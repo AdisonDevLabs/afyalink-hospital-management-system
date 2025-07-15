@@ -1,0 +1,86 @@
+/* HomePage.css */
+
+/* General Body Styling for smooth scrolling */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Animations for elements entering the view */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes bounceIn {
+    0% {
+        transform: scale(0.1);
+        opacity: 0;
+    }
+    60% {
+        transform: scale(1.1);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes fadeInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+
+.animate-fadeInUp {
+    animation: fadeInUp 0.8s ease-out forwards;
+}
+
+.animate-fadeIn {
+    animation: fadeIn 0.8s ease-out forwards;
+}
+
+.animate-bounceIn {
+    animation: bounceIn 1s ease-out forwards;
+}
+
+.animate-fadeInLeft {
+    animation: fadeInLeft 0.8s ease-out forwards;
+}
+
+/* Custom styles for select and input fields for consistency */
+.form-select,
+.form-input {
+    appearance: none; /* Remove default browser styles */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-color: #fff;
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%20viewBox%3D%220%200%20292.4%20292.4%22%3E%3Cpath%20fill%3D%22%236b7280%22%20d%3D%22M287%20173.5c-4.1%204.1-10.7%204.1-14.8%200L146.2%2057.4%2020.2%20173.5c-4.1%204.1-10.7%204.1-14.8%200l-7-7c-4.1-4.1-4.1-10.7%200-14.8L138.8%203.4c4.1-4.1%2010.7-4.1%2014.8%200l131.2%20131.2c4.1%204.1%204.1%2010.7%200%2014.8L287%20173.5z%22%2F%3E%3C%2Fsvg%3E'); /* Custom dropdown arrow */
+    background-repeat: no-repeat;
+    background-position: right 0.7em top 50%, 0 0;
+    background-size: 0.8em auto, 100%;
+}
+
+.form-select::-ms-expand {
+    display: none;
+}
