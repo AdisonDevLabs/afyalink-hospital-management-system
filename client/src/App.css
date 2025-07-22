@@ -4,7 +4,13 @@
   padding: 2rem;
   text-align: center;
 }
+.some-class {
+  color: #333;
+}
 
+html.dark .some-class {
+  color: #eee;
+}
 .logo {
   height: 6em;
   padding: 1.5em;

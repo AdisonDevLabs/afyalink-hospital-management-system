@@ -1,14 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
-import { useAuth } from '../context/AuthContext'; // Assuming you have an AuthContext
+import { motion } from 'framer-motion';
+import { useAuth } from '../context/AuthContext';
 
-// Image Imports (replace with your actual high-quality assets)
-import heroBannerVideo from '../assets/hero-banner-video.mp4'; // Example: A calming hospital environment video
-import heroBannerImage from '../assets/hero-banner-image.webp'; // Fallback image for video
+import heroBannerVideo from '../assets/hero-banner-video.mp4';
+import heroBannerImage from '../assets/hero-banner-image.webp';
 import afyalinkLogo from '../assets/afyalink-logo.svg';
 
-// Service Icons (replace with actual SVG/PNG icons for a modern look)
 import serviceIconOutpatient from '../assets/icons/icon-outpatient.png';
 import serviceIconEmergency from '../assets/icons/icon-emergency.png';
 import serviceIconLab from '../assets/icons/icon-lab.png';
@@ -17,56 +15,47 @@ import serviceIconRadiology from '../assets/icons/icon-radiology.png';
 import serviceIconSurgery from '../assets/icons/icon-surgery.png';
 import serviceIconMaternity from '../assets/icons/icon-maternity.png';
 
-// Doctor Placeholders (replace with actual doctor photos)
 import doctorPhoto1 from '../assets/doctors/dr-aisha-khan.webp';
 import doctorPhoto2 from '../assets/doctors/dr-ben-carter.webp';
 import doctorPhoto3 from '../assets/doctors/dr-sarah-lee.webp';
 
-// Generic Background Images for sections (optional, or use solid colors/gradients)
 import bgDoctors from '../assets/bg-doctors.webp';
 import bgTestimonials from '../assets/bg-testimonials.webp';
 
-// CSS Imports
-import '/src/footer.css'; // Your existing footer styles
-import './HomePage.css'; // Create this for custom animations and styles
-
-const backendUrl = import.meta.env.VITE_BACKEND_URL;
-
-//${backendUrl}
+import '/src/footer.css';
+import './HomePage.css';
 
 const HomePage = () => {
     const navigate = useNavigate();
-    const { currentUser } = useAuth(); // Assuming useAuth provides current user if logged in
+    const { currentUser } = useAuth();
 
-    // Refs for smooth scrolling to sections
     const servicesRef = useRef(null);
     const appointmentRef = useRef(null);
     const departmentsRef = useRef(null);
     const doctorsRef = useRef(null);
     const testimonialsRef = useRef(null);
-    const contactRef = useRef(null); // For footer contact info
+    const contactRef = useRef(null);
 
-    // State for Appointment Booking Widget
     const [appointmentForm, setAppointmentForm] = useState({
         department: '',
         doctor: '',
         date: '',
         time: '',
         name: '',
-        email: '', // Changed to email for better contact svg
-        phone: '', // Added specific phone field
+        email: '',
+        phone: '',
         captcha: ''
     });
     const [captchaValue, setCaptchaValue] = useState('');
     const [captchaInput, setCaptchaInput] = useState('');
-    const [formMessage, setFormMessage] = useState({ type: '', text: '' }); // { type: 'success' | 'error', text: 'message' }
+    const [formMessage, setFormMessage] = useState({ type: '', text: '' });
 
     useEffect(() => {
         generateCaptcha();
     }, []);
 
     const generateCaptcha = () => {
-        const characters = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Avoid I, O, 0, 1 for clarity
+        const characters = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
         let result = '';
         for (let i = 0; i < 6; i++) {
             result += characters.charAt(Math.floor(Math.random() * characters.length));
@@ -88,35 +77,19 @@ const HomePage = () => {
 
     const handleAppointmentSubmit = async (e) => {
         e.preventDefault();
-        setFormMessage({ type: '', text: '' }); // Clear previous messages
+        setFormMessage({ type: '', text: '' });
 
-        if (captchaInput.toLowerCase() !== captchaValue.toLowerCase()) { // Case-insensitive check
+        if (captchaInput.toLowerCase() !== captchaValue.toLowerCase()) {
             setFormMessage({ type: 'error', text: 'Incorrect CAPTCHA. Please try again.' });
-            generateCaptcha(); // Regenerate CAPTCHA on failure
+            generateCaptcha();
             setCaptchaInput('');
             return;
         }
 
         try {
-            // --- Simulate API call for booking ---
-            // In a real application, you would send appointmentForm data to your backend API
-            // const response = await fetch('/api/book-appointment', {
-            //     method: 'POST',
-            //     headers: { 'Content-Type': 'application/json' },
-            //     body: JSON.stringify(appointmentForm)
-            // });
-            // const data = await response.json();
-            // if (response.ok) {
-            //     setFormMessage({ type: 'success', text: 'Your appointment request has been received! We will contact you shortly.' });
-            // } else {
-            //     setFormMessage({ type: 'error', text: data.message || 'Failed to book appointment. Please try again.' });
-            // }
-
-            // Dummy success for now
             console.log('Appointment Form Submitted:', appointmentForm);
             setFormMessage({ type: 'success', text: 'Your appointment request has been received! We will contact you shortly.' });
 
-            // Reset form
             setAppointmentForm({
                 department: '',
                 doctor: '',
@@ -128,14 +101,13 @@ const HomePage = () => {
                 captcha: ''
             });
             setCaptchaInput('');
-            generateCaptcha(); // Regenerate CAPTCHA on success
+            generateCaptcha();
         } catch (error) {
             console.error('Appointment booking error:', error);
             setFormMessage({ type: 'error', text: 'An error occurred during booking. Please try again later.' });
         }
     };
 
-    // Framer Motion for scroll animations
     const sectionVariants = {
         hidden: { opacity: 0, y: 50 },
         visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: "easeOut", staggerChildren: 0.1 } }
@@ -146,7 +118,6 @@ const HomePage = () => {
         visible: { opacity: 1, y: 0 }
     };
 
-    // Dummy Data (Replace with real data from your API)
     const departments = [
         { name: 'Cardiology', description: 'Comprehensive heart care, diagnostics, and surgical interventions for cardiovascular health.', icon: '❤️' },
         { name: 'Pediatrics', description: 'Specialized medical care for infants, children, and adolescents, including vaccinations and developmental checks.', icon: '👶' },
@@ -179,9 +150,19 @@ const HomePage = () => {
         { id: 4, name: 'David L.', rating: 5, feedback: 'From emergency admission to recovery, the professionalism and care at AfyaLink were outstanding. The nurses and doctors went above and beyond.', photo: 'https://via.placeholder.com/80/cce5ff/333333?text=DL' },
     ];
 
+    const services = [
+        { title: 'Outpatient Services', icon: serviceIconOutpatient, desc: 'Convenient and efficient medical consultations, check-ups, and follow-ups for non-emergency needs.' },
+        { title: 'Emergency & Trauma', icon: serviceIconEmergency, desc: '24/7 rapid response and critical care for urgent medical situations, supported by experienced emergency physicians.' },
+        { title: 'Laboratory Testing', icon: serviceIconLab, desc: 'Accurate and timely diagnostic lab tests, including blood work, pathology, and microbiology, with quick results.' },
+        { title: 'Pharmacy Services', icon: serviceIconPharmacy, desc: 'A well-stocked pharmacy providing prescription medications, over-the-counter drugs, and expert pharmaceutical advice.' },
+        { title: 'Radiology & Imaging', icon: serviceIconRadiology, desc: 'Advanced diagnostic imaging services including X-rays, MRI, CT scans, and ultrasound for precise medical insights.' },
+        { title: 'Advanced Surgery', icon: serviceIconSurgery, desc: 'Expert surgical procedures across various specialties, utilizing modern techniques for optimal patient outcomes.' },
+        { title: 'Maternity Care', icon: serviceIconMaternity, desc: 'Compassionate prenatal, delivery, and postnatal care for mothers and newborns, ensuring a safe and joyful experience.' },
+        { title: 'Wellness & Prevention', icon: serviceIconMaternity, desc: 'Programs focused on health education, disease prevention, and wellness promotion for a healthier community.' },
+    ];
+
     return (
         <div className="home-page overflow-x-hidden">
-            {/* A. Header / Navigation */}
             <header className="fixed w-full bg-white shadow-lg z-50 py-3 px-6 md:px-12 flex justify-between items-center transition-all duration-300">
                 <div className="flex items-center space-x-3">
                     <Link to="/" className="flex items-center space-x-2 animate-fadeInLeft">
@@ -213,32 +194,22 @@ const HomePage = () => {
                         </Link>
                     )}
                 </div>
-                {/* Mobile Menu Toggle (Implement a mobile nav drawer/modal) */}
                 <button className="md:hidden text-gray-700 focus:outline-none">
                     <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
                 </button>
             </header>
-            <main className="pt-[76px]"> {/* Adjust padding-top based on header height */}
-                {/* B. Hero Section / Welcome Message */}
+            <main className="pt-[76px]">
                 <section className="hero-section relative h-screen flex items-center justify-center text-white overflow-hidden">
                     <video
                         className="absolute inset-0 w-full h-full object-cover z-0"
-                        autoPlay
-                        loop
-                        muted
-                        playsInline
-                        poster={heroBannerImage} // Fallback image
-                    >
+                        autoPlay loop muted playsInline poster={heroBannerImage}>
                         <source src={heroBannerVideo} type="video/mp4" />
                         Your browser does not support the video tag.
                     </video>
                     <div className="absolute inset-0 bg-gradient-to-r from-blue-900 to-transparent opacity-70 z-10"></div>
                     <motion.div
-                        initial={{ opacity: 0, y: 50 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.8, delay: 0.3 }}
-                        className="relative z-20 text-center p-4 max-w-4xl"
-                    >
+                        initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.3 }}
+                        className="relative z-20 text-center p-4 max-w-4xl">
                         <h1 className="text-5xl md:text-7xl font-extrabold mb-4 leading-tight">
                             Your Health, <span className="text-blue-300">Our Priority</span>
                         </h1>
@@ -248,9 +219,7 @@ const HomePage = () => {
                         <motion.button
                             onClick={() => appointmentRef.current?.scrollIntoView({ behavior: 'smooth' })}
                             className="bg-green-500 text-white text-xl px-10 py-4 rounded-full hover:bg-green-600 transition duration-300 transform hover:scale-105 shadow-lg font-semibold"
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                        >
+                            whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                             Book Appointment Today
                         </motion.button>
                         <Link to="/register" className="ml-4 text-white text-xl px-10 py-4 border-2 border-white rounded-full hover:bg-white hover:text-blue-700 transition duration-300 transform hover:scale-105 shadow-lg font-semibold">
@@ -259,32 +228,14 @@ const HomePage = () => {
                     </motion.div>
                 </section>
 
-                {/* C. Key Services Section */}
                 <section ref={servicesRef} className="py-20 bg-gray-50">
                     <motion.div
-                        className="container mx-auto px-6"
-                        initial="hidden"
-                        whileInView="visible"
-                        viewport={{ once: true, amount: 0.2 }}
-                        variants={sectionVariants}
-                    >
+                        className="container mx-auto px-6" initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }} variants={sectionVariants}>
                         <h2 className="text-4xl md:text-5xl font-bold text-center text-gray-800 mb-14">Our Comprehensive Healthcare Services</h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                            {[
-                                { title: 'Outpatient Services', icon: serviceIconOutpatient, desc: 'Convenient and efficient medical consultations, check-ups, and follow-ups for non-emergency needs.' },
-                                { title: 'Emergency & Trauma', icon: serviceIconEmergency, desc: '24/7 rapid response and critical care for urgent medical situations, supported by experienced emergency physicians.' },
-                                { title: 'Laboratory Testing', icon: serviceIconLab, desc: 'Accurate and timely diagnostic lab tests, including blood work, pathology, and microbiology, with quick results.' },
-                                { title: 'Pharmacy Services', icon: serviceIconPharmacy, desc: 'A well-stocked pharmacy providing prescription medications, over-the-counter drugs, and expert pharmaceutical advice.' },
-                                { title: 'Radiology & Imaging', icon: serviceIconRadiology, desc: 'Advanced diagnostic imaging services including X-rays, MRI, CT scans, and ultrasound for precise medical insights.' },
-                                { title: 'Advanced Surgery', icon: serviceIconSurgery, desc: 'Expert surgical procedures across various specialties, utilizing modern techniques for optimal patient outcomes.' },
-                                { title: 'Maternity Care', icon: serviceIconMaternity, desc: 'Compassionate prenatal, delivery, and postnatal care for mothers and newborns, ensuring a safe and joyful experience.' },
-                                { title: 'Wellness & Prevention', icon: serviceIconMaternity, desc: 'Programs focused on health education, disease prevention, and wellness promotion for a healthier community.' },
-                            ].map((service, index) => (
+                            {services.map((service, index) => (
                                 <motion.div
-                                    key={index}
-                                    className="bg-white rounded-xl shadow-lg p-7 text-center transform hover:scale-[1.02] transition duration-300 ease-out border border-gray-100 group"
-                                    variants={itemVariants}
-                                >
+                                    key={index} className="bg-white rounded-xl shadow-lg p-7 text-center transform hover:scale-[1.02] transition duration-300 ease-out border border-gray-100 group" variants={itemVariants}>
                                     <img src={service.icon} alt={service.title} className="w-16 h-16 mx-auto mb-5 transition-transform duration-300 group-hover:rotate-6" />
                                     <h3 className="text-2xl font-semibold text-blue-700 mb-3">{service.title}</h3>
                                     <p className="text-gray-600 mb-5 text-sm leading-relaxed">{service.desc}</p>
@@ -298,16 +249,10 @@ const HomePage = () => {
                     </motion.div>
                 </section>
 
-                {/* D. Appointment Booking Widget */}
                 <section ref={appointmentRef} className="py-20 bg-gradient-to-r from-blue-700 to-blue-900 text-white relative overflow-hidden">
-                    <div className="absolute inset-0 bg-cover bg-center opacity-10" style={{ backgroundImage: `url(${bgDoctors})` }}></div> {/* Subtle background texture */}
+                    <div className="absolute inset-0 bg-cover bg-center opacity-10" style={{ backgroundImage: `url(${bgDoctors})` }}></div>
                     <motion.div
-                        className="container mx-auto px-6 relative z-10"
-                        initial="hidden"
-                        whileInView="visible"
-                        viewport={{ once: true, amount: 0.3 }}
-                        variants={sectionVariants}
-                    >
+                        className="container mx-auto px-6 relative z-10" initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.3 }} variants={sectionVariants}>
                         <h2 className="text-4xl md:text-5xl font-bold text-center mb-14">Book Your Appointment Instantly</h2>
                         <div className="bg-white p-8 md:p-12 rounded-xl shadow-2xl max-w-3xl mx-auto text-gray-800 border-t-4 border-blue-500">
                             <form onSubmit={handleAppointmentSubmit} className="space-y-7">
@@ -315,34 +260,20 @@ const HomePage = () => {
                                     <div>
                                         <label htmlFor="department" className="block text-lg font-medium text-gray-700 mb-2">Select Department</label>
                                         <select
-                                            id="department"
-                                            name="department"
-                                            value={appointmentForm.department}
-                                            onChange={handleAppointmentChange}
-                                            className="form-select mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-3 px-4 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base"
-                                            required
-                                        >
+                                            id="department" name="department" value={appointmentForm.department} onChange={handleAppointmentChange}
+                                            className="form-select mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-3 px-4 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base" required>
                                             <option value="">-- Choose Department --</option>
-                                            {departments.map((dept, index) => (
-                                                <option key={index} value={dept.name}>{dept.name}</option>
-                                            ))}
+                                            {departments.map((dept, index) => (<option key={index} value={dept.name}>{dept.name}</option>))}
                                         </select>
                                     </div>
                                     <div>
                                         <label htmlFor="doctor" className="block text-lg font-medium text-gray-700 mb-2">Preferred Doctor (Optional)</label>
                                         <select
-                                            id="doctor"
-                                            name="doctor"
-                                            value={appointmentForm.doctor}
-                                            onChange={handleAppointmentChange}
-                                            className="form-select mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-3 px-4 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base"
-                                        >
+                                            id="doctor" name="doctor" value={appointmentForm.doctor} onChange={handleAppointmentChange}
+                                            className="form-select mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-3 px-4 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base">
                                             <option value="">-- Any Doctor --</option>
-                                            {doctors
-                                                .filter(doc => !appointmentForm.department || doc.specialization.includes(appointmentForm.department.split(' ')[0])) // Simple filter
-                                                .map(doc => (
-                                                    <option key={doc.id} value={doc.name}>{doc.name} ({doc.specialization})</option>
-                                                ))}
+                                            {doctors.filter(doc => !appointmentForm.department || doc.specialization.includes(appointmentForm.department.split(' ')[0])).map(doc => (
+                                                    <option key={doc.id} value={doc.name}>{doc.name} ({doc.specialization})</option>))}
                                         </select>
                                     </div>
                                 </div>
@@ -350,101 +281,54 @@ const HomePage = () => {
                                     <div>
                                         <label htmlFor="date" className="block text-lg font-medium text-gray-700 mb-2">Desired Date</label>
                                         <input
-                                            type="date"
-                                            id="date"
-                                            name="date"
-                                            value={appointmentForm.date}
-                                            onChange={handleAppointmentChange}
-                                            min={new Date().toISOString().split('T')[0]}
-                                            className="form-input mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-3 px-4 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base"
-                                            required
-                                        />
+                                            type="date" id="date" name="date" value={appointmentForm.date} onChange={handleAppointmentChange}
+                                            min={new Date().toISOString().split('T')[0]} className="form-input mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-3 px-4 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base" required/>
                                     </div>
                                     <div>
                                         <label htmlFor="time" className="block text-lg font-medium text-gray-700 mb-2">Desired Time</label>
                                         <input
-                                            type="time"
-                                            id="time"
-                                            name="time"
-                                            value={appointmentForm.time}
-                                            onChange={handleAppointmentChange}
-                                            className="form-input mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-3 px-4 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base"
-                                            required
-                                        />
+                                            type="time" id="time" name="time" value={appointmentForm.time} onChange={handleAppointmentChange}
+                                            className="form-input mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-3 px-4 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base" required/>
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
                                         <label htmlFor="name" className="block text-lg font-medium text-gray-700 mb-2">Your Full Name</label>
                                         <input
-                                            type="text"
-                                            id="name"
-                                            name="name"
-                                            value={appointmentForm.name}
-                                            onChange={handleAppointmentChange}
-                                            className="form-input mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-3 px-4 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base"
-                                            placeholder="e.g., Jane Doe"
-                                            required
-                                        />
+                                            type="text" id="name" name="name" value={appointmentForm.name} onChange={handleAppointmentChange}
+                                            className="form-input mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-3 px-4 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base" placeholder="e.g., Jane Doe" required/>
                                     </div>
                                     <div>
                                         <label htmlFor="email" className="block text-lg font-medium text-gray-700 mb-2">Email Address</label>
                                         <input
-                                            type="email"
-                                            id="email"
-                                            name="email"
-                                            value={appointmentForm.email}
-                                            onChange={handleAppointmentChange}
-                                            className="form-input mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-3 px-4 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base"
-                                            placeholder="e.g., jane.doe@example.com"
-                                            required
-                                        />
+                                            type="email" id="email" name="email" value={appointmentForm.email} onChange={handleAppointmentChange}
+                                            className="form-input mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-3 px-4 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base" placeholder="e.g., jane.doe@example.com" required/>
                                     </div>
                                 </div>
                                 <div>
                                     <label htmlFor="phone" className="block text-lg font-medium text-gray-700 mb-2">Phone Number</label>
                                     <input
-                                        type="tel"
-                                        id="phone"
-                                        name="phone"
-                                        value={appointmentForm.phone}
-                                        onChange={handleAppointmentChange}
-                                        className="form-input mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-3 px-4 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base"
-                                        placeholder="e.g., +254 712 345 678"
-                                        required
-                                    />
+                                        type="tel" id="phone" name="phone" value={appointmentForm.phone} onChange={handleAppointmentChange}
+                                        className="form-input mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-3 px-4 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base" placeholder="e.g., +254 712 345 678" required/>
                                 </div>
                                 <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6">
-                                    <label htmlFor="captcha" className="block text-lg font-medium text-gray-700">
-                                        Enter CAPTCHA:
-                                    </label>
+                                    <label htmlFor="captcha" className="block text-lg font-medium text-gray-700">Enter CAPTCHA:</label>
                                     <div className="font-bold text-blue-700 text-3xl tracking-widest bg-blue-100 px-5 py-2 rounded-lg select-none border border-blue-300">
                                         {captchaValue}
                                     </div>
                                     <input
-                                        type="text"
-                                        id="captcha"
-                                        name="captcha"
-                                        value={captchaInput}
-                                        onChange={handleCaptchaInputChange}
-                                        className="form-input flex-grow border border-gray-300 rounded-lg shadow-sm py-3 px-4 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base"
-                                        placeholder="Type characters here"
-                                        required
-                                    />
+                                        type="text" id="captcha" name="captcha" value={captchaInput} onChange={handleCaptchaInputChange}
+                                        className="form-input flex-grow border border-gray-300 rounded-lg shadow-sm py-3 px-4 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base" placeholder="Type characters here" required/>
                                 </div>
                                 {formMessage.text && (
-                                    <motion.p
-                                        initial={{ opacity: 0, y: -10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        className={`mt-4 text-center font-medium ${formMessage.type === 'error' ? 'text-red-600' : 'text-green-600'}`}
-                                    >
+                                    <motion.p initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
+                                        className={`mt-4 text-center font-medium ${formMessage.type === 'error' ? 'text-red-600' : 'text-green-600'}`}>
                                         {formMessage.text}
                                     </motion.p>
                                 )}
                                 <button
                                     type="submit"
-                                    className="w-full bg-green-600 text-white py-4 rounded-lg hover:bg-green-700 transition duration-300 text-xl font-semibold shadow-md transform hover:scale-[1.01]"
-                                >
+                                    className="w-full bg-green-600 text-white py-4 rounded-lg hover:bg-green-700 transition duration-300 text-xl font-semibold shadow-md transform hover:scale-[1.01]">
                                     Submit Appointment Request
                                 </button>
                             </form>
@@ -452,23 +336,14 @@ const HomePage = () => {
                     </motion.div>
                 </section>
 
-                {/* E. Departments / Specialties */}
                 <section ref={departmentsRef} className="py-20 bg-white">
                     <motion.div
-                        className="container mx-auto px-6"
-                        initial="hidden"
-                        whileInView="visible"
-                        viewport={{ once: true, amount: 0.2 }}
-                        variants={sectionVariants}
-                    >
+                        className="container mx-auto px-6" initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }} variants={sectionVariants}>
                         <h2 className="text-4xl md:text-5xl font-bold text-center text-gray-800 mb-14">Explore Our Specialized Departments</h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                             {departments.map((dept, index) => (
                                 <motion.div
-                                    key={index}
-                                    className="bg-blue-50 rounded-xl shadow-lg p-6 text-center transform hover:translate-y-[-5px] transition duration-300 ease-out border-t-4 border-blue-500"
-                                    variants={itemVariants}
-                                >
+                                    key={index} className="bg-blue-50 rounded-xl shadow-lg p-6 text-center transform hover:translate-y-[-5px] transition duration-300 ease-out border-t-4 border-blue-500" variants={itemVariants}>
                                     <div className="text-5xl mb-4 text-blue-700">{dept.icon}</div>
                                     <h3 className="text-2xl font-semibold text-blue-800 mb-2">{dept.name}</h3>
                                     <p className="text-gray-600 mb-4 text-sm">{dept.description}</p>
@@ -487,29 +362,18 @@ const HomePage = () => {
                     </motion.div>
                 </section>
 
-                {/* F. Meet Our Doctors / Team */}
                 <section ref={doctorsRef} className="py-20 bg-blue-50 relative overflow-hidden">
                     <div className="absolute inset-0 bg-cover bg-center opacity-10" style={{ backgroundImage: `url(${bgDoctors})` }}></div>
                     <motion.div
-                        className="container mx-auto px-6 relative z-10"
-                        initial="hidden"
-                        whileInView="visible"
-                        viewport={{ once: true, amount: 0.2 }}
-                        variants={sectionVariants}
-                    >
+                        className="container mx-auto px-6 relative z-10" initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }} variants={sectionVariants}>
                         <h2 className="text-4xl md:text-5xl font-bold text-center text-gray-800 mb-14">Meet Our Exceptional Medical Team</h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                             {doctors.map(doctor => (
                                 <motion.div
-                                    key={doctor.id}
-                                    className="bg-white rounded-xl shadow-lg p-7 text-center group transform hover:translate-y-[-5px] transition duration-300 ease-out border border-gray-100"
-                                    variants={itemVariants}
-                                >
+                                    key={doctor.id} className="bg-white rounded-xl shadow-lg p-7 text-center group transform hover:translate-y-[-5px] transition duration-300 ease-out border border-gray-100" variants={itemVariants}>
                                     <img
-                                        src={doctor.photo}
-                                        alt={doctor.name}
-                                        className="w-32 h-32 rounded-full mx-auto mb-5 object-cover border-4 border-blue-300 group-hover:border-blue-500 transition duration-300"
-                                    />
+                                        src={doctor.photo} alt={doctor.name}
+                                        className="w-32 h-32 rounded-full mx-auto mb-5 object-cover border-4 border-blue-300 group-hover:border-blue-500 transition duration-300"/>
                                     <h3 className="text-2xl font-semibold text-gray-800 mb-1">{doctor.name}</h3>
                                     <p className="text-blue-600 font-medium mb-3 text-lg">{doctor.specialization}</p>
                                     <p className="text-gray-600 text-sm leading-relaxed mb-5">{doctor.bio}</p>
@@ -528,23 +392,14 @@ const HomePage = () => {
                     </motion.div>
                 </section>
 
-                {/* G. News & Announcements */}
                 <section className="py-20 bg-white">
                     <motion.div
-                        className="container mx-auto px-6"
-                        initial="hidden"
-                        whileInView="visible"
-                        viewport={{ once: true, amount: 0.2 }}
-                        variants={sectionVariants}
-                    >
+                        className="container mx-auto px-6" initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }} variants={sectionVariants}>
                         <h2 className="text-4xl md:text-5xl font-bold text-center text-gray-800 mb-14">Latest News & Health Insights</h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                             {newsItems.map(news => (
                                 <motion.div
-                                    key={news.id}
-                                    className="bg-gray-50 rounded-xl shadow-lg p-6 group transform hover:translate-y-[-5px] transition duration-300 ease-out border border-gray-100"
-                                    variants={itemVariants}
-                                >
+                                    key={news.id} className="bg-gray-50 rounded-xl shadow-lg p-6 group transform hover:translate-y-[-5px] transition duration-300 ease-out border border-gray-100" variants={itemVariants}>
                                     <p className="text-sm text-gray-500 mb-2">{news.date}</p>
                                     <h3 className="text-xl font-semibold text-gray-800 mb-3 group-hover:text-blue-700 transition duration-200">{news.title}</h3>
                                     <p className="text-gray-700 text-sm leading-relaxed mb-5 line-clamp-3">{news.snippet}</p>
@@ -563,36 +418,24 @@ const HomePage = () => {
                     </motion.div>
                 </section>
 
-                {/* H. Patient Testimonials */}
                 <section ref={testimonialsRef} className="py-20 bg-gradient-to-r from-blue-700 to-blue-900 text-white relative overflow-hidden">
                     <div className="absolute inset-0 bg-cover bg-center opacity-10" style={{ backgroundImage: `url(${bgTestimonials})` }}></div>
                     <motion.div
-                        className="container mx-auto px-6 relative z-10"
-                        initial="hidden"
-                        whileInView="visible"
-                        viewport={{ once: true, amount: 0.2 }}
-                        variants={sectionVariants}
-                    >
+                        className="container mx-auto px-6 relative z-10" initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }} variants={sectionVariants}>
                         <h2 className="text-4xl md:text-5xl font-bold text-center mb-14">Hear From Our Valued Patients</h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                             {testimonials.map(testimonial => (
                                 <motion.div
-                                    key={testimonial.id}
-                                    className="bg-white text-gray-800 rounded-xl shadow-xl p-7 flex flex-col items-center text-center border-t-4 border-yellow-400 transform hover:scale-[1.02] transition duration-300 ease-out"
-                                    variants={itemVariants}
-                                >
+                                    key={testimonial.id} className="bg-white text-gray-800 rounded-xl shadow-xl p-7 flex flex-col items-center text-center border-t-4 border-yellow-400 transform hover:scale-[1.02] transition duration-300 ease-out" variants={itemVariants}>
                                     {testimonial.photo && (
                                         <img src={testimonial.photo} alt={testimonial.name} className="w-20 h-20 rounded-full object-cover mb-4 border-3 border-blue-200" />
                                     )}
                                     <div className="flex mb-3">
                                         {[...Array(5)].map((_, i) => (
                                             <svg
-                                                key={i}
-                                                className={`w-6 h-6 ${i < testimonial.rating ? 'text-yellow-400' : 'text-gray-300'}`}
-                                                fill="currentColor"
-                                                viewBox="0 0 20 20"
-                                            >
-                                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.96a1 1 0 00.95.69h4.167c.969 0 1.371 1.24.588 1.81l-3.374 2.45a1 1 0 00-.364 1.118l1.287 3.96c.3.921-.755 1.688-1.54 1.118l-3.374-2.45a1 1 0 00-1.176 0l-3.374 2.45c-.784.57-1.838-.197-1.539-1.118l1.287-3.96a1 1 00-.364-1.118L2.055 9.397c-.783-.57-.38-1.81.588-1.81h4.167a1 1 0 00.95-.69l1.286-3.96z" />
+                                                key={i} className={`w-6 h-6 ${i < testimonial.rating ? 'text-yellow-400' : 'text-gray-300'}`}
+                                                fill="currentColor" viewBox="0 0 20 20">
+                                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.96a1 1 0 00.95.69h4.167c.969 0 1.371 1.24.588 1.81l-3.374 2.45a1 1 00-.364 1.118l1.287 3.96c.3.921-.755 1.688-1.54 1.118l-3.374-2.45a1 1 00-1.176 0l-3.374 2.45c-.784.57-1.838-.197-1.539-1.118l1.287-3.96a1 1 00-.364-1.118L2.055 9.397c-.783-.57-.38-1.81.588-1.81h4.167a1 1 00.95-.69l1.286-3.96z" />
                                             </svg>
                                         ))}
                                     </div>
@@ -605,10 +448,8 @@ const HomePage = () => {
                 </section>
             </main>
 
-            {/* I. Footer */}
             <footer ref={contactRef} className="footer-section bg-gray-900 text-white py-16">
                 <div className="container mx-auto px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
-                    {/* Contact Info */}
                     <div>
                         <h3 className="text-2xl font-bold mb-6 text-blue-300">Contact Us</h3>
                         <p className="mb-3 text-gray-300">123 AfyaLink Road, <br/>Rongai, Nakuru County, Kenya</p>
@@ -617,7 +458,6 @@ const HomePage = () => {
                         <p className="mb-3">Open 24/7 for Emergencies</p>
                     </div>
 
-                    {/* Emergency Numbers */}
                     <div>
                         <h3 className="text-2xl font-bold mb-6 text-blue-300">Emergency Services</h3>
                         <p className="text-red-400 text-4xl font-extrabold mb-3 leading-tight">📞 999</p>
@@ -626,7 +466,6 @@ const HomePage = () => {
                         <p className="text-lg text-gray-300">General Emergency Hotline</p>
                     </div>
 
-                    {/* Quick Links */}
                     <div>
                         <h3 className="text-2xl font-bold mb-6 text-blue-300">Quick Links</h3>
                         <ul>
@@ -638,7 +477,6 @@ const HomePage = () => {
                         </ul>
                     </div>
 
-                    {/* Social Media & Newsletter */}
                     <div>
                         <h3 className="text-2xl font-bold mb-6 text-blue-300">Stay Connected</h3>
                         <div className="flex space-x-5 mb-8">
@@ -659,15 +497,10 @@ const HomePage = () => {
                         <p className="mb-4 text-gray-300">Receive health tips, news, and special announcements directly in your inbox.</p>
                         <form className="flex">
                             <input
-                                type="email"
-                                placeholder="Enter your email"
-                                className="p-3 rounded-l-lg flex-grow bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
-                                aria-label="Email for newsletter"
-                            />
+                                type="email" placeholder="Enter your email"
+                                className="p-3 rounded-l-lg flex-grow bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-base" aria-label="Email for newsletter"/>
                             <button
-                                type="submit"
-                                className="bg-blue-600 text-white px-5 py-3 rounded-r-lg hover:bg-blue-700 transition duration-300 font-semibold"
-                            >
+                                type="submit" className="bg-blue-600 text-white px-5 py-3 rounded-r-lg hover:bg-blue-700 transition duration-300 font-semibold">
                                 Subscribe
                             </button>
                         </form>

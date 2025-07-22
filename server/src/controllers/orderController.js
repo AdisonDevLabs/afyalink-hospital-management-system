@@ -1,8 +1,5 @@
-// backend/src/controllers/orderController.js
-
 const pool = require('../config/db');
 
-// --- Get new doctor orders for a specific nurse or ward ---
 exports.getNewDoctorOrders = async (req, res) => {
   const nurse_id = req.user.id;
 
@@ -31,16 +28,14 @@ exports.getNewDoctorOrders = async (req, res) => {
       ORDER BY o.order_time ASC;
     `;
     const result = await pool.query(query, [nurse_id]);
-
     const orders = result.rows.map(order => ({
       ...order,
       patient_name: `${order.patient_first_name} ${order.patient_last_name}`,
       doctor_name: `${order.doctor_first_name} ${order.doctor_last_name}`
     }));
-
     res.status(200).json({ orders: orders });
-
-  } catch (error) {
+  } 
+  catch (error) {
     console.error('Error fetching new doctor orders:', error.stack);
     res.status(500).json({ message: 'Server error when fetching new doctor orders.' });
   }

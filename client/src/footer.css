@@ -1,9 +1,7 @@
-/* src/footer.css */
 .footer-text-visible {
-  color: #E0E0E0 !important; /* This is a light grey color. The !important tag ensures it overrides other conflicting styles. */
+  color: #E0E0E0 !important;
 }
 
-/* You can add more manual footer styles here if needed */
 .footer-link-hover:hover {
-  color: #63b3ed !important; /* A light blue for hover effect on links */
+  color: #63b3ed !important;
 }

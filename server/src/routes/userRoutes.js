@@ -1,28 +1,54 @@
-// backend/src/routes/userRoutes.js
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
+const path = require('path');
+
 const userController = require('../controllers/userController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
-// Add this POST route for creating new users
-router.post('/', protect, authorize('admin'), userController.registerUser); // Only admin should be able to create new users from this management page
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, path.join(__dirname, '..', '..', 'public', 'uploads'));
+  },
+  filename: (req, file, cb) => {
+    const userId = req.user.id;
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const fileExtension = path.extname(file.originalname);
+    cb(null, `profile-${userId}-${uniqueSuffix}${fileExtension}`);
+  }
+});
 
-// Get all users (with optional role filter and search, e.g., /api/users?role=doctor&search=john)
-router.get('/', protect, authorize('admin', 'doctor', 'receptionist', 'nurse'), userController.getAllUsers);
+const fileFilter = (req, file, cb) => {
+  if (file.mimetype.startsWith('image/')) {
+    cb(null, true);
+  } else {
+    cb(new Error('Only image files are allowed!'), false);
+  }
+};
+const upload = multer({
+  storage: storage,
+  fileFilter: fileFilter,
+  limits: {
+    fileSize: 10 * 1024 * 1024
+  }
+});
 
-// Get user by ID (accessible by admin, or the user themselves)
-router.get('/:id', protect, authorize('admin', 'doctor', 'receptionist', 'nurse'), userController.getUserById);
+router.get('/profile', protect, userController.getProfile);
 
-// Update user (admin can update any user, users can update their own profile via a separate route if needed)
+router.put('/profile', protect, upload.single('profile_picture'), userController.updateProfile);
+
+router.post('/', protect, authorize('admin'), userController.registerUser);
+
+router.get('/', protect, authorize('admin', 'doctor', 'receptionist', 'nurse', 'guest'), userController.getAllUsers);
+
+router.get('/:id', protect, authorize('admin', 'doctor', 'receptionist', 'nurse', 'guest'), userController.getUserById);
+
 router.put('/:id', protect, authorize('admin'), userController.updateUser);
 
-// Delete user (admin only)
 router.delete('/:id', protect, authorize('admin'), userController.deleteUser);
 
-// New Route: Toggle User Status (Admin only)
 router.put('/:id/toggle-status', protect, authorize('admin'), userController.toggleUserStatus);
 
-// New Route: Request Password Reset (Admin triggered for a user)
 router.post('/:id/reset-password', protect, authorize('admin'), userController.resetUserPassword);
 
 module.exports = router;

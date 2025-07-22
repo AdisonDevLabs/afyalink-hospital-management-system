@@ -2,12 +2,11 @@ const { Pool } = require('pg');
 
 let pool;
 
-// Use DATABASE_URL if defined (Render or production), else use local credentials
 if (process.env.DATABASE_URL) {
   pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: {
-      rejectUnauthorized: false, // Required by many cloud PostgreSQL providers
+      rejectUnauthorized: false,
     },
   });
 } else {
@@ -20,16 +19,15 @@ if (process.env.DATABASE_URL) {
   });
 }
 
-// Test connection
 pool.connect((err, client, release) => {
   if (err) {
     console.log("ENV DATABASE_URL:", process.env.DATABASE_URL);
-    return console.error('❌ Error acquiring client:', err.stack);
+    return console.error('Error acquiring client:', err.stack);
     
   }
   
-  console.log('✅ Successfully connected to PostgreSQL database');
-  release(); // release the client back to the pool
+  console.log('Successfully connected to PostgreSQL database');
+  release();
 });
 
 module.exports = pool;

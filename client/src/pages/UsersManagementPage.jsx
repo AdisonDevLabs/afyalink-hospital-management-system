@@ -5,14 +5,75 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
+// --- Constants for common Tailwind CSS classes ---
+const INPUT_CLASSES = 'mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-800 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 dark:placeholder-gray-400 transition-colors duration-300';
+const BUTTON_BASE_CLASSES = 'font-semibold py-2 px-5 rounded-lg shadow-md transition duration-300';
+const BUTTON_GREEN_CLASSES = `bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600 text-white ${BUTTON_BASE_CLASSES}`;
+const BUTTON_BLUE_CLASSES = `bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 text-white ${BUTTON_BASE_CLASSES}`;
+const BUTTON_GRAY_CLASSES = `bg-gray-300 hover:bg-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500 text-gray-800 dark:text-gray-100 ${BUTTON_BASE_CLASSES}`;
+
+// --- Reusable FormField Component ---
+const FormField = ({ label, id, name, type = 'text', value, onChange, required = false, disabled = false, children }) => (
+  <div>
+    <label htmlFor={id} className='block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300 transition-colors duration-300'>
+      {label}
+    </label>
+    {type === 'select' ? (
+      <select
+        id={id}
+        name={name}
+        value={value}
+        onChange={onChange}
+        className={INPUT_CLASSES.replace('focus:border-blue-500', 'focus:border-transparent transition duration-200 ease-in-out')}
+        required={required}
+        disabled={disabled}
+      >
+        {children}
+      </select>
+    ) : (
+      <input
+        type={type}
+        id={id}
+        name={name}
+        value={value}
+        onChange={onChange}
+        className={INPUT_CLASSES}
+        required={required}
+        disabled={disabled}
+      />
+    )}
+  </div>
+);
+
 // --- Reusable Notification Component ---
 const Notification = ({ message, type, onClose }) => {
   if (!message) return null;
 
-  const bgColor = type === 'success' ? 'bg-green-100' : 'bg-red-100';
-  const borderColor = type === 'success' ? 'border-green-400' : 'border-red-400';
-  const textColor = type === 'success' ? 'text-green-700' : 'text-red-700';
-  const iconColor = type === 'success' ? 'text-green-500' : 'text-red-500';
+  const colorMap = {
+    success: {
+      bg: 'bg-green-100 dark:bg-green-800',
+      border: 'border-green-400 dark:border-green-600',
+      text: 'text-green-700 dark:text-green-100',
+      icon: 'text-green-500 dark:text-green-300',
+      focus: 'focus:ring-green-500'
+    },
+    error: {
+      bg: 'bg-red-100 dark:bg-red-800',
+      border: 'border-red-400 dark:border-red-600',
+      text: 'text-red-700 dark:text-red-100',
+      icon: 'text-red-500 dark:text-red-300',
+      focus: 'focus:ring-red-500'
+    },
+    info: {
+      bg: 'bg-blue-100 dark:bg-blue-800', // Added for info type
+      border: 'border-blue-400 dark:border-blue-600',
+      text: 'text-blue-700 dark:text-blue-100',
+      icon: 'text-blue-500 dark:text-blue-300',
+      focus: 'focus:ring-blue-500'
+    }
+  };
+
+  const colors = colorMap[type] || colorMap.info; // Default to info if type is not recognized
 
   return (
     <motion.div
@@ -21,22 +82,23 @@ const Notification = ({ message, type, onClose }) => {
       exit={{ opacity: 0, y: -50 }}
       transition={{ duration: 0.3 }}
       className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg flex items-center space-x-3
-                  ${bgColor} ${borderColor} ${textColor} border-l-4`}
+                  ${colors.bg} ${colors.border} ${colors.text} border-l-4 transition-colors duration-300`}
       role="alert"
     >
       {type === 'success' ? (
-        <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <svg className={`h-6 w-6 ${colors.icon}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
         </svg>
       ) : (
-        <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <svg className={`h-6 w-6 ${colors.icon}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
         </svg>
       )}
       <span className="font-medium text-sm">{message}</span>
       <button
         onClick={onClose}
-        className={`ml-auto -mx-1.5 -my-1.5 rounded-lg p-1.5 inline-flex h-8 w-8 ${iconColor} focus:ring-2 focus:ring-opacity-50`}
+        className={`ml-auto -mx-1.5 -my-1.5 rounded-lg p-1.5 inline-flex h-8 w-8 ${colors.icon} ${colors.focus} focus:ring-2 focus:ring-opacity-50
+                  hover:bg-opacity-80 dark:hover:bg-opacity-70 transition-colors duration-300`}
         aria-label="Close"
       >
         <span className="sr-only">Close</span>
@@ -57,7 +119,7 @@ const Modal = ({ isOpen, onClose, title, children }) => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-gray-600 bg-opacity-75 dark:bg-gray-900 dark:bg-opacity-75 flex items-center justify-center z-50 p-4 transition-colors duration-300"
       onClick={onClose}
     >
       <motion.div
@@ -65,19 +127,19 @@ const Modal = ({ isOpen, onClose, title, children }) => {
         animate={{ y: "0" }}
         exit={{ y: "100vh" }}
         transition={{ type: "spring", stiffness: 120, damping: 14 }}
-        className="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl relative"
-        onClick={(e) => e.stopPropagation()} // Prevent modal close when clicking inside
+        className="bg-white dark:bg-gray-800 rounded-lg shadow-xl dark:shadow-2xl p-6 w-full max-w-2xl relative transition-colors duration-300"
+        onClick={(e) => e.stopPropagation()}
       >
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
+          className="absolute top-3 right-3 text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-gray-100 transition-colors duration-300"
           aria-label="Close modal"
         >
           <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
           </svg>
         </button>
-        <h2 className="text-2xl font-semibold mb-4 text-gray-800">{title}</h2>
+        <h2 className="text-2xl font-semibold mb-4 text-gray-800 dark:text-gray-100 transition-colors duration-300">{title}</h2>
         {children}
       </motion.div>
     </motion.div>
@@ -90,28 +152,16 @@ const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, userName }) => {
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Confirm Deletion">
-      <p className="text-gray-700 mb-6">Are you sure you want to delete the user "<span className="font-semibold">{userName}</span>"? This action cannot be undone.</p>
+      <p className="text-gray-700 dark:text-gray-300 mb-6 transition-colors duration-300">Are you sure you want to delete the user "<span className="font-semibold text-gray-900 dark:text-gray-50">{userName}</span>"? This action cannot be undone.</p>
       <div className="flex justify-end space-x-3">
-        <button
-          onClick={onClose}
-          className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300"
-        >
-          Cancel
-        </button>
-        <button
-          onClick={onConfirm}
-          className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300"
-        >
-          Delete
-        </button>
+        <button onClick={onClose} className={BUTTON_GRAY_CLASSES}>Cancel</button>
+        <button onClick={onConfirm} className="bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300">Delete</button>
       </div>
     </Modal>
   );
 };
 
 const backendUrl = import.meta.env.VITE_BACKEND_URL;
-
-//${backendUrl}/api
 
 // --- Main UsersManagementPage Component ---
 function UsersManagementPage() {
@@ -124,18 +174,18 @@ function UsersManagementPage() {
   const [notification, setNotification] = useState({ message: null, type: null });
 
   const [showUserFormModal, setShowUserFormModal] = useState(false);
-  const [editingUser, setEditingUser] = useState(null); // Holds user data if editing
-  const [userToDelete, setUserToDelete] = useState(null); // Holds user data if confirming delete
+  const [editingUser, setEditingUser] = useState(null);
+  const [userToDelete, setUserToDelete] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRole, setFilterRole] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [usersPerPage] = useState(10); // Number of users per page
+  const [usersPerPage] = useState(10);
 
-  const [formData, setFormData] = useState({
+  const initialFormData = {
     username: '',
     password: '',
-    confirmPassword: '', // For new user registration
-    role: 'receptionist', // Changed default role from 'patient' to 'receptionist'
+    confirmPassword: '',
+    role: 'receptionist',
     first_name: '',
     last_name: '',
     email: '',
@@ -143,36 +193,28 @@ function UsersManagementPage() {
     address: '',
     date_of_birth: '',
     gender: '',
-    specialization: '', // Added for doctors
-  });
+    specialization: '',
+  };
+  const [formData, setFormData] = useState(initialFormData);
 
-  // Base URL for API calls
-  //const backendUrl = '/api/';
+  const resetFormData = () => setFormData(initialFormData);
 
   const fetchUsers = useCallback(async () => {
-    if (!token) return; // Ensure token is available
+    if (!token) return;
 
     setLoading(true);
     setError(null);
     try {
       const queryParams = new URLSearchParams();
-      if (searchTerm) {
-        queryParams.append('search', searchTerm);
-      }
-      if (filterRole) {
-        queryParams.append('role', filterRole);
-      }
+      if (searchTerm) queryParams.append('search', searchTerm);
+      if (filterRole) queryParams.append('role', filterRole);
 
-      const response = await fetch(`${backendUrl}/api/users?${queryParams.toString()}`, { // Added query parameters
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+      const response = await fetch(`${backendUrl}/api/users?${queryParams.toString()}`, {
+        headers: { 'Authorization': `Bearer ${token}` },
       });
+
       if (!response.ok) {
-        if (response.status === 403) { // Forbidden
-          setError('You do not have permission to view users.');
-          navigate('/unauthorized'); // Redirect if not authorized
-        }
+        if (response.status === 403) navigate('/unauthorized');
         throw new Error(`Failed to fetch users: ${response.statusText}`);
       }
       const data = await response.json();
@@ -184,36 +226,28 @@ function UsersManagementPage() {
     } finally {
       setLoading(false);
     }
-  }, [token, searchTerm, filterRole, backendUrl, navigate]); // Dependencies for useCallback
+  }, [token, searchTerm, filterRole, navigate]);
 
   useEffect(() => {
-    if (!authLoading && isAuthenticated && user && user.role === 'admin') {
+    if (!authLoading && isAuthenticated && user?.role === 'admin') { // Simplified user role check
       fetchUsers();
-    } else if (!authLoading && (!isAuthenticated || user.role !== 'admin')) {
-      navigate('/unauthorized'); // Redirect if not authenticated or not admin
+    } else if (!authLoading && (!isAuthenticated || user?.role !== 'admin')) {
+      navigate('/unauthorized');
     }
   }, [authLoading, isAuthenticated, user, navigate, fetchUsers]);
 
-  // Handle search and filter changes with debounce
   useEffect(() => {
-    const handler = setTimeout(() => {
-      fetchUsers(); // Re-fetch users when search term or filter role changes
-    }, 300); // Debounce for 300ms
+    const handler = setTimeout(() => { fetchUsers(); }, 300);
     return () => clearTimeout(handler);
   }, [searchTerm, filterRole, fetchUsers]);
 
-
-  // Helper for user initials/avatar
-  const getUserAvatar = (user) => {
-    if (user.photo_url) {
-      return <img src={user.photo_url} alt={user.first_name} className="h-8 w-8 rounded-full object-cover mr-3" />;
-    }
-    const initials = `${user.first_name ? user.first_name[0] : ''}${user.last_name ? user.last_name[0] : ''}`.toUpperCase();
-    // Simple hash for color based on the first initial
-    const charCode = initials.charCodeAt(0) || 0; // Get ASCII value, default to 0 if no initials
-    const hue = (charCode * 10) % 360; // Spread hues across the color spectrum
-    const bgColor = `hsl(${hue}, 70%, 90%)`; // Light background
-    const textColor = `hsl(${hue}, 70%, 30%)`; // Darker text
+  const getUserAvatar = (u) => {
+    if (u.photo_url) return <img src={u.photo_url} alt={u.first_name} className="h-8 w-8 rounded-full object-cover mr-3" />;
+    const initials = `${u.first_name ? u.first_name[0] : ''}${u.last_name ? u.last_name[0] : ''}`.toUpperCase();
+    const charCode = initials.charCodeAt(0) || 0;
+    const hue = (charCode * 10) % 360;
+    const bgColor = `hsl(${hue}, 70%, 90%)`;
+    const textColor = `hsl(${hue}, 70%, 30%)`;
     return (
       <div className={`h-8 w-8 rounded-full flex items-center justify-center font-semibold text-sm mr-3 flex-shrink-0`} style={{ backgroundColor: bgColor, color: textColor }}>
         {initials || '?'}
@@ -222,13 +256,11 @@ function UsersManagementPage() {
   };
 
   const handleToggleStatus = async (userId, currentStatus) => {
+    if (!token) { setNotification({ message: 'Authentication required.', type: 'error' }); return; }
     try {
       const response = await fetch(`${backendUrl}/api/users/${userId}/toggle-status`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ is_active: !currentStatus })
       });
       if (!response.ok) {
@@ -236,7 +268,7 @@ function UsersManagementPage() {
         throw new Error(errorData.message || 'Failed to toggle user status.');
       }
       setNotification({ message: 'User status updated successfully!', type: 'success' });
-      fetchUsers(); // Re-fetch to ensure data consistency
+      fetchUsers();
     } catch (err) {
       console.error('Error toggling user status:', err);
       setNotification({ message: err.message || 'Failed to toggle user status.', type: 'error' });
@@ -244,17 +276,12 @@ function UsersManagementPage() {
   };
 
   const handleResetPassword = async (userId) => {
-    if (!token) {
-      setNotification({ message: 'Authentication required. Please log in.', type: 'error' });
-      return;
-    }
+    if (!token) { setNotification({ message: 'Authentication required.', type: 'error' }); return; }
     setNotification({ message: `Sending password reset for user ${userId}...`, type: 'info' });
     try {
       const response = await fetch(`${backendUrl}/api/users/${userId}/reset-password`, {
-        method: 'POST', // Changed to POST, as reset usually triggers an action, not updates a resource directly
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!response.ok) {
         const errorData = await response.json();
@@ -267,102 +294,61 @@ function UsersManagementPage() {
     }
   };
 
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
+    setFormData((prevData) => ({ ...prevData, [name]: value }));
   };
 
-  const resetFormData = () => {
-    setFormData({
-      username: '',
-      password: '',
-      confirmPassword: '',
-      role: 'receptionist', // Default role after reset
-      first_name: '',
-      last_name: '',
-      email: '',
-      phone_number: '',
-      address: '',
-      date_of_birth: '',
-      gender: '',
-      specialization: '',
-    });
+  const openUserFormModal = (userToEdit = null) => {
+    setEditingUser(userToEdit);
+    resetFormData();
+    if (userToEdit) {
+      setFormData({
+        ...initialFormData, // Start with all fields from initial
+        username: userToEdit.username,
+        role: userToEdit.role,
+        first_name: userToEdit.first_name || '',
+        last_name: userToEdit.last_name || '',
+        email: userToEdit.email || '',
+        phone_number: userToEdit.phone_number || '',
+        address: userToEdit.address || '',
+        date_of_birth: userToEdit.date_of_birth ? new Date(userToEdit.date_of_birth).toISOString().split('T')[0] : '',
+        gender: userToEdit.gender || '',
+        specialization: userToEdit.specialization || '',
+      });
+    }
+    setNotification({ message: null, type: null });
+    setShowUserFormModal(true);
   };
 
-  const handleAddUserClick = () => {
+  const closeUserFormModal = () => {
+    setShowUserFormModal(false);
     setEditingUser(null);
     resetFormData();
-    setNotification({ message: null, type: null }); // Clear previous notifications
-    setShowUserFormModal(true);
-  };
-
-  const handleEditUserClick = (userToEdit) => {
-    setEditingUser(userToEdit);
-    setNotification({ message: null, type: null }); // Clear previous notifications
-    // Populate form with existing user data, but not password
-    setFormData({
-      username: userToEdit.username,
-      password: '', // Password is not editable directly
-      confirmPassword: '',
-      role: userToEdit.role,
-      first_name: userToEdit.first_name || '',
-      last_name: userToEdit.last_name || '',
-      email: userToEdit.email || '',
-      phone_number: userToEdit.phone_number || '',
-      address: userToEdit.address || '',
-      date_of_birth: userToEdit.date_of_birth ? new Date(userToEdit.date_of_birth).toISOString().split('T')[0] : '',
-      gender: userToEdit.gender || '',
-      specialization: userToEdit.specialization || '',
-    });
-    setShowUserFormModal(true);
+    setNotification({ message: null, type: null });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!token) {
-      setNotification({ message: 'Authentication required. Please log in.', type: 'error' });
-      return;
-    }
-
+    if (!token) { setNotification({ message: 'Authentication required.', type: 'error' }); return; }
     if (!editingUser && formData.password !== formData.confirmPassword) {
-      setNotification({ message: 'Passwords do not match.', type: 'error' });
-      return;
+      setNotification({ message: 'Passwords do not match.', type: 'error' }); return;
     }
-
-    // Basic validation for doctor specialization
     if (formData.role === 'doctor' && !formData.specialization) {
-      setNotification({ message: 'Specialization is required for doctors.', type: 'error' });
-      return;
+      setNotification({ message: 'Specialization is required for doctors.', type: 'error' }); return;
     }
 
-    // Remove confirmPassword as it's not sent to the backend
     const { confirmPassword, ...dataToSend } = formData;
+    if (editingUser && dataToSend.password === '') delete dataToSend.password;
 
-    // Remove password if editing and password field is empty (meaning no change)
-    if (editingUser && dataToSend.password === '') {
-      delete dataToSend.password;
-    }
-
-    let url = `${backendUrl}/api/users`;
-    let method = 'POST';
-
-    if (editingUser) {
-      url = `${backendUrl}/api/users/${editingUser.id}`;
-      method = 'PUT';
-    }
+    const url = editingUser ? `${backendUrl}/api/users/${editingUser.id}` : `${backendUrl}/api/users`;
+    const method = editingUser ? 'PUT' : 'POST';
 
     try {
       const response = await fetch(url, {
         method,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify(dataToSend),
       });
 
@@ -372,19 +358,15 @@ function UsersManagementPage() {
       }
 
       setNotification({ message: `User ${editingUser ? 'updated' : 'added'} successfully!`, type: 'success' });
-      setShowUserFormModal(false);
-      setEditingUser(null);
-      resetFormData();
-      fetchUsers(); // Refresh the list
+      closeUserFormModal();
+      fetchUsers();
     } catch (err) {
       console.error(`Error ${editingUser ? 'updating' : 'adding'} user:`, err);
       setNotification({ message: `Error ${editingUser ? 'updating' : 'adding'} user: ${err.message}`, type: 'error' });
     }
   };
 
-  const handleDeleteClick = (user) => {
-    setUserToDelete(user);
-  };
+  const handleDeleteClick = (user) => setUserToDelete(user);
 
   const confirmDelete = async () => {
     if (!userToDelete || !token) return;
@@ -392,9 +374,7 @@ function UsersManagementPage() {
     try {
       const response = await fetch(`${backendUrl}/api/users/${userToDelete.id}`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+        headers: { 'Authorization': `Bearer ${token}` },
       });
 
       if (!response.ok) {
@@ -411,131 +391,57 @@ function UsersManagementPage() {
     }
   };
 
-  // Animation variants for Framer Motion
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
-  };
+  const containerVariants = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.1 } } };
+  const itemVariants = { hidden: { y: 20, opacity: 0 }, visible: { y: 0, opacity: 1 } };
 
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: { y: 0, opacity: 1 },
-  };
+  if (authLoading) return <div className="flex justify-center items-center h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300 text-lg text-gray-700 dark:text-gray-300">Loading authentication...</div>;
+  if (!isAuthenticated || user?.role !== 'admin') return <div className="flex justify-center items-center h-screen bg-red-50 dark:bg-red-900 transition-colors duration-300 text-lg text-red-700 dark:text-red-100">Unauthorized Access. Only administrators can view this page.</div>;
 
-  if (authLoading) {
-    return (
-      <div className="flex justify-center items-center h-screen bg-gray-50">
-        <div className="text-lg text-gray-700">Loading authentication...</div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated || user.role !== 'admin') {
-    return (
-      <div className="flex justify-center items-center h-screen bg-red-50">
-        <div className="text-lg text-red-700">Unauthorized Access. Only administrators can view this page.</div>
-      </div>
-    );
-  }
-
-  // Pagination logic (if needed for larger datasets, currently not fully implemented with API pagination)
   const indexOfLastUser = currentPage * usersPerPage;
   const indexOfFirstUser = indexOfLastUser - usersPerPage;
   const currentUsers = users.slice(indexOfFirstUser, indexOfLastUser);
-
-  const paginate = (pageNumber) => setCurrentPage(pageNumber);
-
+  const totalPages = Math.ceil(users.length / usersPerPage);
 
   return (
     <motion.div
-      className="container mx-auto p-6 bg-gray-50 min-h-screen"
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
+      className="container mx-auto p-6 bg-gray-50 min-h-screen dark:bg-gray-900 transition-colors duration-300"
+      variants={containerVariants} initial="hidden" animate="visible"
     >
-      <AnimatePresence>
-        {notification.message && (
-          <Notification
-            message={notification.message}
-            type={notification.type}
-            onClose={() => setNotification({ message: null, type: null })}
-          />
-        )}
-      </AnimatePresence>
+      <AnimatePresence>{notification.message && <Notification {...notification} onClose={() => setNotification({ message: null, type: null })} />}</AnimatePresence>
 
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">User Management</h1>
-        {user && ['admin'].includes(user.role) && (
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={handleAddUserClick}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-5 rounded-lg shadow-md transition duration-300 flex items-center space-x-2"
-          >
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path>
-            </svg>
+        <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 transition-colors duration-300">User Management</h1>
+        {user?.role === 'admin' && (
+          <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => openUserFormModal()} className={`${BUTTON_BLUE_CLASSES} flex items-center space-x-2`}>
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
             <span>Add New User</span>
           </motion.button>
         )}
       </div>
 
-      {/* Filter and Search Section */}
-      <motion.div
-        className="bg-white shadow-lg rounded-lg p-4 mb-6 grid grid-cols-1 md:grid-cols-3 gap-4"
-        variants={itemVariants}
-      >
-        <div>
-          <label htmlFor="search" className="block text-sm font-medium text-gray-700">Search by Name/Username:</label>
-          <input
-            type="text"
-            id="search"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search users..."
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-800"
-          />
-        </div>
-        <div>
-          <label htmlFor="filterRole" className="block text-sm font-medium text-gray-700">Filter by Role:</label>
-          <select
-            id="filterRole"
-            value={filterRole}
-            onChange={(e) => setFilterRole(e.target.value)}
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-800"
-          >
-            <option value="">All Roles</option>
-            <option value="admin">Admin</option>
-            <option value="doctor">Doctor</option>
-            <option value="receptionist">Receptionist</option>
-            <option value="nurse">Nurse</option>
-            {/* Add other roles as needed */}
-          </select>
-        </div>
-        {/* Potentially add more filters here */}
+      <motion.div className="bg-white shadow-lg rounded-lg p-4 mb-6 grid grid-cols-1 md:grid-cols-3 gap-4 dark:bg-gray-800 dark:shadow-xl transition-colors duration-300" variants={itemVariants}>
+        <FormField label="Search by Name/Username:" id="search" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Search users..." />
+        <FormField label="Filter by Role:" id="filterRole" name="filterRole" type="select" value={filterRole} onChange={(e) => setFilterRole(e.target.value)}>
+          <option value="">All Roles</option>
+          <option value="admin">Admin</option>
+          <option value="doctor">Doctor</option>
+          <option value="receptionist">Receptionist</option>
+          <option value="nurse">Nurse</option>
+        </FormField>
       </motion.div>
 
-
-      <motion.div
-        className="bg-white shadow-lg rounded-lg overflow-hidden"
-        variants={itemVariants}
-      >
+      <motion.div className="bg-white shadow-lg rounded-lg overflow-hidden dark:bg-gray-800 dark:shadow-xl transition-colors duration-300" variants={itemVariants}>
         {loading ? (
-          <p className="p-6 text-center text-gray-500">Loading users...</p>
+          <p className="p-6 text-center text-gray-500 dark:text-gray-400">Loading users...</p>
         ) : error ? (
-          <p className="p-6 text-center text-red-500">{error}</p>
+          <p className="p-6 text-center text-red-500 dark:text-red-400">{error}</p>
         ) : users.length === 0 ? (
-          <p className="p-6 text-center text-gray-500">No users found.</p>
+          <p className="p-6 text-center text-gray-500 dark:text-gray-400">No users found.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full leading-normal">
               <thead>
-                <tr className="bg-gray-100 border-b border-gray-200 text-gray-600 uppercase text-sm">
+                <tr className="bg-gray-100 border-b border-gray-200 text-gray-600 uppercase text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 transition-colors duration-300">
                   <th className="px-5 py-3 text-left">User</th>
                   <th className="px-5 py-3 text-left">Full Name</th>
                   <th className="px-5 py-3 text-left">Role</th>
@@ -548,71 +454,37 @@ function UsersManagementPage() {
               <tbody>
                 <AnimatePresence>
                   {currentUsers.map((u) => (
-                    <motion.tr
-                      key={u.id}
-                      className="hover:bg-gray-50 border-b border-gray-100"
-                      variants={itemVariants}
-                      initial="hidden"
-                      animate="visible"
-                      exit="hidden"
-                    >
-                      <td className="px-5 py-4 text-sm text-gray-900 flex items-center">
-                        {getUserAvatar(u)}
-                        {u.username}
-                      </td>
-                      <td className="px-5 py-4 text-sm text-gray-900">{`${u.first_name || ''} ${u.last_name || ''}`}</td>
-                      <td className="px-5 py-4 text-sm text-gray-900 capitalize">{u.role}</td>
-                      <td className="px-5 py-4 text-sm text-gray-900">{u.email}</td>
+                    <motion.tr key={u.id} className="hover:bg-gray-50 border-b border-gray-100 dark:hover:bg-gray-700 dark:border-gray-700 transition-colors duration-300" variants={itemVariants} initial="hidden" animate="visible" exit="hidden">
+                      <td className="px-5 py-4 text-sm text-gray-900 dark:text-gray-100 flex items-center transition-colors duration-300">{getUserAvatar(u)}{u.username}</td>
+                      <td className="px-5 py-4 text-sm text-gray-900 dark:text-gray-100 transition-colors duration-300">{`${u.first_name || ''} ${u.last_name || ''}`}</td>
+                      <td className="px-5 py-4 text-sm text-gray-900 dark:text-gray-100 capitalize transition-colors duration-300">{u.role}</td>
+                      <td className="px-5 py-4 text-sm text-gray-900 dark:text-gray-100 transition-colors duration-300">{u.email}</td>
                       <td className="px-5 py-4 text-sm">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${u.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${u.is_active ? 'bg-green-100 text-green-800 dark:bg-green-700 dark:text-green-100' : 'bg-red-100 text-red-800 dark:bg-red-700 dark:text-red-100'} transition-colors duration-300`}>
                           {u.is_active ? 'Active' : 'Inactive'}
                         </span>
                       </td>
-                      <td className="px-5 py-4 text-sm text-gray-900">
+                      <td className="px-5 py-4 text-sm text-gray-900 dark:text-gray-100 transition-colors duration-300">
                         {u.last_login ? new Date(u.last_login).toLocaleString() : 'N/A'}
                       </td>
                       <td className="px-5 py-4 text-sm">
                         <div className="flex items-center space-x-3">
-                          <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => handleEditUserClick(u)}
-                            className="text-blue-600 hover:text-blue-800"
-                            title="Edit User"
-                          >
-                            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.536L15.232 5.232z"></path>
-                            </svg>
+                          <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => openUserFormModal(u)} className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200 transition-colors duration-300" title="Edit User">
+                            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.536L15.232 5.232z"></path></svg>
                           </motion.button>
-                          {user && user.id !== u.id && ( // Prevent admin from deleting themselves
+                          {user && user.id !== u.id && (
                             <>
-                              <motion.button
-                                whileHover={{ scale: 1.1 }}
-                                whileTap={{ scale: 0.9 }}
-                                onClick={() => handleDeleteClick(u)}
-                                className="text-red-600 hover:text-red-800"
-                                title="Delete User"
-                              >
-                                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                </svg>
+                              <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleDeleteClick(u)} className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200 transition-colors duration-300" title="Delete User">
+                                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                               </motion.button>
-                              <motion.button
-                                whileHover={{ scale: 1.1 }}
-                                whileTap={{ scale: 0.9 }}
-                                onClick={() => handleToggleStatus(u.id, u.is_active)}
-                                className={`text-sm py-1 px-2 rounded ${u.is_active ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' : 'bg-green-100 text-green-800 hover:bg-green-200'}`}
-                                title={u.is_active ? "Deactivate User" : "Activate User"}
-                              >
+                              <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleToggleStatus(u.id, u.is_active)}
+                                className={`text-sm py-1 px-2 rounded ${u.is_active ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200 dark:bg-yellow-700 dark:text-yellow-100 dark:hover:bg-yellow-600' : 'bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-700 dark:text-green-100 dark:hover:bg-green-600'} transition-colors duration-300`}
+                                title={u.is_active ? "Deactivate User" : "Activate User"}>
                                 {u.is_active ? 'Deactivate' : 'Activate'}
                               </motion.button>
-                              <motion.button
-                                whileHover={{ scale: 1.1 }}
-                                whileTap={{ scale: 0.9 }}
-                                onClick={() => handleResetPassword(u.id)}
-                                className="text-purple-600 hover:text-purple-800 text-sm py-1 px-2 rounded bg-purple-100 hover:bg-purple-200"
-                                title="Reset Password"
-                              >
+                              <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleResetPassword(u.id)}
+                                className="text-purple-600 hover:text-purple-800 text-sm py-1 px-2 rounded bg-purple-100 hover:bg-purple-200 dark:bg-purple-700 dark:text-purple-100 dark:hover:bg-purple-600 transition-colors duration-300"
+                                title="Reset Password">
                                 Reset Pass
                               </motion.button>
                             </>
@@ -628,20 +500,13 @@ function UsersManagementPage() {
         )}
       </motion.div>
 
-      {/* Pagination Controls (Placeholder - adjust based on actual API pagination) */}
-      {users.length > usersPerPage && (
+      {totalPages > 1 && (
         <div className="flex justify-center mt-6">
           <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-            {Array.from({ length: Math.ceil(users.length / usersPerPage) }, (_, i) => (
-              <button
-                key={i + 1}
-                onClick={() => paginate(i + 1)}
-                className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium
-                  ${currentPage === i + 1
-                    ? 'bg-blue-600 border-blue-600 text-white'
-                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-                  } rounded-md`}
-              >
+            {Array.from({ length: totalPages }, (_, i) => (
+              <button key={i + 1} onClick={() => setCurrentPage(i + 1)}
+                className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium rounded-md transition-colors duration-300
+                  ${currentPage === i + 1 ? 'bg-blue-600 border-blue-600 text-white dark:bg-blue-700 dark:border-blue-700 dark:text-gray-100' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-600'}`}>
                 {i + 1}
               </button>
             ))}
@@ -649,187 +514,41 @@ function UsersManagementPage() {
         </div>
       )}
 
-
-      {/* User Add/Edit Modal */}
-      <Modal
-        isOpen={showUserFormModal}
-        onClose={() => { setShowUserFormModal(false); setEditingUser(null); resetFormData(); setNotification({ message: null, type: null }); }}
-        title={editingUser ? 'Edit User' : 'Add New User'}
-      >
+      <Modal isOpen={showUserFormModal} onClose={closeUserFormModal} title={editingUser ? 'Edit User' : 'Add New User'}>
         <form onSubmit={handleSubmit} className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-          <div>
-            <label className='block text-sm font-medium text-gray-700 mb-1' htmlFor='username'>Username</label>
-            <input
-              type='text'
-              id='username'
-              name='username'
-              value={formData.username}
-              onChange={handleInputChange}
-              className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-800'
-              required
-              disabled={!!editingUser} // Username should not be editable when editing
-            />
-          </div>
-
-          {!editingUser && ( // Only show password fields for new user creation
+          <FormField label='Username' id='username' name='username' value={formData.username} onChange={handleInputChange} required disabled={!!editingUser} />
+          {!editingUser && (
             <>
-              <div>
-                <label className='block text-sm font-medium text-gray-700 mb-1' htmlFor='password'>Password</label>
-                <input
-                  type='password'
-                  id='password'
-                  name='password'
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-800'
-                  required={!editingUser}
-                />
-              </div>
-              <div>
-                <label className='block text-sm font-medium text-gray-700 mb-1' htmlFor='confirmPassword'>Confirm Password</label>
-                <input
-                  type='password'
-                  id='confirmPassword'
-                  name='confirmPassword'
-                  value={formData.confirmPassword}
-                  onChange={handleInputChange}
-                  className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-800'
-                  required={!editingUser}
-                />
-              </div>
+              <FormField label='Password' id='password' name='password' type='password' value={formData.password} onChange={handleInputChange} required={!editingUser} />
+              <FormField label='Confirm Password' id='confirmPassword' name='confirmPassword' type='password' value={formData.confirmPassword} onChange={handleInputChange} required={!editingUser} />
             </>
           )}
-
-          <div>
-            <label className='block text-sm font-medium text-gray-700 mb-1' htmlFor='role'>Role</label>
-            <select
-              id='role'
-              name='role'
-              value={formData.role}
-              onChange={handleInputChange}
-              className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-transparent text-gray-800 transition duration-200 ease-in-out'
-              required
-            >
-              <option value='admin'>Admin</option>
-              <option value='doctor'>Doctor</option>
-              {/* Removed <option value='patient'>Patient</option> */}
-              <option value='receptionist'>Receptionist</option>
-              <option value='nurse'>Nurse</option>
-            </select>
-          </div>
-
-          <div>
-            <label className='block text-sm font-medium text-gray-700 mb-1' htmlFor='first_name'>First Name</label>
-            <input
-              type='text'
-              id='first_name'
-              name='first_name'
-              value={formData.first_name}
-              onChange={handleInputChange}
-              className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-800'
-            />
-          </div>
-          <div>
-            <label className='block text-sm font-medium text-gray-700 mb-1' htmlFor='last_name'>Last Name</label>
-            <input
-              type='text'
-              id='last_name'
-              name='last_name'
-              value={formData.last_name}
-              onChange={handleInputChange}
-              className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-800'
-            />
-          </div>
-          <div>
-            <label className='block text-sm font-medium text-gray-700 mb-1' htmlFor='email'>Email</label>
-            <input
-              type='email'
-              id='email'
-              name='email'
-              value={formData.email}
-              onChange={handleInputChange}
-              className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-800'
-              required
-            />
-          </div>
-          <div>
-            <label className='block text-sm font-medium text-gray-700 mb-1' htmlFor='phone_number'>Phone Number</label>
-            <input
-              type='text'
-              id='phone_number'
-              name='phone_number'
-              value={formData.phone_number}
-              onChange={handleInputChange}
-              className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-800'
-            />
-          </div>
-          <div className='md:col-span-2'>
-            <label className='block text-sm font-medium text-gray-700 mb-1' htmlFor='address'>Address</label>
-            <input
-              type='text'
-              id='address'
-              name='address'
-              value={formData.address}
-              onChange={handleInputChange}
-              className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-800'
-            />
-          </div>
-          <div>
-            <label className='block text-sm font-medium text-gray-700 mb-1' htmlFor='date_of_birth'>Date of Birth</label>
-            <input
-              type='date'
-              id='date_of_birth'
-              name='date_of_birth'
-              value={formData.date_of_birth}
-              onChange={handleInputChange}
-              className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-800'
-            />
-          </div>
-          <div>
-            <label className='block text-sm font-medium text-gray-700 mb-1' htmlFor='gender'>Gender</label>
-            <select
-              id='gender'
-              name='gender'
-              value={formData.gender}
-              onChange={handleInputChange}
-              className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-transparent text-gray-800 transition duration-200 ease-in-out'
-            >
-              <option value=''>Select Gender</option>
-              <option value='Male'>Male</option>
-              <option value='Female'>Female</option>
-              <option value='Other'>Other</option>
-            </select>
-          </div>
-
+          <FormField label='Role' id='role' name='role' type='select' value={formData.role} onChange={handleInputChange} required>
+            <option value='admin'>Admin</option>
+            <option value='doctor'>Doctor</option>
+            <option value='receptionist'>Receptionist</option>
+            <option value='nurse'>Nurse</option>
+            <option value='guest'>Guest</option>
+          </FormField>
+          <FormField label='First Name' id='first_name' name='first_name' value={formData.first_name} onChange={handleInputChange} />
+          <FormField label='Last Name' id='last_name' name='last_name' value={formData.last_name} onChange={handleInputChange} />
+          <FormField label='Email' id='email' name='email' type='email' value={formData.email} onChange={handleInputChange} required />
+          <FormField label='Phone Number' id='phone_number' name='phone_number' value={formData.phone_number} onChange={handleInputChange} />
+          <FormField label='Address' id='address' name='address' value={formData.address} onChange={handleInputChange} className='md:col-span-2' />
+          <FormField label='Date of Birth' id='date_of_birth' name='date_of_birth' type='date' value={formData.date_of_birth} onChange={handleInputChange} />
+          <FormField label='Gender' id='gender' name='gender' type='select' value={formData.gender} onChange={handleInputChange}>
+            <option value=''>Select Gender</option>
+            <option value='Male'>Male</option>
+            <option value='Female'>Female</option>
+            <option value='Other'>Other</option>
+          </FormField>
           {formData.role === 'doctor' && (
-            <div>
-              <label className='block text-sm font-medium text-gray-700 mb-1' htmlFor='specialization'>Specialization</label>
-              <input
-                type='text'
-                id='specialization'
-                name='specialization'
-                value={formData.specialization}
-                onChange={handleInputChange}
-                className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-800'
-                required={formData.role === 'doctor'}
-              />
-            </div>
+            <FormField label='Specialization' id='specialization' name='specialization' value={formData.specialization} onChange={handleInputChange} required={formData.role === 'doctor'} />
           )}
 
           <div className='col-span-1 md:col-span-2 flex justify-end items-center gap-4 mt-4'>
-            <button
-              type='button'
-              onClick={() => { setShowUserFormModal(false); setEditingUser(null); resetFormData(); setNotification({ message: null, type: null }); }}
-              className='bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-5 rounded-lg shadow-md transition duration-300'
-            >
-              Cancel
-            </button>
-            <button
-              type='submit'
-              className='bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-5 rounded-lg shadow-md transition duration-300'
-            >
-              {editingUser ? 'Update User' : 'Add User'}
-            </button>
+            <button type='button' onClick={closeUserFormModal} className={BUTTON_GRAY_CLASSES}>Cancel</button>
+            <button type='submit' className={BUTTON_GREEN_CLASSES}>{editingUser ? 'Update User' : 'Add User'}</button>
           </div>
         </form>
       </Modal>

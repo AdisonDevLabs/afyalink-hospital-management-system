@@ -1,11 +1,8 @@
-// backend/src/controllers/medicationController.js
-
 const pool = require('../config/db');
 
-// --- Get medications due for a specific nurse ---
 exports.getDueMedications = async (req, res) => {
   const nurse_id = req.user.id;
-  const { status } = req.query; // Expecting status='due_now' or similar
+  const { status } = req.query;
 
   if (!nurse_id) {
     return res.status(400).json({ message: 'Nurse ID is required.' });
@@ -20,9 +17,9 @@ exports.getDueMedications = async (req, res) => {
         p.last_name AS patient_last_name,
         m.medication_name,
         m.dosage AS dose,
-        'mg' AS unit, -- Placeholder, add 'unit' column to medications table if needed
-        'Daily' AS frequency, -- Placeholder, add 'frequency' column if needed
-        m.administration_time AS due_time, -- Assuming administration_time is the due_time
+        'mg' AS unit,
+        'Daily' AS frequency,
+        m.administration_time AS due_time,
         m.status,
         m.notes
       FROM medications m
@@ -35,28 +32,26 @@ exports.getDueMedications = async (req, res) => {
     if (status) {
       query += ` AND m.status = $${paramIndex++}`;
       queryParams.push(status);
-    } else {
+    } 
+    else {
       query += ` AND m.status IN ('scheduled', 'due')`;
     }
 
     query += ` ORDER BY m.administration_time ASC`;
 
     const medications = await pool.query(query, queryParams);
-
     const formattedMedications = medications.rows.map(med => ({
       ...med,
       patient_name: `${med.patient_first_name} ${med.patient_last_name}`
     }));
-
     res.status(200).json({ medications: formattedMedications });
-
-  } catch (error) {
+  } 
+  catch (error) {
     console.error('Error fetching due medications:', error.stack);
     res.status(500).json({ message: 'Server error when fetching due medications.' });
   }
 };
 
-// --- Get count of medications administered by a specific nurse today ---
 exports.getAdministeredMedicationsCount = async (req, res) => {
   const nurse_id = req.user.id;
   const { date } = req.query;
@@ -64,6 +59,7 @@ exports.getAdministeredMedicationsCount = async (req, res) => {
   if (!nurse_id) {
     return res.status(400).json({ message: 'Nurse ID is required.' });
   }
+
   if (!date) {
     return res.status(400).json({ message: 'Date is required for administered count.' });
   }
@@ -83,16 +79,14 @@ exports.getAdministeredMedicationsCount = async (req, res) => {
         AND administration_time <= $3;
     `;
     const result = await pool.query(query, [nurse_id, startOfDay.toISOString(), endOfDay.toISOString()]);
-
     res.status(200).json({ count: parseInt(result.rows[0].count, 10) });
-
-  } catch (error) {
+  } 
+  catch (error) {
     console.error('Error fetching administered medications count:', error.stack);
     res.status(500).json({ message: 'Server error when fetching administered medications count.' });
   }
 };
 
-// --- Mark a medication as administered ---
 exports.markMedicationAsAdministered = async (req, res) => {
   const { medicationId } = req.params;
   const nurse_id = req.user.id;
@@ -100,6 +94,7 @@ exports.markMedicationAsAdministered = async (req, res) => {
   if (!medicationId) {
     return res.status(400).json({ message: 'Medication ID is required.' });
   }
+
   if (!nurse_id) {
     return res.status(401).json({ message: 'Unauthorized: Nurse ID not found.' });
   }
@@ -120,13 +115,12 @@ exports.markMedicationAsAdministered = async (req, res) => {
         message: 'Medication not found, already administered, or not assigned to this nurse.'
       });
     }
-
     res.status(200).json({
       message: 'Medication marked as administered successfully.',
       medication: result.rows[0]
     });
-
-  } catch (error) {
+  } 
+  catch (error) {
     console.error('Error marking medication as administered:', error.stack);
     res.status(500).json({ message: 'Server error when marking medication as administered.' });
   }

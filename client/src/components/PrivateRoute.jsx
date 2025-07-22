@@ -1,5 +1,3 @@
-// frontend/src/components/PrivateRoute.jsx
-
 import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -20,7 +18,6 @@ const PrivateRoute = ({ allowedRoles }) => {
     return <Navigate to="/login" replace />;
   }
 
-  // If authenticated but user object not fully loaded or role not available yet
   if (!user || !user.role) {
     console.warn('PrivateRoute: Authenticated, but user object or role not yet available. Waiting for user data...');
     return (
@@ -30,13 +27,12 @@ const PrivateRoute = ({ allowedRoles }) => {
     );
   }
 
-  // Check if the user's role is allowed for this protected section
   if (allowedRoles && user.role && !allowedRoles.includes(user.role)) {
     console.warn(`Access Denied: User role '${user.role}' not allowed for this route. Redirecting to dashboard.`);
-    return <Navigate to="/dashboard" replace />; // Redirect to dashboard or a specific "access denied" page
+    console.log('allowedRoles:', allowedRoles, 'user.role:', user.role);
+    return <Navigate to="/dashboard" replace />;
   }
 
-  // If authenticated and authorized, render the nested route
   return <Outlet />;
 };
 

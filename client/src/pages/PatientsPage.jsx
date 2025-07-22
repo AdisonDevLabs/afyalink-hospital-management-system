@@ -1,6 +1,6 @@
 // frontend/src/pages/PatientsPage.jsx
 
-import React, { useState, useEffect, useCallback, useRef } from 'react'; // Added useRef
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -23,14 +23,14 @@ const modalVariants = {
   exit: { opacity: 0, scale: 0.9, transition: { duration: 0.15, ease: "easeIn" } },
 };
 
-// --- Reusable Notification Component ---
+// --- Reusable Notification Component (no change, as it's already optimized) ---
 const Notification = ({ message, type, onClose }) => {
   if (!message) return null;
 
-  const bgColor = type === 'success' ? 'bg-green-100' : 'bg-red-100';
-  const borderColor = type === 'success' ? 'border-green-400' : 'border-red-400';
-  const textColor = type === 'success' ? 'text-green-700' : 'text-red-700';
-  const iconColor = type === 'success' ? 'text-green-500' : 'text-red-500';
+  const bgColor = type === 'success' ? 'bg-green-100 dark:bg-green-900' : 'bg-red-100 dark:bg-red-900';
+  const borderColor = type === 'success' ? 'border-green-400 dark:border-green-700' : 'border-red-400 dark:border-red-700';
+  const textColor = type === 'success' ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300';
+  const iconColor = type === 'success' ? 'text-green-500 dark:text-green-400' : 'text-red-500 dark:text-red-400';
 
   return (
     <motion.div
@@ -38,7 +38,7 @@ const Notification = ({ message, type, onClose }) => {
       animate={{ opacity: 1, y: 0, x: "-50%" }}
       exit={{ opacity: 0, y: -50, x: "-50%" }}
       transition={{ duration: 0.3 }}
-      className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 p-4 rounded-lg shadow-lg flex items-center space-x-3 
+      className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 p-4 rounded-lg shadow-lg dark:shadow-none flex items-center space-x-3 
                   ${bgColor} ${borderColor} ${textColor} border-l-4`}
       role="alert"
     >
@@ -48,14 +48,14 @@ const Notification = ({ message, type, onClose }) => {
         <svg className={`h-6 w-6 ${iconColor}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2A9 9 0 111 10a9 9 0 0118 0z"></path></svg>
       )}
       <span className="font-medium">{message}</span>
-      <button onClick={onClose} className={`absolute top-1 right-1 ${iconColor} hover:text-gray-900`}>
+      <button onClick={onClose} className={`absolute top-1 right-1 ${iconColor} hover:text-gray-900 dark:hover:text-gray-100`}>
         <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
       </button>
     </motion.div>
   );
 };
 
-// --- Simple Modal Component ---
+// --- Simple Modal Component (no change, as it's already optimized) ---
 const Modal = ({ isOpen, onClose, children, title }) => {
   return (
     <AnimatePresence>
@@ -71,13 +71,13 @@ const Modal = ({ isOpen, onClose, children, title }) => {
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="bg-white rounded-lg shadow-2xl w-full max-w-2xl transform sm:my-8 sm:align-middle sm:w-full"
+            className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl dark:shadow-none w-full max-w-2xl transform sm:my-8 sm:align-middle sm:w-full"
           >
-            <div className="flex justify-between items-center p-5 border-b border-gray-200 bg-gray-50 rounded-t-lg">
-              <h3 className="text-2xl font-semibold text-gray-800">{title}</h3>
+            <div className="flex justify-between items-center p-5 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 rounded-t-lg">
+              <h3 className="text-2xl font-semibold text-gray-800 dark:text-gray-100">{title}</h3>
               <button
                 onClick={onClose}
-                className="text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-300 rounded-md p-1"
+                className="text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-gray-600 rounded-md p-1 dark:text-gray-300 dark:hover:text-gray-100"
                 aria-label="Close modal"
               >
                 <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -93,13 +93,13 @@ const Modal = ({ isOpen, onClose, children, title }) => {
   );
 };
 
-// --- Delete Confirmation Modal ---
+// --- Delete Confirmation Modal (no change, as it's already optimized) ---
 const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, patientName }) => {
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Confirm Deletion">
       <div className="text-center p-5">
-        <svg className="mx-auto mb-4 h-16 w-16 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-        <h3 className="mb-5 text-lg font-normal text-gray-700">
+        <svg className="mx-auto mb-4 h-16 w-16 text-red-500 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+        <h3 className="mb-5 text-lg font-normal text-gray-700 dark:text-gray-300">
           Are you sure you want to delete the record for <span className="font-semibold">{patientName}</span>?
           This action cannot be undone.
         </h3>
@@ -116,7 +116,7 @@ const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, patientName }) =>
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={onClose}
-            className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-5 rounded-lg shadow-md transition duration-300"
+            className="bg-gray-300 hover:bg-gray-400 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-semibold py-2 px-5 rounded-lg shadow-md transition duration-300"
           >
             No, cancel
           </motion.button>
@@ -126,89 +126,140 @@ const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, patientName }) =>
   );
 };
 
+// --- Extracted Form Components for Reusability ---
+const FormInput = ({ label, id, type = 'text', value, onChange, placeholder, required = false, className = '', ...props }) => (
+  <div>
+    <label htmlFor={id} className='block text-gray-700 text-sm font-medium mb-1 dark:text-gray-300'>
+      {label} {required && <span className="text-red-500">*</span>}:
+    </label>
+    <input
+      type={type}
+      id={id}
+      name={id}
+      value={value}
+      onChange={onChange}
+      className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 ${className}`}
+      placeholder={placeholder}
+      required={required}
+      {...props}
+    />
+  </div>
+);
+
+const FormSelect = ({ label, id, value, onChange, options, required = false, className = '', ...props }) => (
+  <div>
+    <label htmlFor={id} className='block text-gray-700 text-sm font-medium mb-1 dark:text-gray-300'>
+      {label} {required && <span className="text-red-500">*</span>}:
+    </label>
+    <select
+      id={id}
+      name={id}
+      value={value}
+      onChange={onChange}
+      className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 ${className}`}
+      required={required}
+      {...props}
+    >
+      {options.map(option => (
+        <option key={option.value} value={option.value}>{option.label}</option>
+      ))}
+    </select>
+  </div>
+);
+
+const FormTextArea = ({ label, id, value, onChange, placeholder, rows = '3', className = '', ...props }) => (
+  <div>
+    <label htmlFor={id} className='block text-gray-700 text-sm font-medium mb-1 dark:text-gray-300'>
+      {label}:
+    </label>
+    <textarea
+      id={id}
+      name={id}
+      value={value}
+      onChange={onChange}
+      rows={rows}
+      className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 ${className}`}
+      placeholder={placeholder}
+      {...props}
+    ></textarea>
+  </div>
+);
+
 
 const backendUrl = import.meta.env.VITE_BACKEND_URL;
-
-//${backendUrl}/api
 
 function PatientsPage() {
   const { token, isAuthenticated, user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+
   const [patients, setPatients] = useState([]);
   const [pageLoading, setPageLoading] = useState(true);
   const [notification, setNotification] = useState({ message: null, type: null });
-  const [showPatientFormModal, setShowPatientFormModal] = useState(false);
-  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
-  const [patientToDelete, setPatientToDelete] = useState(null); // Stores patient ID for deletion
-  const [editingPatient, setEditingPatient] = useState(null);
+  const [modalState, setModalState] = useState({
+    showPatientForm: false,
+    showDeleteConfirm: false,
+    patientToDelete: null,
+    editingPatient: null,
+  });
   const [searchTerm, setSearchTerm] = useState('');
-  const fileInputRef = useRef(null); // Ref for file input
+  const fileInputRef = useRef(null);
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
-  const [patientsPerPage] = useState(10); // Number of patients per page
+  const [patientsPerPage] = useState(10);
 
   const [formData, setFormData] = useState({
     first_name: '', last_name: '', date_of_birth: '', gender: '',
-    national_id: '', contact_phone: '', email: '', address: '', // Existing fields
-    emergency_contact_name: '', // New
-    emergency_contact_phone: '', // New
-    emergency_contact_relationship: '', // New
-    allergies: '', // New, comma-separated string
-    conditions: '', // New, comma-separated string
-    photo_id_file: null, // New, for file upload
-    photo_id_url: '' // New, to display existing photo
+    national_id: '', contact_phone: '', email: '', address: '',
+    emergency_contact_name: '', emergency_contact_phone: '',
+    emergency_contact_relationship: '', allergies: '', conditions: '',
+    photo_id_file: null, photo_id_url: ''
   });
-  const [photoPreviewUrl, setPhotoPreviewUrl] = useState(''); // State for image preview
+  const [photoPreviewUrl, setPhotoPreviewUrl] = useState('');
 
   const showNotification = useCallback((message, type) => {
     setNotification({ message, type });
     setTimeout(() => {
       setNotification({ message: null, type: null });
-    }, 5000); // Notification disappears after 5 seconds
+    }, 5000);
   }, []);
 
-const fetchPatients = useCallback(async () => {
-  setPageLoading(true);
-  setNotification({ message: null, type: null });
+  const fetchPatients = useCallback(async () => {
+    setPageLoading(true);
+    setNotification({ message: null, type: null });
 
-  try {
-    const response = await fetch(`${backendUrl}/api/patients`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
+    try {
+      const response = await fetch(`${backendUrl}/api/patients`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
 
-    if (!response.ok) {
-      const errData = await response.json();
-      throw new Error(errData.message || 'Failed to fetch patients.');
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.message || 'Failed to fetch patients.');
+      }
+      const data = await response.json();
+
+      if (data && Array.isArray(data.patients)) {
+        setPatients(data.patients);
+      } else {
+        console.error('API response for patients is not an array or malformed:', data);
+        throw new Error('Received invalid data format from server.');
+      }
+
+    } catch (err) {
+      console.error('Error fetching patients:', err);
+      showNotification(err.message || 'Failed to load patients.', 'error');
+    } finally {
+      setPageLoading(false);
     }
-    const data = await response.json();
-
-    // ⭐ MODIFICATION: Check if the received data has a 'patients' array
-    if (data && Array.isArray(data.patients)) {
-      setPatients(data.patients);
-    } else {
-      console.error('API response for patients is not an array or malformed:', data);
-      throw new Error('Received invalid data format from server.');
-    }
-
-  } catch (err) {
-    console.error('Error fetching patients:', err);
-    showNotification(err.message || 'Failed to load patients.', 'error');
-  } finally {
-    setPageLoading(false);
-  }
-}, [token, showNotification]);
+  }, [token, showNotification]);
 
   useEffect(() => {
-    if (authLoading) {
-      return;
-    }
-
+    if (authLoading) return;
     if (!isAuthenticated || !token) {
       navigate('/login');
       return;
     }
-
     fetchPatients();
   }, [isAuthenticated, token, authLoading, navigate, fetchPatients]);
 
@@ -216,86 +267,88 @@ const fetchPatients = useCallback(async () => {
     const { name, value, type, files } = e.target;
     if (type === 'file') {
       const file = files[0];
-      setFormData({ ...formData, [name]: file });
-      if (file) {
-        setPhotoPreviewUrl(URL.createObjectURL(file));
-      } else {
-        setPhotoPreviewUrl('');
-      }
+      setFormData(prev => ({ ...prev, [name]: file }));
+      setPhotoPreviewUrl(file ? URL.createObjectURL(file) : '');
     } else {
-      setFormData({ ...formData, [name]: value });
+      setFormData(prev => ({ ...prev, [name]: value }));
     }
   };
+
+  const resetFormData = useCallback(() => {
+    setFormData({
+      first_name: '', last_name: '', date_of_birth: '', gender: '',
+      national_id: '', contact_phone: '', email: '', address: '',
+      emergency_contact_name: '', emergency_contact_phone: '',
+      emergency_contact_relationship: '', allergies: '', conditions: '',
+      photo_id_file: null, photo_id_url: ''
+    });
+    setPhotoPreviewUrl('');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  }, []);
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     setNotification({ message: null, type: null });
 
-    // Basic client-side validation
-    if (!formData.first_name || !formData.last_name || !formData.date_of_birth || !formData.gender || !formData.contact_phone) {
+    const { first_name, last_name, date_of_birth, gender, contact_phone } = formData;
+    if (!first_name || !last_name || !date_of_birth || !gender || !contact_phone) {
       setNotification({ message: 'Please fill in all required fields: First Name, Last Name, Date of Birth, Gender, Contact Phone.', type: 'error' });
       return;
     }
 
-    try {
-      const url = editingPatient ? `${backendUrl}/api/patients/${editingPatient.id}` : `${backendUrl}/api/patients`;
-      const method = editingPatient ? 'PUT' : 'POST';
+    const isEditing = !!modalState.editingPatient;
+    const url = isEditing ? `${backendUrl}/api/patients/${modalState.editingPatient.id}` : `${backendUrl}/api/patients`;
+    const method = isEditing ? 'PUT' : 'POST';
 
+    try {
       let body;
       let headers = { 'Authorization': `Bearer ${token}` };
 
-      // If a file is being uploaded, use FormData
       if (formData.photo_id_file) {
         body = new FormData();
         for (const key in formData) {
-          if (formData[key] !== null && key !== 'photo_id_url') { // Don't send photo_id_url if it's already on patient object
+          if (formData[key] !== null && key !== 'photo_id_url') {
             body.append(key, formData[key]);
           }
         }
-        // When FormData is used, Content-Type header is automatically set by the browser to multipart/form-data with the correct boundary
-        // Do NOT manually set 'Content-Type': 'multipart/form-data' here, as it will break the boundary
       } else {
         body = JSON.stringify(formData);
         headers['Content-Type'] = 'application/json';
       }
 
-      const response = await fetch(url, {
-        method: method,
-        headers: headers,
-        body: body
-      });
+      const response = await fetch(url, { method, headers, body });
 
       if (!response.ok) {
         const errData = await response.json();
-        throw new Error(errData.message || `Failed to ${editingPatient ? 'update' : 'add'} patient.`);
+        throw new Error(errData.message || `Failed to ${isEditing ? 'update' : 'add'} patient.`);
       }
 
       await fetchPatients();
-      showNotification(`Patient ${editingPatient ? 'updated' : 'added'} successfully!`, 'success');
-      setShowPatientFormModal(false);
-      setEditingPatient(null);
+      showNotification(`Patient ${isEditing ? 'updated' : 'added'} successfully!`, 'success');
+      setModalState(prev => ({ ...prev, showPatientForm: false, editingPatient: null }));
       resetFormData();
 
     } catch (err) {
-      console.error(`Error ${editingPatient ? 'updating' : 'adding'} patient:`, err);
-      showNotification(err.message || `An error occurred while ${editingPatient ? 'updating' : 'adding'} the patient.`, 'error');
+      console.error(`Error ${isEditing ? 'updating' : 'adding'} patient:`, err);
+      showNotification(err.message || `An error occurred while ${isEditing ? 'updating' : 'adding'} the patient.`, 'error');
     }
   };
 
-  const handleDeleteClick = (patientId, patientName) => {
-    setPatientToDelete({ id: patientId, name: patientName });
-    setShowDeleteConfirmModal(true);
-  };
+  const handleDeleteClick = useCallback((patientId, patientName) => {
+    setModalState(prev => ({ ...prev, showDeleteConfirm: true, patientToDelete: { id: patientId, name: patientName } }));
+  }, []);
 
   const confirmDelete = async () => {
-    setShowDeleteConfirmModal(false); // Close confirmation modal
-    if (!patientToDelete) return; // Should not happen
+    setModalState(prev => ({ ...prev, showDeleteConfirm: false }));
+    if (!modalState.patientToDelete) return;
 
     setPageLoading(true);
     setNotification({ message: null, type: null });
 
     try {
-      const response = await fetch(`${backendUrl}/api/patients/${patientToDelete.id}`, {
+      const response = await fetch(`${backendUrl}/api/patients/${modalState.patientToDelete.id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -310,71 +363,48 @@ const fetchPatients = useCallback(async () => {
       showNotification(err.message || 'Failed to delete patient.', 'error');
     } finally {
       setPageLoading(false);
-      setPatientToDelete(null); // Clear patient to delete
+      setModalState(prev => ({ ...prev, patientToDelete: null }));
     }
   };
 
-  const handleEditClick = (patient) => {
-    setEditingPatient(patient);
+  const handleEditClick = useCallback((patient) => {
+    setModalState(prev => ({ ...prev, showPatientForm: true, editingPatient: patient }));
     setFormData({
       first_name: patient.first_name,
       last_name: patient.last_name,
-      date_of_birth: patient.date_of_birth ? patient.date_of_birth.split('T')[0] : '', // Format for date input
+      date_of_birth: patient.date_of_birth ? patient.date_of_birth.split('T')[0] : '',
       gender: patient.gender,
       national_id: patient.national_id || '',
       contact_phone: patient.contact_phone,
       email: patient.email || '',
       address: patient.address || '',
-      // New fields for editing
       emergency_contact_name: patient.emergency_contact_name || '',
       emergency_contact_phone: patient.emergency_contact_phone || '',
       emergency_contact_relationship: patient.emergency_contact_relationship || '',
-      allergies: Array.isArray(patient.allergies) ? patient.allergies.join(', ') : (patient.allergies || ''), // Join array to string for textarea
-      conditions: Array.isArray(patient.conditions) ? patient.conditions.join(', ') : (patient.conditions || ''), // Join array to string for textarea
-      photo_id_file: null, // Always null when opening for edit, user must re-upload
-      photo_id_url: patient.photo_id_url || '' // Display existing photo
-    });
-    setPhotoPreviewUrl(patient.photo_id_url || ''); // Set photo preview for existing photo
-    setShowPatientFormModal(true);
-  };
-
-  const resetFormData = () => {
-    setFormData({
-      first_name: '', last_name: '', date_of_birth: '', gender: '',
-      national_id: '', contact_phone: '', email: '', address: '',
-      emergency_contact_name: '',
-      emergency_contact_phone: '',
-      emergency_contact_relationship: '',
-      allergies: '',
-      conditions: '',
+      allergies: Array.isArray(patient.allergies) ? patient.allergies.join(', ') : (patient.allergies || ''),
+      conditions: Array.isArray(patient.conditions) ? patient.conditions.join(', ') : (patient.conditions || ''),
       photo_id_file: null,
-      photo_id_url: ''
+      photo_id_url: patient.photo_id_url || ''
     });
-    setPhotoPreviewUrl(''); // Clear photo preview
-    if (fileInputRef.current) {
-        fileInputRef.current.value = ''; // Clear file input value
-    }
-  };
+    setPhotoPreviewUrl(patient.photo_id_url || '');
+  }, []);
 
-  const handleAddPatientClick = () => {
-    setEditingPatient(null);
+  const handleAddPatientClick = useCallback(() => {
+    setModalState(prev => ({ ...prev, showPatientForm: true, editingPatient: null }));
     resetFormData();
-    setShowPatientFormModal(true);
-  };
+  }, [resetFormData]);
 
-  // Filter patients based on search term
   const filteredPatients = patients.filter(patient =>
-    patient.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    patient.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (patient.national_id && patient.national_id.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    patient.contact_phone.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    patient.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (patient.emergency_contact_name && patient.emergency_contact_name.toLowerCase().includes(searchTerm.toLowerCase())) || // New
-    (patient.allergies && patient.allergies.toLowerCase().includes(searchTerm.toLowerCase())) || // New
-    (patient.conditions && patient.conditions.toLowerCase().includes(searchTerm.toLowerCase())) // New
+    Object.values(patient).some(val =>
+      String(val).toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    // More specific filtering for readability if needed, but general is more concise
+    // patient.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    // patient.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    // (patient.national_id && patient.national_id.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    // etc.
   );
 
-  // Pagination Logic
   const indexOfLastPatient = currentPage * patientsPerPage;
   const indexOfFirstPatient = indexOfLastPatient - patientsPerPage;
   const currentPatients = filteredPatients.slice(indexOfFirstPatient, indexOfLastPatient);
@@ -382,20 +412,19 @@ const fetchPatients = useCallback(async () => {
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
-  // Permissions
+  // Permissions (no change, as they are role-based logic)
   const canManagePatients = user && (user.role === 'admin' || user.role === 'receptionist');
   const canViewClinicalNotes = user && (user.role === 'admin' || user.role === 'doctor' || user.role === 'nurse');
   const canViewAppointments = user && (user.role === 'admin' || user.role === 'receptionist' || user.role === 'doctor' || user.role === 'nurse');
   const canViewMedicalHistory = user && (user.role === 'admin' || user.role === 'doctor' || user.role === 'nurse');
 
-
   if (authLoading) return (
-    <div className='flex justify-center items-center h-screen bg-gray-100'>
+    <div className='flex justify-center items-center h-screen bg-gray-100 dark:bg-gray-900'>
       <svg className="animate-spin h-12 w-12 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
       </svg>
-      <div className='ml-3 text-xl text-gray-700'>Loading Patients Page...</div>
+      <div className='ml-3 text-xl text-gray-700 dark:text-gray-300'>Loading Patients Page...</div>
     </div>
   );
 
@@ -405,7 +434,7 @@ const fetchPatients = useCallback(async () => {
       initial="initial"
       animate="animate"
       exit="exit"
-      className='p-6 bg-gray-50 min-h-[calc(100vh-64px)]'
+      className='p-6 bg-gray-50 min-h-[calc(100vh-64px)] dark:bg-gray-900'
     >
       <AnimatePresence>
         {notification.message && (
@@ -418,7 +447,7 @@ const fetchPatients = useCallback(async () => {
       </AnimatePresence>
 
       <motion.h2
-        className='text-3xl font-extrabold text-gray-800 mb-6 pb-3 border-b-2 border-blue-200 flex items-center space-x-3'
+        className='text-3xl font-extrabold text-gray-800 mb-6 pb-3 border-b-2 border-blue-200 flex items-center space-x-3 dark:text-gray-200 dark:border-blue-700'
         initial={{ x: -50, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         transition={{ delay: 0.2, duration: 0.5 }}
@@ -429,27 +458,25 @@ const fetchPatients = useCallback(async () => {
 
       {/* Search and Add Patient Section */}
       <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-        {/* Search Input */}
         <motion.div
           className="w-full md:w-1/3 relative"
           initial={{ x: -50, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ delay: 0.3, duration: 0.5 }}
         >
-          <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-1">Search</label>
+          <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">Search</label>
           <input
             type="text"
             placeholder="Search by name, ID, phone, emergency contact, allergies, conditions..."
             value={searchTerm}
             onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-800"
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-800 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
           />
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            <svg className="h-5 w-5 text-gray-400 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
           </div>
         </motion.div>
 
-        {/* Add New Patient Button */}
         {canManagePatients && (
           <motion.button
             onClick={handleAddPatientClick}
@@ -466,105 +493,97 @@ const fetchPatients = useCallback(async () => {
         )}
       </div>
 
-      {/* Loading State */}
       {pageLoading ? (
         <div className="text-center py-10">
           <svg className="animate-spin h-12 w-12 text-blue-500 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
-          <p className="mt-4 text-gray-600 text-lg">Loading patient data...</p>
+          <p className="mt-4 text-gray-600 text-lg dark:text-gray-400">Loading patient data...</p>
         </div>
       ) : (
         <>
-          {/* Patient Table */}
           {currentPatients.length > 0 ? (
-            <div className="bg-white shadow-lg rounded-lg overflow-hidden">
+            <div className="bg-white shadow-lg rounded-lg overflow-hidden dark:bg-gray-700 dark:shadow-xl">
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-100">
+                  <thead className="bg-gray-100 dark:bg-gray-800">
                     <tr>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date of Birth</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Gender</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact Phone</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">National ID</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                      {['Name', 'Date of Birth', 'Gender', 'Contact Phone', 'National ID', 'Email', 'Actions'].map(header => (
+                        <th key={header} scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
+                          {header}
+                        </th>
+                      ))}
                     </tr>
                   </thead>
                   <motion.tbody
-                    className="bg-white divide-y divide-gray-200"
+                    className="bg-white divide-y divide-gray-200 dark:bg-gray-700 dark:divide-gray-600"
                     initial="hidden"
                     animate="visible"
-                    variants={{
-                      visible: { transition: { staggerChildren: 0.05 } },
-                    }}
+                    variants={{ visible: { transition: { staggerChildren: 0.05 } }}}
                   >
-                    {currentPatients.map((patient, index) => (
+                    {currentPatients.map((patient) => (
                       <motion.tr
                         key={patient.id}
-                        className="hover:bg-gray-50 transition-colors duration-200"
+                        className="hover:bg-gray-50 transition-colors duration-200 dark:hover:bg-gray-600"
                         variants={itemVariants}
                       >
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{patient.first_name} {patient.last_name}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{patient.date_of_birth ? new Date(patient.date_of_birth).toLocaleDateString() : 'N/A'}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{patient.gender}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{patient.contact_phone}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{patient.national_id || 'N/A'}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{patient.email || 'N/A'}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">{patient.first_name} {patient.last_name}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{patient.date_of_birth ? new Date(patient.date_of_birth).toLocaleDateString() : 'N/A'}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{patient.gender}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{patient.contact_phone}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{patient.national_id || 'N/A'}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{patient.email || 'N/A'}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <div className="flex items-center space-x-3">
                             {canManagePatients && (
-                              <motion.button
-                                onClick={() => handleEditClick(patient)}
-                                className="text-indigo-600 hover:text-indigo-900 flex items-center space-x-1"
-                                whileHover={{ scale: 1.1 }}
-                                whileTap={{ scale: 0.9 }}
-                                title="Edit Patient"
-                              >
-                                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                                <span className="hidden sm:inline">Edit</span>
-                              </motion.button>
-                            )}
-                            {canManagePatients && (
-                              <motion.button
-                                onClick={() => handleDeleteClick(patient.id, `${patient.first_name} ${patient.last_name}`)}
-                                className="text-red-600 hover:text-red-900 flex items-center space-x-1"
-                                whileHover={{ scale: 1.1 }}
-                                whileTap={{ scale: 0.9 }}
-                                title="Delete Patient"
-                              >
-                                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                <span className="hidden sm:inline">Delete</span>
-                              </motion.button>
+                              <>
+                                <motion.button
+                                  onClick={() => handleEditClick(patient)}
+                                  className="text-indigo-600 hover:text-indigo-900 flex items-center space-x-1 dark:text-indigo-400 dark:hover:text-indigo-300"
+                                  whileHover={{ scale: 1.1 }}
+                                  whileTap={{ scale: 0.9 }}
+                                  title="Edit Patient"
+                                >
+                                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                  <span className="hidden sm:inline">Edit</span>
+                                </motion.button>
+                                <motion.button
+                                  onClick={() => handleDeleteClick(patient.id, `${patient.first_name} ${patient.last_name}`)}
+                                  className="text-red-600 hover:text-red-900 flex items-center space-x-1 dark:text-red-400 dark:hover:text-red-300"
+                                  whileHover={{ scale: 1.1 }}
+                                  whileTap={{ scale: 0.9 }}
+                                  title="Delete Patient"
+                                >
+                                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                  <span className="hidden sm:inline">Delete</span>
+                                </motion.button>
+                              </>
                             )}
                             {canViewClinicalNotes && (
                               <Link
                                 to={`/clinical-notes/${patient.id}`}
-                                className="text-blue-600 hover:text-blue-900 flex items-center space-x-1 transition-transform duration-200 ease-in-out transform hover:scale-110 active:scale-90"
+                                className="text-blue-600 hover:text-blue-900 flex items-center space-x-1 transition-transform duration-200 ease-in-out transform hover:scale-110 active:scale-90 dark:text-blue-400 dark:hover:text-blue-300"
                                 title="View Clinical Notes"
                               >
                                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M12 16h.01"></path></svg>
                                 <span className="hidden sm:inline">Notes</span>
                               </Link>
                             )}
-                            {/* New: Link to Medical History */}
                             {canViewMedicalHistory && (
                               <Link
                                 to={`/medical-history/${patient.id}`}
-                                className="text-purple-600 hover:text-purple-900 flex items-center space-x-1 transition-transform duration-200 ease-in-out transform hover:scale-110 active:scale-90"
+                                className="text-purple-600 hover:text-purple-900 flex items-center space-x-1 transition-transform duration-200 ease-in-out transform hover:scale-110 active:scale-90 dark:text-purple-400 dark:hover:text-purple-300"
                                 title="View Medical History"
                               >
                                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"></path></svg>
                                 <span className="hidden sm:inline">History</span>
                               </Link>
                             )}
-                            {/* New: Link to Appointments */}
                             {canViewAppointments && (
                               <Link
                                 to={`/appointments/${patient.id}`}
-                                className="text-green-600 hover:text-green-900 flex items-center space-x-1 transition-transform duration-200 ease-in-out transform hover:scale-110 active:scale-90"
+                                className="text-green-600 hover:text-green-900 flex items-center space-x-1 transition-transform duration-200 ease-in-out transform hover:scale-110 active:scale-90 dark:text-green-400 dark:hover:text-green-300"
                                 title="View Appointments"
                               >
                                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h.01M7 12h.01M7 15h.01M17 12h.01M17 15h.01M12 21h.01M12 18h.01M3 8h18V5a2 2 0 00-2-2H5a2 2 0 00-2 2v3zm0 3h18v10a2 2 0 01-2 2H5a2 2 0 01-2-2v-10z"></path></svg>
@@ -579,17 +598,16 @@ const fetchPatients = useCallback(async () => {
                 </table>
               </div>
 
-              {/* Pagination Controls */}
               {totalPages > 1 && (
-                <div className="px-6 py-4 flex justify-between items-center bg-gray-100 border-t border-gray-200">
-                  <span className="text-sm text-gray-700">
+                <div className="px-6 py-4 flex justify-between items-center bg-gray-100 border-t border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+                  <span className="text-sm text-gray-700 dark:text-gray-300">
                     Showing <span className="font-semibold">{indexOfFirstPatient + 1}</span> to <span className="font-semibold">{Math.min(indexOfLastPatient, filteredPatients.length)}</span> of <span className="font-semibold">{filteredPatients.length}</span> patients
                   </span>
                   <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
                     <motion.button
                       onClick={() => paginate(currentPage - 1)}
                       disabled={currentPage === 1}
-                      className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
                       whileHover={{ scale: currentPage === 1 ? 1 : 1.05 }}
                       whileTap={{ scale: currentPage === 1 ? 1 : 0.95 }}
                     >
@@ -602,7 +620,7 @@ const fetchPatients = useCallback(async () => {
                       <motion.button
                         key={number + 1}
                         onClick={() => paginate(number + 1)}
-                        className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium ${currentPage === number + 1 ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                        className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium ${currentPage === number + 1 ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'}`}
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                       >
@@ -612,7 +630,7 @@ const fetchPatients = useCallback(async () => {
                     <motion.button
                       onClick={() => paginate(currentPage + 1)}
                       disabled={currentPage === totalPages}
-                      className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
                       whileHover={{ scale: currentPage === totalPages ? 1 : 1.05 }}
                       whileTap={{ scale: currentPage === totalPages ? 1 : 0.95 }}
                     >
@@ -626,10 +644,10 @@ const fetchPatients = useCallback(async () => {
               )}
             </div>
           ) : (
-            <div className="text-center py-10 bg-white rounded-lg shadow-lg">
+            <div className="text-center py-10 bg-white rounded-lg shadow-lg dark:bg-gray-700 dark:shadow-xl">
               <svg className="mx-auto h-20 w-20 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M12 4.354a4 4 0 110 5.292M12 20.005v-2.326A4 4 0 0017.207 14H19a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293L11.586 2.5a2 2 0 00-1.414 0L7.293 4.293A1 1 0 016.586 4H5a2 2 0 00-2 2v5a2 2 0 002 2h2.326A4 4 0 0012 20.005z"></path></svg>
-              <h3 className="mt-2 text-xl font-medium text-gray-900">No Patients Found</h3>
-              <p className="mt-1 text-base text-gray-500">Get started by adding a new patient.</p>
+              <h3 className="mt-2 text-xl font-medium text-gray-900 dark:text-gray-100">No Patients Found</h3>
+              <p className="mt-1 text-base text-gray-500 dark:text-gray-400">Get started by adding a new patient.</p>
               {canManagePatients && (
                 <motion.button
                   onClick={handleAddPatientClick}
@@ -646,223 +664,77 @@ const fetchPatients = useCallback(async () => {
         </>
       )}
 
-
-      {/* Add/Edit Patient Modal */}
       <Modal
-        isOpen={showPatientFormModal}
+        isOpen={modalState.showPatientForm}
         onClose={() => {
-          setShowPatientFormModal(false);
-          setEditingPatient(null);
+          setModalState(prev => ({ ...prev, showPatientForm: false, editingPatient: null }));
           resetFormData();
-          setNotification({ message: null, type: null }); // Clear modal-specific errors
+          setNotification({ message: null, type: null });
         }}
-        title={editingPatient ? 'Edit Patient' : 'Add New Patient'}
+        title={modalState.editingPatient ? 'Edit Patient' : 'Add New Patient'}
       >
         <form onSubmit={handleFormSubmit} className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-          {/* First Name */}
-          <div>
-            <label htmlFor='first_name' className='block text-gray-700 text-sm font-medium mb-1'>First Name <span className="text-red-500">*</span>:</label>
-            <input
-              type='text'
-              id='first_name'
-              name='first_name'
-              value={formData.first_name}
-              onChange={handleFormChange}
-              className='w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200'
-              placeholder="e.g., John"
-              required
-            />
-          </div>
-          {/* Last Name */}
-          <div>
-            <label htmlFor='last_name' className='block text-gray-700 text-sm font-medium mb-1'>Last Name <span className="text-red-500">*</span>:</label>
-            <input
-              type='text'
-              id='last_name'
-              name='last_name'
-              value={formData.last_name}
-              onChange={handleFormChange}
-              className='w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200'
-              placeholder="e.g., Doe"
-              required
-            />
-          </div>
-          {/* Date of Birth */}
-          <div>
-            <label htmlFor='date_of_birth' className='block text-gray-700 text-sm font-medium mb-1'>Date of Birth <span className="text-red-500">*</span>:</label>
-            <input
-              type='date'
-              id='date_of_birth'
-              name='date_of_birth'
-              value={formData.date_of_birth}
-              onChange={handleFormChange}
-              className='w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200'
-              required
-            />
-          </div>
-          {/* Gender */}
-          <div>
-            <label htmlFor='gender' className='block text-gray-700 text-sm font-medium mb-1'>Gender <span className="text-red-500">*</span>:</label>
-            <select
-              id='gender'
-              name='gender'
-              value={formData.gender}
-              onChange={handleFormChange}
-              className='w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 bg-white'
-              required
-            >
-              <option value="">Select Gender</option>
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
-              <option value="Other">Other</option>
-            </select>
-          </div>
-          {/* National ID */}
-          <div>
-            <label htmlFor='national_id' className='block text-gray-700 text-sm font-medium mb-1'>National ID:</label>
-            <input
-              type='text'
-              id='national_id'
-              name='national_id'
-              value={formData.national_id}
-              onChange={handleFormChange}
-              className='w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200'
-              placeholder="e.g., 12345678"
-            />
-          </div>
-          {/* Contact Phone */}
-          <div>
-            <label htmlFor='contact_phone' className='block text-gray-700 text-sm font-medium mb-1'>Contact Phone <span className="text-red-500">*</span>:</label>
-            <input
-              type='tel'
-              id='contact_phone'
-              name='contact_phone'
-              value={formData.contact_phone}
-              onChange={handleFormChange}
-              className='w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200'
-              placeholder="e.g., +254712345678"
-              required
-            />
-          </div>
-          {/* Email */}
-          <div>
-            <label htmlFor='email' className='block text-gray-700 text-sm font-medium mb-1'>Email:</label>
-            <input
-              type='email'
-              id='email'
-              name='email'
-              value={formData.email}
-              onChange={handleFormChange}
-              className='w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200'
-              placeholder="e.g., patient@example.com"
-            />
-          </div>
-          {/* Address */}
+          <FormInput label="First Name" id="first_name" value={formData.first_name} onChange={handleFormChange} placeholder="e.g., John" required />
+          <FormInput label="Last Name" id="last_name" value={formData.last_name} onChange={handleFormChange} placeholder="e.g., Doe" required />
+          <FormInput label="Date of Birth" id="date_of_birth" type="date" value={formData.date_of_birth} onChange={handleFormChange} required />
+          <FormSelect
+            label="Gender"
+            id="gender"
+            value={formData.gender}
+            onChange={handleFormChange}
+            options={[
+              { value: "", label: "Select Gender" },
+              { value: "Male", label: "Male" },
+              { value: "Female", label: "Female" },
+              { value: "Other", label: "Other" },
+            ]}
+            required
+          />
+          <FormInput label="National ID" id="national_id" value={formData.national_id} onChange={handleFormChange} placeholder="e.g., 12345678" />
+          <FormInput label="Contact Phone" id="contact_phone" type="tel" value={formData.contact_phone} onChange={handleFormChange} placeholder="e.g., +254712345678" required />
+          <FormInput label="Email" id="email" type="email" value={formData.email} onChange={handleFormChange} placeholder="e.g., patient@example.com" />
           <div className='col-span-1 md:col-span-2'>
-            <label htmlFor='address' className='block text-gray-700 text-sm font-medium mb-1'>Address:</label>
-            <textarea
-              id='address'
-              name='address'
-              value={formData.address}
-              onChange={handleFormChange}
-              rows='3'
-              className='w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200'
-              placeholder="e.g., 123 Hospital Road, Nairobi"
-            ></textarea>
+            <FormTextArea label="Address" id="address" value={formData.address} onChange={handleFormChange} rows="3" placeholder="e.g., 123 Hospital Road, Nairobi" />
           </div>
 
-          {/* Emergency Contact Info - New Section */}
-          <div className='col-span-1 md:col-span-2 border-t pt-6 mt-6 border-gray-200'>
-            <h4 className="text-lg font-semibold text-gray-800 mb-4">Emergency Contact Information</h4>
+          <div className='col-span-1 md:col-span-2 border-t pt-6 mt-6 border-gray-200 dark:border-gray-600'>
+            <h4 className="text-lg font-semibold text-gray-800 mb-4 dark:text-gray-200">Emergency Contact Information</h4>
             <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
-                <div>
-                    <label htmlFor='emergency_contact_name' className='block text-gray-700 text-sm font-medium mb-1'>Full Name:</label>
-                    <input
-                      type='text'
-                      id='emergency_contact_name'
-                      name='emergency_contact_name'
-                      value={formData.emergency_contact_name}
-                      onChange={handleFormChange}
-                      className='w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200'
-                      placeholder="e.g., Jane Doe"
-                    />
-                </div>
-                <div>
-                    <label htmlFor='emergency_contact_phone' className='block text-gray-700 text-sm font-medium mb-1'>Phone Number:</label>
-                    <input
-                      type='tel'
-                      id='emergency_contact_phone'
-                      name='emergency_contact_phone'
-                      value={formData.emergency_contact_phone}
-                      onChange={handleFormChange}
-                      className='w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200'
-                      placeholder="e.g., +254722334455"
-                    />
-                </div>
-                <div>
-                    <label htmlFor='emergency_contact_relationship' className='block text-gray-700 text-sm font-medium mb-1'>Relationship:</label>
-                    <input
-                      type='text'
-                      id='emergency_contact_relationship'
-                      name='emergency_contact_relationship'
-                      value={formData.emergency_contact_relationship}
-                      onChange={handleFormChange}
-                      className='w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200'
-                      placeholder="e.g., Parent, Spouse"
-                    />
-                </div>
+              <FormInput label="Full Name" id="emergency_contact_name" value={formData.emergency_contact_name} onChange={handleFormChange} placeholder="e.g., Jane Doe" />
+              <FormInput label="Phone Number" id="emergency_contact_phone" type="tel" value={formData.emergency_contact_phone} onChange={handleFormChange} placeholder="e.g., +254722334455" />
+              <FormInput label="Relationship" id="emergency_contact_relationship" value={formData.emergency_contact_relationship} onChange={handleFormChange} placeholder="e.g., Parent, Spouse" />
             </div>
           </div>
 
-          {/* Allergies / Conditions - New Section */}
           <div className='col-span-1 md:col-span-2'>
-            <label htmlFor='allergies' className='block text-gray-700 text-sm font-medium mb-1'>Allergies (comma-separated):</label>
-            <textarea
-              id='allergies'
-              name='allergies'
-              value={formData.allergies}
-              onChange={handleFormChange}
-              rows='2'
-              className='w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200'
-              placeholder="e.g., Penicillin, Peanuts"
-            ></textarea>
+            <FormTextArea label="Allergies (comma-separated)" id="allergies" value={formData.allergies} onChange={handleFormChange} rows="2" placeholder="e.g., Penicillin, Peanuts" />
           </div>
           <div className='col-span-1 md:col-span-2'>
-            <label htmlFor='conditions' className='block text-gray-700 text-sm font-medium mb-1'>Chronic Conditions (comma-separated):</label>
-            <textarea
-              id='conditions'
-              name='conditions'
-              value={formData.conditions}
-              onChange={handleFormChange}
-              rows='2'
-              className='w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200'
-              placeholder="e.g., Diabetes, Hypertension"
-            ></textarea>
+            <FormTextArea label="Chronic Conditions (comma-separated)" id="conditions" value={formData.conditions} onChange={handleFormChange} rows="2" placeholder="e.g., Diabetes, Hypertension" />
           </div>
 
-          {/* Photo/ID Document Upload - New Section */}
           <div className='col-span-1 md:col-span-2'>
-            <label htmlFor='photo_id_file' className='block text-gray-700 text-sm font-medium mb-1'>Upload Photo/ID Document:</label>
+            <label htmlFor='photo_id_file' className='block text-gray-700 text-sm font-medium mb-1 dark:text-gray-300'>Upload Photo/ID Document:</label>
             <input
               type='file'
               id='photo_id_file'
               name='photo_id_file'
               accept='image/*'
               onChange={handleFormChange}
-              ref={fileInputRef} // Assign ref to input
-              className='w-full text-gray-800 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100'
+              ref={fileInputRef}
+              className='w-full text-gray-800 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:text-gray-200 dark:border-gray-600 file:dark:bg-blue-800 file:dark:text-blue-200 hover:file:dark:bg-blue-700'
             />
             {(photoPreviewUrl || formData.photo_id_url) && (
                 <div className="mt-4">
-                    <p className="text-sm text-gray-600 mb-2">Current Photo/ID:</p>
+                    <p className="text-sm text-gray-600 mb-2 dark:text-gray-400">Current Photo/ID:</p>
                     <img
                         src={photoPreviewUrl || formData.photo_id_url}
                         alt="Patient Photo/ID Preview"
-                        className="max-w-xs h-auto rounded-md shadow-md border border-gray-200"
+                        className="max-w-xs h-auto rounded-md shadow-md border border-gray-200 dark:border-gray-600"
                     />
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-gray-500 mt-1 dark:text-gray-400">
                         {photoPreviewUrl ? "New file selected" : "Existing file"}
-                        {editingPatient && formData.photo_id_url && !photoPreviewUrl && (
+                        {modalState.editingPatient && formData.photo_id_url && !photoPreviewUrl && (
                             " (To change, select a new file above)"
                         )}
                     </p>
@@ -874,12 +746,11 @@ const fetchPatients = useCallback(async () => {
             <motion.button
               type='button'
               onClick={() => {
-                setShowPatientFormModal(false);
-                setEditingPatient(null);
+                setModalState(prev => ({ ...prev, showPatientForm: false, editingPatient: null }));
                 resetFormData();
                 setNotification({ message: null, type: null });
               }}
-              className='bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-5 rounded-lg shadow-md transition duration-300'
+              className='bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-5 rounded-lg shadow-md transition duration-300 dark:bg-gray-600 dark:hover:bg-gray-500 dark:text-gray-200'
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -891,18 +762,17 @@ const fetchPatients = useCallback(async () => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              {editingPatient ? 'Update Patient' : 'Add Patient'}
+              {modalState.editingPatient ? 'Update Patient' : 'Add Patient'}
             </motion.button>
           </div>
         </form>
       </Modal>
 
-      {/* Delete Confirmation Modal */}
       <DeleteConfirmationModal
-        isOpen={showDeleteConfirmModal}
-        onClose={() => setShowDeleteConfirmModal(false)}
+        isOpen={modalState.showDeleteConfirm}
+        onClose={() => setModalState(prev => ({ ...prev, showDeleteConfirm: false }))}
         onConfirm={confirmDelete}
-        patientName={patientToDelete ? patientToDelete.name : ''}
+        patientName={modalState.patientToDelete ? modalState.patientToDelete.name : ''}
       />
     </motion.div>
   );

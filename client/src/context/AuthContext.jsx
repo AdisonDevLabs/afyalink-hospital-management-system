@@ -1,46 +1,58 @@
+// AuthContext.jsx
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import { jwtDecode } from 'jwt-decode'; // <--- ADD THIS IMPORT
+import { jwtDecode } from 'jwt-decode';
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null); // Stores user info { id, username, role }
-  const [token, setToken] = useState(null); // Stores JWT token
-  const [loading, setLoading] = useState(true); // indicate if auth state is being loaded
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // On component mount, check for existing token in localStorage
     const storedToken = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');
 
     if (storedToken && storedUser) {
       try {
-        const parsedUser = JSON.parse(storedUser); // Parse user data first
-        const decodedToken = jwtDecode(storedToken); // <--- DECODE THE TOKEN
+        const parsedUser = JSON.parse(storedUser);
+        const decodedToken = jwtDecode(storedToken);
 
-        // Check if token is expired (exp is in seconds, Date.now() is in milliseconds)
-        if (decodedToken.exp * 1000 < Date.now()) { // <--- ADD EXPIRY CHECK
+        if (decodedToken.exp * 1000 < Date.now()) {
           console.warn('AuthContext: Stored token is EXPIRED. Clearing session.');
-          logout(); // Clear invalid data if token is expired
+          logout();
         } else {
-          setUser(parsedUser); // Set user only if token is valid
-          setToken(storedToken); // Set token only if token is valid
+          setUser(parsedUser);
+          setToken(storedToken);
+          // *** ADD THIS LOG ***
+          console.log('AuthContext useEffect: User parsed from localStorage on initial load:', parsedUser);
+          // *********************
         }
 
       } catch (error) {
         console.error('AuthContext: Failed to parse or decode stored data/token:', error);
-        logout(); // Clear invalid data if parsing/decoding fails
+        logout();
       }
     } else {
+      // console.log('AuthContext: No token or user found in localStorage.'); // Uncomment for more verbosity
     }
-    setLoading(false); // Finished loading regardless of token presence/validity
-  }, []); // Empty dependency array means this runs only once on mount
+    setLoading(false);
+  }, []); // Empty dependency array means this runs once on mount
 
   const login = (userData, jwtToken) => {
-    setUser(userData);
+    // *** ADD THESE LOGS ***
+    console.log('AuthContext Login: userData RECEIVED by login function:', userData);
+    console.log('AuthContext Login: profile_picture in RECEIVED userData:', userData?.profile_picture);
+    // *********************
+
+    setUser(userData); // This updates the React state
     setToken(jwtToken);
     localStorage.setItem('token', jwtToken);
-    localStorage.setItem('user', JSON.stringify(userData));
+    localStorage.setItem('user', JSON.stringify(userData)); // This updates localStorage
+
+    // *** ADD THIS LOG ***
+    console.log('AuthContext Login: User object STRINGIFIED and SAVED to localStorage:', JSON.stringify(userData));
+    // *********************
   };
 
   const logout = () => {
@@ -67,7 +79,6 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-// Custom hook to use the AuthContext
 export const useAuth = () => {
   return useContext(AuthContext);
 };

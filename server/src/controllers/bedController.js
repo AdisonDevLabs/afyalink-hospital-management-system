@@ -1,12 +1,7 @@
-// backend/src/controllers/bedController.js
-
 const pool = require('../config/db');
 
-// --- Get bed occupancy status ---
 exports.getBedOccupancy = async (req, res) => {
   try {
-    // Assuming a 'beds' table with 'id', 'room_number', 'is_occupied', 'patient_id'
-    // and a 'patients' table to join for patient details if needed
     const beds = await pool.query(`
       SELECT
         b.id AS bed_id,
@@ -21,7 +16,6 @@ exports.getBedOccupancy = async (req, res) => {
       ORDER BY b.room_number, b.bed_number ASC
     `);
 
-    // You might want to return aggregated data like total occupied/available beds
     const totalBeds = beds.rows.length;
     const occupiedBeds = beds.rows.filter(bed => bed.is_occupied).length;
     const availableBeds = totalBeds - occupiedBeds;
@@ -38,5 +32,3 @@ exports.getBedOccupancy = async (req, res) => {
     res.status(500).json({ message: 'Server error when fetching bed occupancy.' });
   }
 };
-
-// You can add functions for assigning/unassigning beds, etc.

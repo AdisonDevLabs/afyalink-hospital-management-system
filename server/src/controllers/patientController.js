@@ -1,29 +1,24 @@
-// backend/src/controllers/patientController.js
-
 const pool = require('../config/db');
 
-// --- Create new patient ---
 exports.createPatient = async (req, res) => {
   const {
     first_name, last_name, date_of_birth, gender, national_id,
     contact_phone, email, address, assigned_nurse_id, photo_url, is_admitted = false,
-    // Add new emergency contact fields
     emergency_contact_name, emergency_contact_phone, emergency_contact_relationship
   } = req.body;
 
-  // Basic validation
   if (!first_name || !last_name || !date_of_birth || !gender || !contact_phone) {
     return res.status(400).json({ message: 'Missing required patient fields: first name, last name, date of birth, gender, contact phone.' });
   }
 
   try {
-    // Check if national_id or email already exists (if provided)
     if (national_id) {
       const existingPatient = await pool.query('SELECT id FROM patients WHERE national_id = $1', [national_id]);
       if (existingPatient.rows.length > 0) {
         return res.status(409).json({ message: 'Patient with this national ID already exists.' });
       }
     }
+
     if (email) {
       const existingPatient = await pool.query('SELECT id FROM patients WHERE email = $1', [email]);
       if (existingPatient.rows.length > 0) {
@@ -40,8 +35,8 @@ exports.createPatient = async (req, res) => {
       message: "Patient registered successfully.",
       patient: newPatient.rows[0]
     });
-
-  } catch (error) {
+  } 
+  catch (error) {
     console.error('Error creating patient:', error.stack);
     if (error.code === '23505') {
         return res.status(409).json({ message: 'Patient with this national ID or email already exists.' });
@@ -50,9 +45,8 @@ exports.createPatient = async (req, res) => {
   }
 };
 
-// --- Get All Patients (handles filtering by nurse_id and assigned_today) ---
 exports.getAllPatients = async (req, res) => {
-  const { nurse_id, assigned_today } = req.query; // nurse_id for "assigned patients", assigned_today for specific date
+  const { nurse_id, assigned_today } = req.query;
   const queryParams = [];
   let paramIndex = 1;
 
@@ -71,24 +65,22 @@ exports.getAllPatients = async (req, res) => {
       p.updated_at,
       p.assigned_nurse_id,
       p.photo_url,
-      p.emergency_contact_name,    -- Add new column
-      p.emergency_contact_phone,   -- Add new column
-      p.emergency_contact_relationship, -- Add new column
-      b.room_number, -- Get room_number from beds table
-      b.bed_number   -- Get bed_number from beds table
+      p.emergency_contact_name,
+      p.emergency_contact_phone,
+      p.emergency_contact_relationship,
+      b.room_number,
+      b.bed_number
     FROM patients p
     LEFT JOIN beds b ON p.id = b.patient_id
   `;
   let whereClauses = [];
 
-  // Filter by assigned nurse ID if provided
   if (nurse_id) {
     whereClauses.push(`p.assigned_nurse_id = $${paramIndex++}`);
     queryParams.push(nurse_id);
-    whereClauses.push(`p.is_admitted = TRUE`); // Only show currently admitted patients for a nurse's assignment
+    whereClauses.push(`p.is_admitted = TRUE`);
   }
 
-  // Filter for patients admitted/assigned today
   if (assigned_today) {
     const todayStart = new Date(assigned_today);
     todayStart.setHours(0, 0, 0, 0);
@@ -115,9 +107,8 @@ exports.getAllPatients = async (req, res) => {
   }
 };
 
-// --- Get Patient Count (handles filtering by nurse_id) ---
 exports.getPatientCount = async (req, res) => {
-    const { nurse_id } = req.query; // Check for nurse_id query parameter
+    const { nurse_id } = req.query;
     const queryParams = [];
     let paramIndex = 1;
     let query = 'SELECT COUNT(*) AS count FROM patients p';
@@ -126,7 +117,7 @@ exports.getPatientCount = async (req, res) => {
     if (nurse_id) {
         whereClauses.push(`p.assigned_nurse_id = $${paramIndex++}`);
         queryParams.push(nurse_id);
-        whereClauses.push(`p.is_admitted = TRUE`); // Only count currently admitted patients under care
+        whereClauses.push(`p.is_admitted = TRUE`);
     }
 
     if (whereClauses.length > 0) {
@@ -143,7 +134,6 @@ exports.getPatientCount = async (req, res) => {
     }
 };
 
-// --- Get patient by ID ---
 exports.getPatientById = async (req, res) => {
   const { id } = req.params;
 
@@ -167,9 +157,9 @@ exports.getPatientById = async (req, res) => {
          p.updated_at,
          p.assigned_nurse_id,
          p.photo_url,
-         p.emergency_contact_name,    -- Add new column
-         p.emergency_contact_phone,   -- Add new column
-         p.emergency_contact_relationship, -- Add new column
+         p.emergency_contact_name,
+         p.emergency_contact_phone,
+         p.emergency_contact_relationship,
          b.room_number,
          b.bed_number
        FROM patients p
@@ -182,14 +172,13 @@ exports.getPatientById = async (req, res) => {
       return res.status(404).json({ message: 'Patient not found.' });
     }
     res.status(200).json({ patient: patient.rows[0] });
-
-  } catch (error) {
+  } 
+  catch (error) {
     console.error('Error fetching patient by ID:', error.stack);
     res.status(500).json({ message: 'Server error when fetching patient.' });
   }
 };
 
-// --- Get recent patient registrations ---
 exports.getRecentPatients = async (req, res) => {
   try {
     const recentPatients = await pool.query(
@@ -199,30 +188,29 @@ exports.getRecentPatients = async (req, res) => {
        LIMIT 5`
     );
     res.status(200).json({ patients: recentPatients.rows });
-  } catch (error) {
+  } 
+  catch (error) {
     console.error('Error fetching recent patients:', error.stack);
     res.status(500).json({ message: 'Server error when fetching recent patients.' });
   }
 };
 
-// --- Update patient ---
 exports.updatePatient = async (req, res) => {
   const { id } = req.params;
   const {
     first_name, last_name, date_of_birth, gender, national_id,
     contact_phone, email, address, assigned_nurse_id, photo_url, is_admitted,
-    // Add new emergency contact fields
     emergency_contact_name, emergency_contact_phone, emergency_contact_relationship
   } = req.body;
 
   try {
-    // Check if the national_id or email being updated to already exists for another patient
     if (national_id) {
       const existing = await pool.query('SELECT id FROM patients WHERE national_id = $1 AND id <> $2', [national_id, id]);
       if (existing.rows.length > 0) {
         return res.status(409).json({ message: 'This National ID is already associated with another patient.' });
       }
     }
+
     if (email) {
       const existing = await pool.query('SELECT id FROM patients WHERE email = $1 AND id <> $2', [email, id]);
       if (existing.rows.length > 0) {
@@ -243,9 +231,9 @@ exports.updatePatient = async (req, res) => {
         assigned_nurse_id = COALESCE($9, assigned_nurse_id),
         photo_url = COALESCE($10, photo_url),
         is_admitted = COALESCE($11, is_admitted),
-        emergency_contact_name = COALESCE($12, emergency_contact_name),       -- Add new column update
-        emergency_contact_phone = COALESCE($13, emergency_contact_phone),      -- Add new column update
-        emergency_contact_relationship = COALESCE($14, emergency_contact_relationship), -- Add new column update
+        emergency_contact_name = COALESCE($12, emergency_contact_name),
+        emergency_contact_phone = COALESCE($13, emergency_contact_phone),
+        emergency_contact_relationship = COALESCE($14, emergency_contact_relationship),
         updated_at = CURRENT_TIMESTAMP
       WHERE id = $15 RETURNING *`,
       [first_name, last_name, date_of_birth, gender, national_id, contact_phone, email, address, assigned_nurse_id, photo_url, is_admitted, emergency_contact_name, emergency_contact_phone, emergency_contact_relationship, id]
@@ -258,14 +246,13 @@ exports.updatePatient = async (req, res) => {
       message: 'Patient updated successfully.',
       patient: updatedPatient.rows[0]
     });
-
-  } catch (error) {
+  } 
+  catch (error) {
     console.error('Error updating patient:', error.stack);
     res.status(500).json({ message: 'Server error when updating patient.' });
   }
 };
 
-// --- Delete patient ---
 exports.deletePatient = async (req, res) => {
   const { id } = req.params;
 
