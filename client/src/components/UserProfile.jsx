@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Camera, User, Mail, Phone, Home, Briefcase, KeyRound, Save, XCircle, Edit3, Loader2 } from 'lucide-react'; // More icons for richer UI
+import { Camera, User, Mail, Phone, Home, Briefcase, KeyRound, Save, XCircle, Edit3, Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { toast, Toaster } from 'react-hot-toast'; // For modern toast notifications
+import { toast, Toaster } from 'react-hot-toast';
 
 function UserProfile() {
   const { user, token, loading: authLoading, logout, login } = useAuth();
@@ -22,8 +22,8 @@ function UserProfile() {
   const [originalProfileData, setOriginalProfileData] = useState({});
   const [isEditing, setIsEditing] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
-  const [isLoading, setIsLoading] = useState(true); // Loading state for initial fetch
-  const [isSaving, setIsSaving] = useState(false); // Loading state for saving changes
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
 const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
@@ -43,7 +43,7 @@ const apiBackendUrl = backendUrl.replace('/api', '');
       }
 
       setIsLoading(true);
-      toast.dismiss(); // Clear any previous toasts
+      toast.dismiss();
 
       try {
         const response = await fetch(`${backendUrl}/api/users/profile`, {
@@ -97,7 +97,7 @@ const apiBackendUrl = backendUrl.replace('/api', '');
       reader.onload = (event) => {
         setProfileData((prevData) => ({
           ...prevData,
-          profile_picture: event.target.result, // Data URL for preview
+          profile_picture: event.target.result,
         }));
       };
       reader.readAsDataURL(file);
@@ -106,7 +106,7 @@ const apiBackendUrl = backendUrl.replace('/api', '');
 
   const handleSaveChanges = async () => {
     setIsSaving(true);
-    toast.dismiss(); // Clear existing toasts
+    toast.dismiss();
 
     if (!user || !token) {
       toast.error('User not authenticated. Cannot save profile.');
@@ -169,7 +169,7 @@ const apiBackendUrl = backendUrl.replace('/api', '');
     setProfileData(originalProfileData);
     setSelectedFile(null);
     setIsEditing(false);
-    toast.dismiss(); // Clear any messages
+    toast.dismiss();
   };
 
   const capitalize = (str) => {
@@ -188,13 +188,14 @@ const apiBackendUrl = backendUrl.replace('/api', '');
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4 sm:p-6 lg:p-8 flex items-center justify-center">
-      <Toaster position="top-right" reverseOrder={false} /> {/* Toast container */}
+      <Toaster position="top-right" reverseOrder={false} />
       <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl p-6 md:p-10 w-full max-w-4xl transform transition-all duration-300 ease-in-out hover:shadow-3xl">
         <h2 className="text-4xl font-extrabold text-gray-900 dark:text-white mb-8 text-center border-b pb-4 border-gray-200 dark:border-gray-700">
           My Profile
         </h2>
 
         <div className="flex flex-col md:flex-row items-center md:items-start gap-8 mb-8">
+          
           {/* Profile Picture Section */}
           <div className="flex-shrink-0 relative w-36 h-36 rounded-full bg-gradient-to-br from-blue-100 to-indigo-200 dark:from-gray-700 dark:to-gray-600 flex items-center justify-center overflow-hidden border-4 border-blue-500 dark:border-blue-400 shadow-lg group">
             {profileData.profile_picture ? (
@@ -245,6 +246,7 @@ const apiBackendUrl = backendUrl.replace('/api', '');
         </div>
 
         <form className="space-y-6">
+
           {/* Personal Information Section */}
           <div className="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg shadow-inner border border-gray-200 dark:border-gray-700">
             <h4 className="text-xl font-semibold text-gray-800 dark:text-white mb-4 flex items-center">

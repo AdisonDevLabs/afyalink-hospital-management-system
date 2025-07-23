@@ -1,4 +1,3 @@
-// Header.jsx
 import React from 'react';
 import { Menu, LogOut } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -18,18 +17,11 @@ function Header({ toggleSidebar }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  console.log('Header - User Profile Picture (direct access):', user?.profile_picture);
-
-  // *** ADD THESE CONSOLE LOGS ***
-  console.log('Header - Current user object from AuthContext:', user);
-  console.log('Header - apiBackendUrl:', apiBackendUrl);
   if (user && user.profile_picture) {
     const finalImageUrl = user.profile_picture.startsWith('/uploads/')
       ? `${apiBackendUrl}${user.profile_picture}`
       : user.profile_picture;
-    console.log('Header - Constructed image URL:', finalImageUrl);
   }
-  // ******************************
 
   const handleLogout = () => {
     logout();

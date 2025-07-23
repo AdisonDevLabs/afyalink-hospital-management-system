@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import Navbar from './Navbar'; // Import the updated Navbar
-import Header from './Header'; // Import the updated Header
+import Navbar from './Navbar';
+import Header from './Header';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { X, User, Menu, LayoutDashboard, Users, HeartPulse, Calendar, ClipboardList, Building2, LogOut } from 'lucide-react';
-import { useAuth } from '../context/AuthContext'; // Assuming this path is correct
-import afyalinkLogo from '../assets/afyalink-logo.svg'; // Assuming this path is correct
+import { useAuth } from '../context/AuthContext';
+import afyalinkLogo from '../assets/afyalink-logo.svg';
 
 const capitalize = (str) => {
   if (!str) return '';
@@ -20,7 +20,6 @@ function Layout() {
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // Navigation links for mobile menu (used in mobile overlay)
   const navLinks = [
     { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["admin", "doctor", "receptionist", "nurse", "guest"] },
     { to: "/users", label: "Users", icon: Users, roles: ["admin", "guest"] },
@@ -32,29 +31,26 @@ function Layout() {
     { to: "/profile", label: "My Profile", icon: User, roles: ["admin", "doctor", "receptionist", "nurse", "guest"] },
   ];
 
-  // Initial sidebar state based on screen size and handle resize
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth < 768) { // md breakpoint
+      if (window.innerWidth < 768) {
         setIsSidebarExpanded(false);
       } else {
         setIsSidebarExpanded(true);
-        setIsMobileMenuOpen(false); // Close mobile menu if resizing to desktop
+        setIsMobileMenuOpen(false);
       }
     };
 
     window.addEventListener('resize', handleResize);
-    handleResize(); // Set initial state
+    handleResize();
 
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Close mobile menu when navigating
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [location.pathname]);
 
-  // Unified toggle for sidebar (desktop) and mobile menu (mobile)
   const toggleUnifiedMenu = () => {
     if (window.innerWidth < 768) {
       setIsMobileMenuOpen(prev => !prev);
@@ -63,32 +59,23 @@ function Layout() {
     }
   };
 
-  // Calculate margin for main content based on sidebar state
-  // Sidebar width is w-48 (192px) when expanded, w-18 (72px) when collapsed
   const mainContentMarginClass = isSidebarExpanded ? 'md:ml-48' : 'md:ml-16';
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-100 dark:bg-gray-800">
 
-      {/* Desktop Sidebar (Navbar) */}
-      {/* Navbar is fixed and positioned from top-[80px] in its own component */}
       <div className="hidden md:block">
         <Navbar isSidebarExpanded={isSidebarExpanded} toggleSidebar={toggleUnifiedMenu} />
       </div>
 
-      {/* Main content area */}
       <div className={`flex flex-col flex-grow overflow-y-auto ${mainContentMarginClass} transition-all duration-200`}>
-        {/* Header is fixed at the top */}
         <Header toggleSidebar={toggleUnifiedMenu} />
 
-        {/* Main content, pushed down by the header height */}
         <main className="flex-grow py-0.4 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg shadow-md mt-[80px]">
-          {/* Outlet is where child routes will be rendered */}
           <Outlet />
         </main>
       </div>
 
-      {/* Mobile Menu Overlay */}
       <AnimatePresence>
         {isMobileMenuOpen && (
           <motion.div
@@ -98,7 +85,6 @@ function Layout() {
             transition={{ duration: 0.3, ease: "easeOut" }}
             className="fixed top-0 right-0 w-full h-full bg-white z-50 flex flex-col p-4 shadow-lg md:hidden dark:bg-gray-900"
           >
-            {/* Close Button for Mobile Menu */}
             <div className="flex justify-end mb-6">
               <button
                 onClick={() => setIsMobileMenuOpen(false)}
@@ -109,7 +95,6 @@ function Layout() {
               </button>
             </div>
 
-            {/* Mobile Nav Links */}
             <div className="flex flex-col space-y-2 flex-grow">
               {user && navLinks.map((link) => {
                 const isActive = location.pathname === link.to;
@@ -134,7 +119,6 @@ function Layout() {
               })}
             </div>
 
-            {/* User Info and Logout for Mobile */}
             {user && (
               <div className="mt-auto pt-4 border-t border-gray-200 dark:border-gray-700">
                 <span className="text-gray-600 font-medium text-sm block mb-2 dark:text-gray-300">

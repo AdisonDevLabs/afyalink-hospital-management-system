@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext'; // Assuming this path is correct
-import afyalinkLogo from '../assets/afyalink-logo.svg'; // Assuming this path is correct
+import { useAuth } from '../context/AuthContext';
+import afyalinkLogo from '../assets/afyalink-logo.svg';
 import { motion } from 'framer-motion';
 import {
   LayoutDashboard, Users, HeartPulse, Calendar, User, ClipboardList, Building2, ChevronLeft
@@ -32,7 +32,6 @@ function Navbar({ isSidebarExpanded, toggleSidebar }) {
     <>
       <nav
         ref={navRef}
-        // Key change: top-[80px] to start below the 80px (h-20) header
         className={`fixed top-[80px] left-0 bottom-0 bg-white shadow-xl z-20 bg-green-600 transition-all duration-400 ease-in-out
           ${isSidebarExpanded ? 'w-48' : 'w-18'} flex flex-col hidden md:flex
           dark:bg-gray-900 dark:shadow-none dark:border-r dark:border-gray-700`}
@@ -73,7 +72,6 @@ function Navbar({ isSidebarExpanded, toggleSidebar }) {
           </div>
         </div>
 
-        {/* Sidebar Toggle Button (Desktop) */}
         <div className="flex-shrink-0 p-4 border-t border-gray-200 mt-auto dark:border-gray-700">
           <button
             onClick={toggleSidebar}

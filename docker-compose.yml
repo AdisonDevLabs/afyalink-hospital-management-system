@@ -1,50 +1,45 @@
-version: '3.8'
-
 services:
   postgres:
     image: postgres:16-alpine
-    restart: always
+    container_name: afyalink-postgres
+    restart: unless-stopped
     environment:
       POSTGRES_DB: ${DB_DATABASE}
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
-      # This line is correct, it refers to the named volume declared below
       - postgres_data:/var/lib/postgresql/data
-    # No need to expose port 5432 to the host if only the backend connects to it.
-    # If you need to access it from your host machine (e.g., with DBeaver), uncomment the line below.
-    # ports:
-    #   - "5432:5432"
-
+      - ./db/init:/docker-entrypoint-initdb.d
   server:
     build: ./server
     image: afyalink-hms-server
+    container_name: afyalink-server
     environment:
       NODE_ENV: production
       PORT: ${PORT}
       DB_USER: ${DB_USER}
-      DB_HOST: postgres # This is the service name for the PostgreSQL container
+      DB_HOST: postgres
       DB_DATABASE: ${DB_DATABASE}
       DB_PASSWORD: ${DB_PASSWORD}
-      DB_PORT: 5432 # PostgreSQL's default port inside its container
+      DB_PORT: 5432
       JWT_SECRET: ${JWT_SECRET}
     ports:
       - "${PORT}:${PORT}"
     depends_on:
       - postgres
-    restart: always
+    restart: unless-stopped
 
   client:
     build: ./client
     image: afyalink-hms-client
+    container_name: afyalink-client
     ports:
       - "8080:80"
     depends_on:
       - server
-    restart: always
+    restart: unless-stopped
     environment:
-      VITE_BACKEND_URL: http://localhost:8080
+      VITE_BACKEND_URL: "http://localhost:${PORT}"
 
-# THIS IS THE CRUCIAL PART THAT WAS LIKELY MISSING OR MISPLACED
 volumes:
-  postgres_data: # Declare the named volume here
+  postgres_data:

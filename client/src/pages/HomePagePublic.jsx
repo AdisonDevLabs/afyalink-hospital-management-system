@@ -123,7 +123,7 @@ const HomePage = () => {
         { name: 'Pediatrics', description: 'Specialized medical care for infants, children, and adolescents, including vaccinations and developmental checks.', icon: '👶' },
         { name: 'Orthopedics', description: 'Diagnosis and treatment of musculoskeletal system disorders, including fractures, joint pain, and sports injuries.', icon: '🦴' },
         { name: 'Dental', description: 'Full range of dental services from routine check-ups and cleanings to advanced restorative and cosmetic dentistry.', icon: '🦷' },
-        { name: 'General Surgery', description: 'Performing a wide array of surgical procedures, from minor operations to complex abdominal surgeries, with advanced techniques.', icon: '🔪' },
+        { name: 'General Surgery', description: 'Performing a wide array of surgical procedures, from minor operations to complex abdominal surgeries, with advanced techniques.', icon: '' },
         { name: 'Internal Medicine', description: 'Providing primary care for adults, managing chronic diseases, and coordinating specialist care for complex conditions.', icon: '⚕️' },
         { name: 'Oncology', description: 'Dedicated cancer treatment and support, including chemotherapy, radiation, and palliative care.', icon: '🎗️' },
         { name: 'Dermatology', description: 'Expert care for skin, hair, and nail conditions, offering both medical and cosmetic treatments.', icon: '🧴' },
@@ -166,8 +166,7 @@ const HomePage = () => {
             <header className="fixed w-full bg-white shadow-lg z-50 py-3 px-6 md:px-12 flex justify-between items-center transition-all duration-300">
                 <div className="flex items-center space-x-3">
                     <Link to="/" className="flex items-center space-x-2 animate-fadeInLeft">
-                        <img src={afyalinkLogo} alt="AfyaLink Logo" className="h-10 md:h-12" />
-                        <span className="text-2xl md:text-3xl font-extrabold text-blue-800">AfyaLink HMS</span>
+                        <img src={afyalinkLogo} alt="AfyaLink Logo" className="h-20 w-auto md:h-20" />
                     </Link>
                 </div>
                 <nav className="hidden md:flex space-x-7">
@@ -222,7 +221,7 @@ const HomePage = () => {
                             whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                             Book Appointment Today
                         </motion.button>
-                        <Link to="/register" className="ml-4 text-white text-xl px-10 py-4 border-2 border-white rounded-full hover:bg-white hover:text-blue-700 transition duration-300 transform hover:scale-105 shadow-lg font-semibold">
+                        <Link to="/login" className="ml-4 text-white text-xl px-10 py-4 border-2 border-white rounded-full hover:bg-white hover:text-blue-700 transition duration-300 transform hover:scale-105 shadow-lg font-semibold">
                             Register as a Patient
                         </Link>
                     </motion.div>
