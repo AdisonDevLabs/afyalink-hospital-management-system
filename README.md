@@ -56,9 +56,9 @@ It provides hospitals with a robust, modern platform for managing patients, doct
   ```
 
 ### Environment Setup
-Create a `.env` file in the project root (same folder as `docker-compose.yml`):
+Create a `.env` file in the `/server` directory:
   ```properties
-  PORT=5007
+  PORT=5000
 
   DB_USER=afyalink_user
   DB_HOST=localhost
