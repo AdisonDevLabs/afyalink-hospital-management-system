@@ -4,10 +4,14 @@ const activityController = require('../controllers/activityController');
 
 const router = express.Router();
 
+const conditionallyProtect = (req, res, next) => {
+  protect(req, res, next);
+};
+
 router.get(
     '/doctor-activities',
-    protect,
-    authorize('doctor', 'admin', 'guest'),
+    conditionallyProtect,
+    authorize('doctor', 'admin', 'guest_demo'),
     activityController.getDoctorActivities
 );
 

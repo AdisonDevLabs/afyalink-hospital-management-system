@@ -15,11 +15,11 @@ router.get('/', conditionallyProtect, authorize('admin', 'doctor', 'receptionist
 
 router.get('/:id', conditionallyProtect, authorize('admin', 'doctor', 'receptionist', 'nurse', 'guest_demo'), departmentController.getDepartmentById);
 
-router.post('/', protect, authorize('admin'), departmentController.createDepartment);
+router.post('/', conditionallyProtect, authorize('admin'), departmentController.createDepartment);
 
-router.put('/:id', protect, authorize('admin'), departmentController.updateDepartment);
+router.put('/:id', conditionallyProtect, authorize('admin'), departmentController.updateDepartment);
 
-router.delete('/:id', protect, authorize('admin'), departmentController.deleteDepartment);
+router.delete('/:id', conditionallyProtect, authorize('admin'), departmentController.deleteDepartment);
 
 router.get('/:id/staff', conditionallyProtect, authorize('admin', 'doctor', 'receptionist', 'nurse', 'guest_demo'), departmentController.getStaffByDepartment);
 

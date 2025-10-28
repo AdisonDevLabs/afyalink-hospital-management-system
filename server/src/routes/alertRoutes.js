@@ -3,8 +3,12 @@ const router = express.Router();
 const alertController = require('../controllers/alertController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
-router.get('/', protect, authorize('nurse', 'doctor', 'admin', 'guest'), alertController.getAlertsByRecipientRole);
+const conditionallyProtect = (req, res, next) => {
+  protect(req, res, next);
+};
 
-router.get('/by-user', protect, authorize('nurse', 'doctor', 'admin'), alertController.getAlerts);
+router.get('/', conditionallyProtect, authorize('nurse', 'doctor', 'admin', 'guest_demo'), alertController.getAlertsByRecipientRole);
+
+router.get('/by-user', conditionallyProtect, authorize('nurse', 'doctor', 'admin', 'guest_demo'), alertController.getAlerts);
 
 module.exports = router;

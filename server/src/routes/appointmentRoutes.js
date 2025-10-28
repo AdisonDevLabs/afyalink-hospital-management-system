@@ -3,14 +3,18 @@ const router = express.Router();
 const appointmentController = require('../controllers/appointmentController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
-router.post('/', protect, authorize('admin', 'receptionist'), appointmentController.createAppointment);
+const conditionallyProtect = (req, res, next) => {
+  protect(req, res, next);
+};
 
-router.get('/', protect, appointmentController.getAllAppointments);
+router.post('/', conditionallyProtect, authorize('admin', 'receptionist'), appointmentController.createAppointment);
 
-router.get('/:id', protect, appointmentController.getAppointmentById);
+router.get('/', conditionallyProtect, authorize('guest_demo'), appointmentController.getAllAppointments);
 
-router.put('/:id', protect, authorize('admin', 'receptionist', 'doctor'), appointmentController.updateAppointment);
+router.get('/:id', conditionallyProtect, authorize('guest_demo'), appointmentController.getAppointmentById);
 
-router.delete('/:id', protect, authorize('admin'), appointmentController.deleteAppointment);
+router.put('/:id', conditionallyProtect, authorize('admin', 'receptionist', 'doctor'), appointmentController.updateAppointment);
+
+router.delete('/:id', conditionallyProtect, authorize('admin'), appointmentController.deleteAppointment);
 
 module.exports = router;

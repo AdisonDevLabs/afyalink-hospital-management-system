@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast, Toaster } from 'react-hot-toast';
 
 function UserProfile() {
-  const { user, token, loading: authLoading, logout, login } = useAuth();
+  const { user, token, loading: authLoading, logout, login, getApiPrefix } = useAuth();
   const navigate = useNavigate();
 
   const [profileData, setProfileData] = useState({
@@ -46,7 +46,7 @@ const apiBackendUrl = backendUrl.replace('/api', '');
       toast.dismiss();
 
       try {
-        const response = await fetch(`${backendUrl}/api/users/profile`, {
+        const response = await fetch(`${backendUrl}${getApiPrefix()}/users/profile`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -126,7 +126,7 @@ const apiBackendUrl = backendUrl.replace('/api', '');
         formData.append('profile_picture', selectedFile);
       }
 
-      const response = await fetch(`${backendUrl}/api/users/profile`, {
+      const response = await fetch(`${backendUrl}${getApiPrefix()}/users/profile`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,

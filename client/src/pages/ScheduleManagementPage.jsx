@@ -55,7 +55,7 @@ const Notification = ({ message, type, onClose }) => {
 const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
 function ScheduleManagementPage() {
-    const { user, loading: authLoading, isAuthenticated } = useAuth();
+    const { user, loading: authLoading, isAuthenticated, getApiPrefix } = useAuth();
     const navigate = useNavigate();
 
     const [activeTab, setActiveTab] = useState('schedules');
@@ -148,7 +148,7 @@ function ScheduleManagementPage() {
     const fetchSchedules = useCallback(async () => {
         if (!isAuthenticated || authLoading) return;
         try {
-            const response = await axios.get(`${backendUrl}/api/schedules`, config);
+            const response = await axios.get(`${backendUrl}${getApiPrefix()}/schedules`, config);
             setSchedules(response.data.map(s => ({
                 ...s,
                 appointment_start_datetime: s.appointment_date && s.appointment_time ? moment(`${moment(s.appointment_date).format('YYYY-MM-DD')} ${s.appointment_time}`).toDate() : null,
@@ -162,11 +162,11 @@ function ScheduleManagementPage() {
 
     useEffect(() => {
         if (!isAuthenticated || authLoading) return;
-        fetchData(`${backendUrl}/api/users?role=doctor`, setDoctors, 'fetching doctors');
-        fetchData(`${backendUrl}/api/departments`, setDepartments, 'fetching departments');
-        fetchData(`${backendUrl}/api/patients`, setPatients, 'fetching patients');
+        fetchData(`${backendUrl}${getApiPrefix()}/users?role=doctor`, setDoctors, 'fetching doctors');
+        fetchData(`${backendUrl}${getApiPrefix()}/departments`, setDepartments, 'fetching departments');
+        fetchData(`${backendUrl}${getApiPrefix()}/patients`, setPatients, 'fetching patients');
         fetchSchedules();
-        fetchData(`${backendUrl}/api/schedules/availability`, setAvailabilities, 'fetching availabilities');
+        fetchData(`${backendUrl}${getApiPrefix()}/schedules/availability`, setAvailabilities, 'fetching availabilities');
     }, [isAuthenticated, authLoading, fetchData, fetchSchedules]);
 
     useEffect(() => {
@@ -198,7 +198,7 @@ function ScheduleManagementPage() {
             delete payload.appointment_start_datetime; // Remove Date objects before sending
             delete payload.appointment_end_datetime;
 
-            const url = editingSchedule ? `${backendUrl}/api/schedules/${editingSchedule.id}` : `${backendUrl}/api/schedules`;
+            const url = editingSchedule ? `${backendUrl}${getApiPrefix()}/schedules/${editingSchedule.id}` : `${backendUrl}${getApiPrefix()}/schedules`;
             const method = editingSchedule ? axios.put : axios.post;
             await method(url, payload, config);
 
@@ -222,7 +222,7 @@ function ScheduleManagementPage() {
         setSubmittingForm(true);
         setNotification({ message: null, type: null });
         try {
-            await axios.delete(`${backendUrl}/api/schedules/${editingSchedule.id}`, config);
+            await axios.delete(`${backendUrl}${getApiPrefix()}/schedules/${editingSchedule.id}`, config);
             setNotification({ message: 'Schedule deleted successfully!', type: 'success' });
             setShowScheduleFormModal(false);
             setEditingSchedule(null);
@@ -250,7 +250,7 @@ function ScheduleManagementPage() {
                     start_time: availabilityFormData.start_time, end_time: availabilityFormData.end_time,
                     max_patients_per_slot: availabilityFormData.max_patients_per_slot, is_active: availabilityFormData.is_active,
                 };
-                await axios.put(`${backendUrl}/api/schedules/availability/${editingAvailability.id}`, payload, config);
+                await axios.put(`${backendUrl}${getApiPrefix()}/schedules/availability/${editingAvailability.id}`, payload, config);
                 setNotification({ message: 'Availability updated successfully!', type: 'success' });
             } else {
                 if (!Array.isArray(availabilityFormData.day_of_week) || availabilityFormData.day_of_week.length === 0) {
@@ -264,14 +264,14 @@ function ScheduleManagementPage() {
                         start_time: availabilityFormData.start_time, end_time: availabilityFormData.end_time,
                         max_patients_per_slot: availabilityFormData.max_patients_per_slot, is_active: availabilityFormData.is_active ?? true,
                     };
-                    await axios.post(`${backendUrl}/api/schedules/availability`, payload, config);
+                    await axios.post(`${backendUrl}${getApiPrefix()}/schedules/availability`, payload, config);
                 }
                 setNotification({ message: 'Availability added successfully for selected days!', type: 'success' });
             }
             setShowAvailabilityFormModal(false);
             setEditingAvailability(null);
             resetAvailabilityFormData();
-            fetchData(`${backendUrl}/api/schedules/availability`, setAvailabilities, 're-fetching availabilities');
+            fetchData(`${backendUrl}${getApiPrefix()}/schedules/availability`, setAvailabilities, 're-fetching availabilities');
         } catch (error) {
             console.error('Error submitting availability:', error);
             setNotification({ message: error.response?.data?.message || 'Failed to save availability.', type: 'error' });
@@ -285,12 +285,12 @@ function ScheduleManagementPage() {
         setSubmittingForm(true);
         setNotification({ message: null, type: null });
         try {
-            await axios.delete(`${backendUrl}/api/schedules/availability/${idToDelete}`, config);
+            await axios.delete(`${backendUrl}${getApiPrefix()}/schedules/availability/${idToDelete}`, config);
             setNotification({ message: 'Availability deleted successfully!', type: 'success' });
             setShowAvailabilityFormModal(false);
             setEditingAvailability(null);
             resetAvailabilityFormData();
-            fetchData(`${backendUrl}/api/schedules/availability`, setAvailabilities, 're-fetching availabilities');
+            fetchData(`${backendUrl}${getApiPrefix()}/schedules/availability`, setAvailabilities, 're-fetching availabilities');
         } catch (error) {
             console.error('Error deleting availability:', error);
             setNotification({ message: error.response?.data?.message || 'Failed to delete availability.', type: 'error' });

@@ -3,14 +3,18 @@ const router = express.Router();
 const labReportController = require('../controllers/labReportController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
-router.get('/', protect, authorize('admin', 'doctor', 'nurse', 'receptionist'), labReportController.getLabReports);
+const conditionallyProtect = (req, res, next) => {
+  protect(req, res, next);
+};
 
-router.post('/', protect, authorize('admin', 'doctor', 'nurse'), labReportController.createLabReport);
+router.get('/', conditionallyProtect, authorize('admin', 'doctor', 'nurse', 'receptionist', 'guest_demo'), labReportController.getLabReports);
 
-router.get('/:id', protect, authorize('admin', 'doctor', 'nurse', 'receptionist'), labReportController.getLabReportById);
+router.post('/', conditionallyProtect, authorize('admin', 'doctor', 'nurse'), labReportController.createLabReport);
 
-router.put('/:id', protect, authorize('admin', 'doctor', 'nurse'), labReportController.updateLabReport);
+router.get('/:id', conditionallyProtect, authorize('admin', 'doctor', 'nurse', 'receptionist', 'guest_demo'), labReportController.getLabReportById);
 
-router.delete('/:id', protect, authorize('admin'), labReportController.deleteLabReport);
+router.put('/:id', conditionallyProtect, authorize('admin', 'doctor', 'nurse'), labReportController.updateLabReport);
+
+router.delete('/:id', conditionallyProtect, authorize('admin'), labReportController.deleteLabReport);
 
 module.exports = router;

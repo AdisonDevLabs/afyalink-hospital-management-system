@@ -3,12 +3,16 @@ const router = express.Router();
 const messageController = require('../controllers/messageController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
-router.get('/', protect, authorize('admin', 'doctor', 'nurse', 'receptionist', 'patient'), messageController.getMessages);
+const conditionallyProtect = (req, res, next) => {
+  protect(req, res, next);
+};
 
-router.post('/', protect, authorize('admin', 'doctor', 'nurse', 'receptionist'), messageController.createMessage);
+router.get('/', conditionallyProtect, authorize('admin', 'doctor', 'nurse', 'receptionist', 'patient', 'guest_demo'), messageController.getMessages);
 
-router.put('/:id/read', protect, authorize('admin', 'doctor', 'nurse', 'receptionist', 'patient'), messageController.markMessageAsRead);
+router.post('/', conditionallyProtect, authorize('admin', 'doctor', 'nurse', 'receptionist'), messageController.createMessage);
 
-router.delete('/:id', protect, authorize('admin', 'doctor', 'nurse', 'receptionist', 'patient'), messageController.deleteMessage);
+router.put('/:id/read', conditionallyProtect, authorize('admin', 'doctor', 'nurse', 'receptionist', 'patient'), messageController.markMessageAsRead);
+
+router.delete('/:id', conditionallyProtect, authorize('admin', 'doctor', 'nurse', 'receptionist', 'patient'), messageController.deleteMessage);
 
 module.exports = router;

@@ -3,18 +3,22 @@ const router = express.Router();
 const patientController = require('../controllers/patientController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
-router.post('/', protect, authorize('admin', 'receptionist'), patientController.createPatient);
+const conditionallyProtect = (req, res, next) => {
+  protect(req, res, next);
+};
 
-router.get('/', protect, patientController.getAllPatients);
+router.post('/', conditionallyProtect, authorize('admin', 'receptionist'), patientController.createPatient);
 
-router.get('/count', protect, authorize('admin', 'doctor', 'nurse', 'receptionist', 'guest'), patientController.getPatientCount);
+router.get('/', conditionallyProtect, authorize('admin', 'receptionist', 'doctor', 'guest_demo'), patientController.getAllPatients);
 
-router.get('/recent', protect, authorize('admin', 'receptionist', 'doctor', 'nurse', 'guest'), patientController.getRecentPatients);
+router.get('/count', conditionallyProtect, authorize('admin', 'doctor', 'nurse', 'receptionist', 'guest_demo'), patientController.getPatientCount);
 
-router.get('/:id', protect, patientController.getPatientById);
+router.get('/recent', conditionallyProtect, authorize('admin', 'receptionist', 'doctor', 'nurse', 'guest_demo'), patientController.getRecentPatients);
 
-router.put('/:id', protect, authorize('admin', 'receptionist'), patientController.updatePatient);
+router.get('/:id', conditionallyProtect, authorize('admin', 'receptionist', 'doctor', 'nurse', 'guest_demo'), patientController.getPatientById);
 
-router.delete('/:id', protect, authorize('admin'), patientController.deletePatient);
+router.put('/:id', conditionallyProtect, authorize('admin', 'receptionist'), patientController.updatePatient);
+
+router.delete('/:id', conditionallyProtect, authorize('admin'), patientController.deletePatient);
 
 module.exports = router;

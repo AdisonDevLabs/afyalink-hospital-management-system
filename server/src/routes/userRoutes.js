@@ -6,6 +6,10 @@ const path = require('path');
 const userController = require('../controllers/userController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
+const conditionallyProtect = (req, res, next) => {
+  protect(req, res, next);
+};
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, path.join(__dirname, '..', '..', 'public', 'uploads'));
@@ -33,22 +37,22 @@ const upload = multer({
   }
 });
 
-router.get('/profile', protect, userController.getProfile);
+router.get('/profile', conditionallyProtect, authorize('guest_demo'), userController.getProfile);
 
-router.put('/profile', protect, upload.single('profile_picture'), userController.updateProfile);
+router.put('/profile', conditionallyProtect, upload.single('profile_picture'), userController.updateProfile);
 
-router.post('/', protect, authorize('admin'), userController.registerUser);
+router.post('/', conditionallyProtect, authorize('admin'), userController.registerUser);
 
-router.get('/', protect, authorize('admin', 'doctor', 'receptionist', 'nurse', 'guest'), userController.getAllUsers);
+router.get('/', conditionallyProtect, authorize('admin', 'doctor', 'receptionist', 'nurse', 'guest_demo'), userController.getAllUsers);
 
-router.get('/:id', protect, authorize('admin', 'doctor', 'receptionist', 'nurse', 'guest'), userController.getUserById);
+router.get('/:id', conditionallyProtect, authorize('admin', 'doctor', 'receptionist', 'nurse', 'guest_demo'), userController.getUserById);
 
-router.put('/:id', protect, authorize('admin'), userController.updateUser);
+router.put('/:id', conditionallyProtect, authorize('admin'), userController.updateUser);
 
-router.delete('/:id', protect, authorize('admin'), userController.deleteUser);
+router.delete('/:id', conditionallyProtect, authorize('admin'), userController.deleteUser);
 
-router.put('/:id/toggle-status', protect, authorize('admin'), userController.toggleUserStatus);
+router.put('/:id/toggle-status', conditionallyProtect, authorize('admin'), userController.toggleUserStatus);
 
-router.post('/:id/reset-password', protect, authorize('admin'), userController.resetUserPassword);
+router.post('/:id/reset-password', conditionallyProtect, authorize('admin'), userController.resetUserPassword);
 
 module.exports = router;

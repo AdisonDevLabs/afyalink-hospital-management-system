@@ -109,7 +109,7 @@ const StaffListModal = ({ isOpen, onClose, departmentName, staffList }) => {
 const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
 function DepartmentsManagementPage() {
-  const { user, token } = useAuth();
+  const { user, token, getApiPrefix } = useAuth();
   const navigate = useNavigate();
 
   const [departments, setDepartments] = useState([]);
@@ -132,7 +132,7 @@ function DepartmentsManagementPage() {
 
   const fetchStaffForDepartment = useCallback(async (departmentId) => {
     try {
-      const res = await fetch(`${backendUrl}/api/departments/${departmentId}/staff`, { headers: { 'Authorization': `Bearer ${token}` } });
+      const res = await fetch(`${backendUrl}${getApiPrefix()}/departments/${departmentId}/staff`, { headers: { 'Authorization': `Bearer ${token}` } });
       if (!res.ok) throw new Error('Failed to fetch staff');
       return await res.json();
     } catch (error) {
@@ -145,7 +145,7 @@ function DepartmentsManagementPage() {
   const fetchPotentialDepartmentHeads = useCallback(async () => {
     if (!token) return;
     try {
-      const res = await fetch(`${backendUrl}/api/departments/potential-heads`, { headers: { 'Authorization': `Bearer ${token}` } });
+      const res = await fetch(`${backendUrl}${getApiPrefix()}/departments/potential-heads`, { headers: { 'Authorization': `Bearer ${token}` } });
       if (!res.ok) throw new Error('Failed to fetch potential department heads');
       setPotentialDepartmentHeads(await res.json());
     } catch (error) {
@@ -158,7 +158,7 @@ function DepartmentsManagementPage() {
     if (!token) { setLoading(false); return; }
     setLoading(true);
     try {
-      const res = await fetch(`${backendUrl}/api/departments`, { headers: { 'Authorization': `Bearer ${token}` } });
+      const res = await fetch(`${backendUrl}${getApiPrefix()}/departments`, { headers: { 'Authorization': `Bearer ${token}` } });
       if (!res.ok) {
         if (res.status === 403) {
           setNotification({ message: 'You are not authorized to view departments.', type: 'error' });
@@ -204,7 +204,7 @@ function DepartmentsManagementPage() {
 
     const payload = { ...formData, head_of_department_id: formData.head_of_department_id || null };
     try {
-      const url = editingDepartment ? `${backendUrl}/api/departments/${editingDepartment.id}` : `${backendUrl}/api/departments`;
+      const url = editingDepartment ? `${backendUrl}${getApiPrefix()}/departments/${editingDepartment.id}` : `${backendUrl}${getApiPrefix()}/departments`;
       const method = editingDepartment ? 'PUT' : 'POST';
 
       const res = await fetch(url, {
@@ -231,7 +231,7 @@ function DepartmentsManagementPage() {
     if (!departmentToDelete) return;
     handleNotificationClose();
     try {
-      const res = await fetch(`${backendUrl}/api/departments/${departmentToDelete.id}`, {
+      const res = await fetch(`${backendUrl}${getApiPrefix()}/departments/${departmentToDelete.id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` },
       });
@@ -253,11 +253,11 @@ function DepartmentsManagementPage() {
     setCurrentDepartmentStaff(await fetchStaffForDepartment(department.id));
     setShowStaffListModal(true);
   };
-
-  if (!user || user.role !== 'admin') {
+{/**
+  if (!user || user.role !== 'admin', 'guest_demo') {
     navigate('/dashboard');
-    return null;
-  }
+    return;
+  }*/}
 
   if (loading) {
     return (

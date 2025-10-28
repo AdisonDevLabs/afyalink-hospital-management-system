@@ -21,14 +21,14 @@ function Layout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navLinks = [
-    { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["admin", "doctor", "receptionist", "nurse", "guest"] },
-    { to: "/users", label: "Users", icon: Users, roles: ["admin", "guest"] },
-    { to: "/patients", label: "Patients", icon: HeartPulse, roles: ["admin", "doctor", "receptionist", "nurse", "guest"] },
-    { to: "/appointments", label: "Appointments", icon: Calendar, roles: ["admin", "doctor", "receptionist", "nurse", "guest"] },
-    { to: "/clinical-notes", label: "Clinical Notes", icon: ClipboardList, roles: ["admin", "doctor", "nurse", "guest"] },
-    { to: "/departments", label: "Departments", icon: Building2, roles: ["admin", "guest"] },
-    { to: "/schedules", label: "Schedules", icon: Calendar, roles: ["admin", "doctor", "receptionist", "nurse", "guest"] },
-    { to: "/profile", label: "My Profile", icon: User, roles: ["admin", "doctor", "receptionist", "nurse", "guest"] },
+    { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["admin", "doctor", "receptionist", "nurse", "guest_demo"] },
+    { to: "/users", label: "Users", icon: Users, roles: ["admin", "guest_demo"] },
+    { to: "/patients", label: "Patients", icon: HeartPulse, roles: ["admin", "doctor", "receptionist", "nurse", "guest_demo"] },
+    { to: "/appointments", label: "Appointments", icon: Calendar, roles: ["admin", "doctor", "receptionist", "nurse", "guest_demo"] },
+    { to: "/clinical-notes", label: "Clinical Notes", icon: ClipboardList, roles: ["admin", "doctor", "nurse", "guest_demo"] },
+    { to: "/departments", label: "Departments", icon: Building2, roles: ["admin", "guest_demo"] },
+    { to: "/schedules", label: "Schedules", icon: Calendar, roles: ["admin", "doctor", "receptionist", "nurse", "guest_demo"] },
+    { to: "/profile", label: "My Profile", icon: User, roles: ["admin", "doctor", "receptionist", "nurse", "guest_demo"] },
   ];
 
   useEffect(() => {

@@ -3,20 +3,24 @@ const router = express.Router();
 const scheduleController = require('../controllers/scheduleController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
-router.get('/', protect, authorize('admin', 'doctor', 'receptionist', 'nurse', 'guest'), scheduleController.getAllSchedules);
+const conditionallyProtect = (req, res, next) => {
+  protect(req, res, next);
+};
 
-router.post('/', protect, authorize('admin', 'doctor', 'receptionist', 'nurse'), scheduleController.createAppointment);
+router.get('/', conditionallyProtect, authorize('admin', 'doctor', 'receptionist', 'nurse', 'guest_demo'), scheduleController.getAllSchedules);
 
-router.put('/:id', protect, authorize('admin', 'doctor', 'receptionist', 'nurse'), scheduleController.updateAppointment);
+router.post('/', conditionallyProtect, authorize('admin', 'doctor', 'receptionist', 'nurse'), scheduleController.createAppointment);
 
-router.delete('/:id', protect, authorize('admin', 'doctor', 'receptionist', 'nurse'), scheduleController.deleteAppointment);
+router.put('/:id', conditionallyProtect, authorize('admin', 'doctor', 'receptionist', 'nurse'), scheduleController.updateAppointment);
 
-router.post('/availability', protect, authorize('admin', 'doctor'), scheduleController.createDoctorAvailability);
+router.delete('/:id', conditionallyProtect, authorize('admin', 'doctor', 'receptionist', 'nurse'), scheduleController.deleteAppointment);
 
-router.get('/availability', protect, authorize('admin', 'doctor', 'receptionist', 'nurse', 'guest'), scheduleController.getDoctorAvailabilities);
+router.post('/availability', conditionallyProtect, authorize('admin', 'doctor'), scheduleController.createDoctorAvailability);
 
-router.put('/availability/:id', protect, authorize('admin', 'doctor'), scheduleController.updateDoctorAvailability);
+router.get('/availability', conditionallyProtect, authorize('admin', 'doctor', 'receptionist', 'nurse', 'guest_demo'), scheduleController.getDoctorAvailabilities);
 
-router.delete('/availability/:id', protect, authorize('admin', 'doctor'), scheduleController.deleteDoctorAvailability);
+router.put('/availability/:id', conditionallyProtect, authorize('admin', 'doctor'), scheduleController.updateDoctorAvailability);
+
+router.delete('/availability/:id', conditionallyProtect, authorize('admin', 'doctor'), scheduleController.deleteDoctorAvailability);
 
 module.exports = router;

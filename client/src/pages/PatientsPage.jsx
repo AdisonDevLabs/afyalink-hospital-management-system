@@ -189,8 +189,9 @@ const FormTextArea = ({ label, id, value, onChange, placeholder, rows = '3', cla
 const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
 function PatientsPage() {
-  const { token, isAuthenticated, user, loading: authLoading } = useAuth();
+  const { token, isAuthenticated, user, loading: authLoading, getApiPrefix } = useAuth();
   const navigate = useNavigate();
+  const isDemoUser = user?.role === 'guest_demo';
 
   const [patients, setPatients] = useState([]);
   const [pageLoading, setPageLoading] = useState(true);
@@ -229,7 +230,7 @@ function PatientsPage() {
     setNotification({ message: null, type: null });
 
     try {
-      const response = await fetch(`${backendUrl}/api/patients`, {
+      const response = await fetch(`${backendUrl}${getApiPrefix()}/patients`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -291,6 +292,10 @@ function PatientsPage() {
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     setNotification({ message: null, type: null });
+    if (isDemoUser) {
+      const isEditing = !!modalState.editingPatient;
+      showNotification(`Action blocked: Patient ${isEditing ? 'update' : 'creation'} is disabled in Demo Mode.`, 'error');
+    }
 
     const { first_name, last_name, date_of_birth, gender, contact_phone } = formData;
     if (!first_name || !last_name || !date_of_birth || !gender || !contact_phone) {
@@ -299,7 +304,7 @@ function PatientsPage() {
     }
 
     const isEditing = !!modalState.editingPatient;
-    const url = isEditing ? `${backendUrl}/api/patients/${modalState.editingPatient.id}` : `${backendUrl}/api/patients`;
+    const url = isEditing ? `${backendUrl}${getApiPrefix()}/patients/${modalState.editingPatient.id}` : `${backendUrl}${getApiPrefix()}/patients`;
     const method = isEditing ? 'PUT' : 'POST';
 
     try {
@@ -344,11 +349,17 @@ function PatientsPage() {
     setModalState(prev => ({ ...prev, showDeleteConfirm: false }));
     if (!modalState.patientToDelete) return;
 
+    if (isDemoUser) {
+      showNotification('Action blocked: Patient deletion is disabled in Demo Mode.', 'error');
+      setModalState(prev => ({ ...prev, patientToDelete: null }));
+      return;
+    };
+
     setPageLoading(true);
     setNotification({ message: null, type: null });
 
     try {
-      const response = await fetch(`${backendUrl}/api/patients/${modalState.patientToDelete.id}`, {
+      const response = await fetch(`${backendUrl}${getApiPrefix()}/patients/${modalState.patientToDelete.id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
