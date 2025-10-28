@@ -79,6 +79,30 @@ exports.loginUser = async (req, res) => {
     if (!isMatch) {
       return res.status(401).json({ message: 'Invalid credentials.' });
     }
+    console.log('user role: ', user.role)
+
+    // DUAL_FACTOR CHECK FOR ADMINS ACCESS
+    if (user.role === "admin") {
+      const keyResult = await pool.query(
+        "SELECT key_value FROM system_configs WHERE key_name = 'ADMIN_MACHINE_KEY'"
+      );
+
+      const ADMIN_KEY_HASH_DB = keyResult.rows.length > 0 ? keyResult.rows[0].key_value : null;
+      const ADMIN_KEY_HASH_ENV = process.env.ADMIN_MACHINE_KEY;
+
+      if (!ADMIN_KEY_HASH_DB || !ADMIN_KEY_HASH_ENV) {
+        return res.status(403).json({
+          message: "Invalid credentials."
+        });
+      }
+      const isMatch = await bcrypt.compare(ADMIN_KEY_HASH_ENV, ADMIN_KEY_HASH_DB);
+
+      if (!isMatch) {
+        return res.status(403).json({
+          message: "Admin login not allowed."
+        });
+      }
+    }
 
     const token = jwt.sign(
       { id: user.id, role: user.role },
@@ -97,6 +121,7 @@ exports.loginUser = async (req, res) => {
       message: 'Logged in successfully.',
       token,
       user: sanitizedUser,
+      isDemoMode: process.env.DEMO_MODE === 'true'
     });
 
   } catch (error) {

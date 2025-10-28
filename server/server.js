@@ -28,10 +28,12 @@ const alertRoutes = require('./src/routes/alertRoutes');
 const activityRoutes = require('./src/routes/activityRoutes');
 const paymentRoutes = require('./src/routes/paymentRoutes');
 const orderRoutes = require('./src/routes/orderRoutes');
+const { restrictInDemo } = require('./src/middleware/demoMode');
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
+app.use(restrictInDemo)
 
 app.get('/', (req, res) => {
   res.status(200).json({ message: 'AfyaLink HMS Backend is Running' });
