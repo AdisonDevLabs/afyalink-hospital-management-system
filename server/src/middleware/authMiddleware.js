@@ -1,6 +1,13 @@
 const jwt = require('jsonwebtoken');
 
 exports.protect = (req, res, next) => {
+
+  if (req.isDemoMode) {
+    req.user = { id: 0, role: 'guest_demo', username: 'demo_user' };
+    console.log('PROTECT: Bypassing authentication for Demo Mode GET request. Assigned role: guest_demo')
+    return next();
+  }
+
   let token;
 
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
@@ -29,7 +36,8 @@ exports.authorize = (...roles) => {
     const isAuthorized = req.user && roles.includes(req.user.role);
 
     if (!req.user || !isAuthorized) {
-      console.warn(`AUTHORIZATION DENIED: User role '<span class="math-inline">\{req\.user ? req\.user\.role \: "undefined"\}' is not authorized to access this route\. Expected roles\: \[</span>{roles.join(', ')}]`);
+      console.warn(`AUTHORIZATION DENIED: User role '${req.user ? req.user.role : "undefined"}' is not authorized to access this route. Expected roles: [${roles.join(', ')}]`);
+      
       return res.status(403).json({ message: `User role '${req.user ? req.user.role : "undefined"}' is not authorized to access this route.` });
     }
     next();

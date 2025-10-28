@@ -8,12 +8,18 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isDemoMode, setIsDemoMode] = useState(false);
 
   useEffect(() => {
     const storedToken = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');
+    const storedDemoMode = localStorage.getItem('isDemoMode') === 'true';
 
-    if (storedToken && storedUser) {
+    if (storedDemoMode) {
+      setIsDemoMode(true);
+      setUser({ role: 'guest_demo' });
+      setToken('dummy_token');
+    } else if (storedToken && storedUser) {
       try {
         const parsedUser = JSON.parse(storedUser);
         const decodedToken = jwtDecode(storedToken);
@@ -45,6 +51,9 @@ export const AuthProvider = ({ children }) => {
     console.log('AuthContext Login: profile_picture in RECEIVED userData:', userData?.profile_picture);
     // *********************
 
+    setIsDemoMode(false);
+    localStorage.removeItem('isDemoMode');
+
     setUser(userData); // This updates the React state
     setToken(jwtToken);
     localStorage.setItem('token', jwtToken);
@@ -58,8 +67,32 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     setUser(null);
     setToken(null);
+    setIsDemoMode(false);
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('isDemoMode');
+  };
+
+  const enterDemoMode = () => {
+    const demoUser = {
+      role: 'guest_demo',
+      first_name: 'Demo',
+      last_name: 'User',
+      username: 'demo_user',
+    };
+
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+
+    setUser(demoUser);
+    setToken('dummy_token');
+    setIsDemoMode(true);
+    localStorage.setItem('isDemoMode', 'true');
+    localStorage.setItem('user', JSON.stringify(demoUser));
+  };
+
+  const getApiPrefix = () => {
+    return isDemoMode ? '/demo/api' : '/api';
   };
 
   // Provide auth state and functions to children components
@@ -68,8 +101,11 @@ export const AuthProvider = ({ children }) => {
     token,
     loading,
     isAuthenticated: !!user && !!token,
+    isDemoMode,
     login,
     logout,
+    enterDemoMode,
+    getApiPrefix,
   };
 
   return (

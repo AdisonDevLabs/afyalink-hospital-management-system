@@ -41,7 +41,7 @@ function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const { login } = useAuth();
+  const { login, enterDemoMode, getApiPrefix } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -49,8 +49,10 @@ function LoginPage() {
     setError(null);
     setLoading(true);
 
+    const apiUrl = `${backendUrl}${getApiPrefix()}/auth/login`;
+
     try {
-      const response = await fetch(`${backendUrl}/api/auth/login`, {
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
@@ -62,15 +64,29 @@ function LoginPage() {
       }
 
       const data = await response.json();
-      login(data.user, data.token);
-      navigate('/dashboard');
 
+      if (response.ok) {
+        login(data.user, data.token);
+        navigate('/dashboard', { replace: true });
+      } else {
+        if (response.status === 403 && data.message.includes('Login is disabled in Demo Mode')) {
+          setError('Login attempts are blocked while in Demo Mode URL. Please user the "Enter Demo Mode" button below for the read-only access, or remove the /demo prefix from the URL to login.');
+        } else {
+          setError(data.message || 'Login failed. Please check your credentials.');
+        }
+      }
+      
     } catch (err) {
       console.error('Login error:', err);
       setError(err.message || 'An unexpected error occurred during login.');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleDemoMode =() => {
+    enterDemoMode();
+    navigate('/dashboard', { replace: true });
   };
 
   return (
@@ -212,6 +228,30 @@ function LoginPage() {
             ) : (
               'Login'
             )}
+          </motion.button>
+
+          {/* --- START: NEW DEMO MODE UI --- */}
+          <div className="relative mt-6">
+            <div className="absolute inset-0 flex items-center" aria-hidden="true">
+              <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
+            </div>
+            <div className="relative flex justify-center">
+              <span className="bg-white dark:bg-gray-800 px-2 text-sm text-gray-500 dark:text-gray-400">
+                OR
+              </span>
+            </div>
+          </div>
+
+          <motion.button
+            onClick={handleDemoMode}
+            type='button'
+            className='w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-lg text-base font-medium text-blue-600 bg-blue-100 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300 dark:hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800 transition duration-300 ease-in-out transform hover:scale-105'
+            variants={inputVariants}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            disabled={loading}
+          >
+            Enter Read-Only Demo Mode
           </motion.button>
           <motion.div variants={inputVariants} className="text-sm text-center">
             <p className="text-sm text-gray-600 transition-colors duration-300 dark:text-gray-300"> {/* Added dark mode text color */}

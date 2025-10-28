@@ -8,6 +8,12 @@ const sanitizeUser = (user) => {
 };
 
 exports.registerUser = async (req, res) => {
+
+  if (req.isDemoMode) {
+    return res.status(403).json({
+      message: 'User registration is desabled in Demo Mode.'
+    });
+  }
   const { username, password, role, first_name, last_name, email, phone_number, address, date_of_birth, gender, specialization } = req.body;
 
   if (!username || !password || !email) {
@@ -56,6 +62,12 @@ exports.registerUser = async (req, res) => {
 };
 
 exports.loginUser = async (req, res) => {
+
+  if (req.isDemoMode) {
+    return res.status(403).json({
+      message: 'Login is disabled in Demo Mode. Use the demo features without logging in.'
+    })
+  }
   const { username, password } = req.body;
 
   if (!username || !password) {
@@ -121,7 +133,7 @@ exports.loginUser = async (req, res) => {
       message: 'Logged in successfully.',
       token,
       user: sanitizedUser,
-      isDemoMode: process.env.DEMO_MODE === 'true'
+      isDemoMode: false
     });
 
   } catch (error) {
@@ -132,6 +144,19 @@ exports.loginUser = async (req, res) => {
 
 exports.getProfile = async (req, res) => {
   try {
+
+    if (req.isDemoMode) {
+      return res.status(200).json({
+        id: req.user.id,
+        username: req.user.username,
+        role: req.user.role,
+        first_name: 'Demo',
+        last_name: 'User',
+        email: 'demo@afyalink.com',
+        isDemoMode: true
+      });
+    }
+    
     const userResult = await pool.query(
       'SELECT id, username, role, first_name, last_name, email, phone_number, address, date_of_birth, gender, specialization, photo_url FROM users WHERE id = $1',
       [req.user.id]

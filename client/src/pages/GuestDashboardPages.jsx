@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, PointElement, LineElement } from 'chart.js';
 import { Bar, Pie } from 'react-chartjs-2';
 import { useTheme } from '../context/ThemeContext';
-import { ShieldAlert, Users, CalendarCheck, FileText, DollarSign, Briefcase } from 'lucide-react'; // Added icons
+import { ShieldAlert, Users, CalendarCheck, FileText, DollarSign } from 'lucide-react';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, PointElement, LineElement);
 
@@ -22,17 +22,19 @@ const DemoModeAlert = ({ theme }) => (
     </div>
 );
 
-
-function DashboardPage() {
+function GuestDashboardPage() {
+  // Use the same context variables as the Admin Dashboard
   const { user, isAuthenticated, loading: authLoading, token, isDemoMode, getApiPrefix } = useAuth();
   const navigate = useNavigate();
   const { theme } = useTheme();
-
+  
+  // Use the same states to display the admin-level data
   const [stats, setStats] = useState({ totalPatients: 0, totalDoctors: 0, todaysAppointments: 0, revenueSummary: 0 });
-  const [recentActivities, setRecentActivities] = useState([]);
   const [todaysAppointmentsList, setTodaysAppointmentsList] = useState([]);
-  const [totalDepartments, setTotalDepartments] = useState(0); // New stat for demo/guest
+  // Adding a state for total departments for a new guest card
+  const [totalDepartments, setTotalDepartments] = useState(0); 
 
+  // --- Chart Logic (Identical to AdminDashboardPage) ---
   const getChartColors = useCallback((isDarkMode) => ({
     lineChartBackground: isDarkMode ? 'rgba(75, 192, 192, 0.4)' : 'rgba(75, 192, 192, 0.6)',
     lineChartBorder: isDarkMode ? 'rgba(75, 192, 192, 0.8)' : 'rgba(75, 192, 192, 1)',
@@ -73,7 +75,6 @@ function DashboardPage() {
   const [pieChartOptions, setPieChartOptions] = useState({});
 
   useEffect(() => {
-    // Chart options update logic remains the same
     const isDarkMode = theme === 'dark';
     const colors = getChartColors(isDarkMode);
 
@@ -131,22 +132,26 @@ function DashboardPage() {
     });
 
   }, [theme, getChartColors]);
-
+  // --- End Chart Logic ---
+  
   const currentDate = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
-  // --- Data Fetching Hooks (Updated with isDemoMode Fallback) ---
+  // --- Start Data Fetching Logic (Modified to use getApiPrefix) ---
 
-  const fetchAdminStats = useCallback(async () => {
+  const fetchStats = useCallback(async () => {
     if (!token) return;
     try {
-      const response = await fetch(`${backendUrl}${getApiPrefix()}/admin/stats`, { headers: { 'Authorization': `Bearer ${token}` } });
+      // Use the dynamic prefix
+      const response = await fetch(`${backendUrl}${getApiPrefix()}/admin/stats`, { 
+        headers: { 'Authorization': `Bearer ${token}` } 
+      });
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
       setStats(data);
     } catch (error) {
-      console.error('Error fetching admin stats:', error);
+      console.error('Error fetching dashboard stats:', error);
+      // In demo mode, provide hardcoded fallback data if API fails
       if (isDemoMode) {
-          // Fallback data for Demo Mode
           setStats({ totalPatients: 1500, totalDoctors: 35, todaysAppointments: 12, revenueSummary: 15000 });
       }
     }
@@ -156,7 +161,10 @@ function DashboardPage() {
     if (!token) return;
     try {
       const today = new Date().toISOString().split('T')[0];
-      const response = await fetch(`${backendUrl}${getApiPrefix()}/appointments?date=${today}&status=Scheduled`, { headers: { 'Authorization': `Bearer ${token}` } });
+       // Use the dynamic prefix
+      const response = await fetch(`${backendUrl}${getApiPrefix()}/appointments?date=${today}&status=Scheduled`, { 
+        headers: { 'Authorization': `Bearer ${token}` } 
+      });
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
       setTodaysAppointmentsList(data);
@@ -172,36 +180,13 @@ function DashboardPage() {
     }
   }, [token, getApiPrefix, isDemoMode]);
 
-  const fetchRecentActivities = useCallback(async () => {
-    // Only fetch for non-demo users if you don't have a demo-specific mock endpoint
-    if (isDemoMode) {
-      setRecentActivities([
-        { id: 1, type: 'SUCCESS', description: 'Dr. Smith updated a clinical note.', date: '5 min ago' },
-        { id: 2, type: 'INFO', description: 'Patient 104 registered.', date: '1 hour ago' },
-        { id: 3, type: 'CRITICAL', description: 'Database connection error.', date: '2 hours ago' },
-        { id: 4, type: 'LOGIN', description: 'Receptionist Jane logged in.', date: '3 hours ago' },
-      ]);
-      return;
-    }
-    
-    if (!token || isDemoMode) return; // Skip if in demo mode or no token
-
-    try {
-      const response = await fetch(`${backendUrl}${getApiPrefix()}/activities/recent`, { headers: { 'Authorization': `Bearer ${token}` } });
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      const data = await response.json();
-      setRecentActivities(data);
-    } catch (error) {
-      console.error('Error fetching recent activities:', error);
-      // Fallback for real users if API fails (optional)
-      setRecentActivities([]); 
-    }
-  }, [token, getApiPrefix, isDemoMode]);
-
   const fetchAppointmentStatusCounts = useCallback(async () => {
     if (!token) return;
     try {
-      const response = await fetch(`${backendUrl}${getApiPrefix()}/admin/appointment-status-counts`, { headers: { 'Authorization': `Bearer ${token}` } });
+      // Use the dynamic prefix
+      const response = await fetch(`${backendUrl}${getApiPrefix()}/admin/appointment-status-counts`, { 
+        headers: { 'Authorization': `Bearer ${token}` } 
+      });
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
       
@@ -229,6 +214,7 @@ function DashboardPage() {
   const fetchDepartmentsCount = useCallback(async () => {
     if (!token) return;
     try {
+      // Use the dynamic prefix and the departments endpoint
       const response = await fetch(`${backendUrl}${getApiPrefix()}/departments`, { 
         headers: { 'Authorization': `Bearer ${token}` } 
       });
@@ -243,39 +229,27 @@ function DashboardPage() {
     }
   }, [token, getApiPrefix, isDemoMode]);
 
-
   useEffect(() => {
+    // Fetch data only if authenticated OR in demo mode
     if (isAuthenticated || isDemoMode) {
-      fetchAdminStats();
+      fetchStats();
       fetchTodaysAppointments();
       fetchAppointmentStatusCounts();
-      fetchRecentActivities();
-      fetchDepartmentsCount();
+      fetchDepartmentsCount(); // Fetch new stat for Guest/Demo dashboard
     }
-  }, [isAuthenticated, isDemoMode, fetchAdminStats, fetchTodaysAppointments, fetchAppointmentStatusCounts, fetchRecentActivities, fetchDepartmentsCount]);
+  }, [isAuthenticated, isDemoMode, fetchStats, fetchTodaysAppointments, fetchAppointmentStatusCounts, fetchDepartmentsCount]);
+  // --- End Data Fetching Logic ---
 
-  const getActivityBadgeClasses = (type) => {
-    switch (type) {
-      case 'SUCCESS': return 'bg-green-200 text-green-800 dark:bg-green-700 dark:text-green-200';
-      case 'CRITICAL': return 'bg-red-200 text-red-800 dark:bg-red-700 dark:text-red-200';
-      case 'LOGIN': return 'bg-blue-200 text-blue-800 dark:bg-blue-700 dark:text-blue-200';
-      case 'INFO':
-      default: return 'bg-yellow-200 text-yellow-800 dark:bg-yellow-700 dark:text-yellow-200';
-    }
-  };
-
-  // --- JSX Rendering ---
+  // Standard loading and unauthorized check
   if (authLoading) {
     return <div className="flex justify-center items-center h-screen">Loading Authentication...</div>;
   }
-  
+
+  // --- JSX Rendering ---
   const CARD_VARIANTS = {
     initial: { scale: 0.95, opacity: 0 },
     animate: { scale: 1, opacity: 1, transition: { type: "spring", stiffness: 100, damping: 12 } }
   };
-  const isDemo = isDemoMode || user?.role === 'guest_demo';
-  
-  const dashboardTitle = isDemo ? 'Demo Dashboard' : `${user?.role.charAt(0).toUpperCase() + user?.role.slice(1)} Dashboard`;
 
   return (
     <motion.div
@@ -285,14 +259,16 @@ function DashboardPage() {
       className={`min-h-screen p-6 ${theme === 'dark' ? 'bg-gray-900 text-gray-200' : 'bg-gray-100 text-gray-800'}`}
     >
       <header className="mb-8">
-        <h1 className="text-3xl font-bold">{dashboardTitle}</h1>
-        <p className="text-md">Welcome, {user?.first_name || user?.username || 'User'}! Today is {currentDate}.</p>
+        <h1 className="text-3xl font-bold">
+          {user?.role === 'guest_demo' ? 'Demo Dashboard' : 'Guest Dashboard'}
+        </h1>
+        <p className="text-md">Welcome, {user?.first_name || user?.username || 'Guest'}! Today is {currentDate}.</p>
       </header>
       
-      {/* 1. Conditional Demo Mode Alert */}
-      {isDemo && <DemoModeAlert theme={theme} />}
+      {/* Show the Demo Mode Alert */}
+      {(isDemoMode || user?.role === 'guest_demo') && <DemoModeAlert theme={theme} />}
 
-      {/* 2. Statistics Cards - Conditional Rendering based on role */}
+      {/* Statistics Cards - Using the same data as Admin */}
       <motion.div 
         initial="initial"
         animate="animate"
@@ -311,7 +287,7 @@ function DashboardPage() {
           <Link to="/patients" className="text-sm text-blue-400 hover:underline mt-2 block">View Patients List</Link>
         </motion.div>
         
-        {/* Card 2: Doctors/Staff */}
+        {/* Card 2: Doctors */}
         <motion.div
           variants={CARD_VARIANTS}
           whileHover={{ scale: 1.03 }}
@@ -323,42 +299,29 @@ function DashboardPage() {
           <Link to="/users" className="text-sm text-green-400 hover:underline mt-2 block">View Staff Directory</Link>
         </motion.div>
 
-        {/* Card 3: Today's Appointments */}
+        {/* Card 3: Departments (NEW for Guest) */}
         <motion.div
           variants={CARD_VARIANTS}
           whileHover={{ scale: 1.03 }}
           className={`p-6 rounded-lg shadow-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}
         >
           <CalendarCheck className="h-8 w-8 text-yellow-500 mb-2" />
-          <h3 className="text-lg font-semibold mb-1">Today's Appointments</h3>
-          <p className="text-4xl font-extrabold text-yellow-500">{stats.todaysAppointments.toLocaleString()}</p>
-          <Link to="/appointments" className="text-sm text-yellow-400 hover:underline mt-2 block">View Schedule</Link>
+          <h3 className="text-lg font-semibold mb-1">Total Departments</h3>
+          <p className="text-4xl font-extrabold text-yellow-500">{totalDepartments.toLocaleString()}</p>
+          <Link to="/departments" className="text-sm text-yellow-400 hover:underline mt-2 block">View Departments</Link>
         </motion.div>
 
-        {/* Card 4: Revenue (Admin/Receptionist) or Departments (Demo/Guest) */}
-        {!isDemo && user?.role !== 'receptionist' ? ( // Show Revenue for Admin only
-            <motion.div
-                variants={CARD_VARIANTS}
-                whileHover={{ scale: 1.03 }}
-                className={`p-6 rounded-lg shadow-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}
-            >
-                <DollarSign className="h-8 w-8 text-purple-500 mb-2" />
-                <h3 className="text-lg font-semibold mb-1">Monthly Revenue</h3>
-                <p className="text-4xl font-extrabold text-purple-500">${stats.revenueSummary.toLocaleString()}</p>
-                <span className="text-sm text-gray-400 mt-2 block">Simulated Data</span>
-            </motion.div>
-        ) : ( // Show Departments for Demo/Receptionist/Guest
-            <motion.div
-                variants={CARD_VARIANTS}
-                whileHover={{ scale: 1.03 }}
-                className={`p-6 rounded-lg shadow-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}
-            >
-                <Briefcase className="h-8 w-8 text-purple-500 mb-2" />
-                <h3 className="text-lg font-semibold mb-1">Total Departments</h3>
-                <p className="text-4xl font-extrabold text-purple-500">{totalDepartments.toLocaleString()}</p>
-                <Link to="/departments" className="text-sm text-purple-400 hover:underline mt-2 block">View Departments</Link>
-            </motion.div>
-        )}
+        {/* Card 4: Appointments */}
+        <motion.div
+          variants={CARD_VARIANTS}
+          whileHover={{ scale: 1.03 }}
+          className={`p-6 rounded-lg shadow-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}
+        >
+          <FileText className="h-8 w-8 text-purple-500 mb-2" />
+          <h3 className="text-lg font-semibold mb-1">Today's Appointments</h3>
+          <p className="text-4xl font-extrabold text-purple-500">{stats.todaysAppointments.toLocaleString()}</p>
+          <Link to="/appointments" className="text-sm text-purple-400 hover:underline mt-2 block">View Appointments</Link>
+        </motion.div>
       </motion.div>
 
       {/* Charts and Lists */}
@@ -379,27 +342,19 @@ function DashboardPage() {
       </div>
 
       <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Today's Appointments List */}
+        {/* Today's Appointments List (Read-only view) */}
         <div className={`p-6 rounded-lg shadow-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
           <h3 className="text-xl font-semibold mb-4 border-b pb-2 border-gray-200 dark:border-gray-700">Next Scheduled Appointments</h3>
           <ul className="space-y-3">
             {todaysAppointmentsList.length > 0 ? (
               todaysAppointmentsList.slice(0, 5).map(appointment => (
-                // Assuming appointment object has patient_name, doctor_name, and appointment_time
-                <motion.li 
-                    key={appointment.id} 
-                    className={`p-3 rounded-md flex justify-between items-center transition duration-200 hover:shadow-sm ${theme === 'dark' ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-50 hover:bg-gray-100'}`}
-                    initial={{ x: -10, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    transition={{ duration: 0.3 }}
-                >
+                <li key={appointment.id} className={`p-3 rounded-md flex justify-between items-center transition duration-200 hover:shadow-sm ${theme === 'dark' ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-50 hover:bg-gray-100'}`}>
                   <div>
                     <span className="font-medium text-blue-500 dark:text-blue-400">{appointment.patient_name || 'Patient'}</span>
-                    {/* Only display doctor name if it exists or if not in demo mode (where the structure might be simplified) */}
-                    {appointment.doctor_name && <p className="text-xs text-gray-500 dark:text-gray-400">w/ {appointment.doctor_name}</p>}
+                    <p className="text-xs text-gray-500 dark:text-gray-400">w/ {appointment.doctor_name || 'Doctor'}</p>
                   </div>
                   <span className="text-sm font-semibold text-gray-600 dark:text-gray-300">{appointment.appointment_time}</span>
-                </motion.li>
+                </li>
               ))
             ) : (
               <li className="text-gray-500 dark:text-gray-400 text-center py-4">No appointments scheduled for today.</li>
@@ -410,70 +365,39 @@ function DashboardPage() {
           </div>
         </div>
 
-        {/* Recent Activities/Audit Log - Only shown for non-demo users */}
+        {/* System Overview / Financial Summary (Read-only view) */}
         <div className={`p-6 rounded-lg shadow-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
-          <h3 className="text-xl font-semibold mb-4 border-b pb-2 border-gray-200 dark:border-gray-700">{isDemo ? 'System Financial Summary' : 'Recent System Activity'}</h3>
-          
-          {isDemo ? (
-            // Demo Mode Content: Financial Summary
-            <div className="space-y-4">
-                <div className="flex justify-between items-center p-3 rounded-md bg-green-50 dark:bg-green-900/50">
-                    <div className="flex items-center">
-                        <DollarSign className="h-5 w-5 text-green-600 mr-3" />
-                        <span className="font-medium text-green-700 dark:text-green-300">Monthly Revenue (Simulated)</span>
-                    </div>
-                    <span className="text-xl font-bold text-green-700 dark:text-green-300">${stats.revenueSummary.toLocaleString()}</span>
+          <h3 className="text-xl font-semibold mb-4 border-b pb-2 border-gray-200 dark:border-gray-700">Financial Overview (Simulated)</h3>
+          <div className="space-y-4">
+            <div className="flex justify-between items-center p-3 rounded-md bg-green-50 dark:bg-green-900/50">
+                <div className="flex items-center">
+                    <DollarSign className="h-5 w-5 text-green-600 mr-3" />
+                    <span className="font-medium text-green-700 dark:text-green-300">Monthly Revenue Summary</span>
                 </div>
-                <div className="flex justify-between items-center p-3 rounded-md bg-blue-50 dark:bg-blue-900/50">
-                    <div className="flex items-center">
-                        <Users className="h-5 w-5 text-blue-600 mr-3" />
-                        <span className="font-medium text-blue-700 dark:text-blue-300">Total Active Users</span>
-                    </div>
-                    <span className="text-xl font-bold text-blue-700 dark:text-blue-300">{(stats.totalDoctors + 5).toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between items-center p-3 rounded-md bg-red-50 dark:bg-red-900/50">
-                    <div className="flex items-center">
-                        <ShieldAlert className="h-5 w-5 text-red-600 mr-3" />
-                        <span className="font-medium text-red-700 dark:text-red-300">Critical Alerts</span>
-                    </div>
-                    <span className="text-xl font-bold text-red-700 dark:text-red-300">3</span>
-                </div>
+                <span className="text-xl font-bold text-green-700 dark:text-green-300">${stats.revenueSummary.toLocaleString()}</span>
             </div>
-          ) : (
-            // Admin/Receptionist Content: Recent Activities
-            <ul className="space-y-3">
-              {recentActivities.length > 0 ? (
-                recentActivities.slice(0, 5).map(activity => (
-                  <motion.li 
-                    key={activity.id} 
-                    className={`p-3 rounded-md flex justify-between items-center cursor-pointer transition duration-150 hover:shadow-sm ${theme === 'dark' ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-50 hover:bg-gray-100'}`}
-                    initial={{ x: -10, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <div>
-                      <p className='text-gray-800 dark:text-gray-200 font-medium text-base leading-snug'>{activity.description}</p>
-                      <p className='text-sm text-gray-500 dark:text-gray-400 mt-1'>
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-semibold mr-2 ${getActivityBadgeClasses(activity.type)}`}>{activity.type}</span>
-                        {activity.date}
-                      </p>
-                    </div>
-                  </motion.li>
-                ))
-              ) : (
-                <li className='py-4 text-gray-500 dark:text-gray-400 text-center'>No recent activities to display.</li>
-              )}
-              <div className='mt-5 text-center border-t pt-3 border-gray-200 dark:border-gray-700'>
-                <Link to='/activities' className='text-blue-500 hover:text-blue-400 font-medium text-sm'>
-                  {isDemo ? 'Explore Clinical Data \u2192' : 'View Full Activity Log \u2192'}
-                </Link>
-              </div>
-            </ul>
-          )}
+            <div className="flex justify-between items-center p-3 rounded-md bg-blue-50 dark:bg-blue-900/50">
+                <div className="flex items-center">
+                    <Users className="h-5 w-5 text-blue-600 mr-3" />
+                    <span className="font-medium text-blue-700 dark:text-blue-300">Total Active Users</span>
+                </div>
+                <span className="text-xl font-bold text-blue-700 dark:text-blue-300">{(stats.totalDoctors + 5).toLocaleString()}</span> {/* Mock staff count */}
+            </div>
+            <div className="flex justify-between items-center p-3 rounded-md bg-red-50 dark:bg-red-900/50">
+                <div className="flex items-center">
+                    <ShieldAlert className="h-5 w-5 text-red-600 mr-3" />
+                    <span className="font-medium text-red-700 dark:text-red-300">Critical Alerts</span>
+                </div>
+                <span className="text-xl font-bold text-red-700 dark:text-red-300">3</span> {/* Mock alerts */}
+            </div>
+          </div>
+          <div className="mt-4 text-center border-t pt-3 border-gray-200 dark:border-gray-700">
+            <Link to="/clinical-notes" className="text-blue-500 hover:text-blue-400 font-medium text-sm">Explore Clinical Data &rarr;</Link>
+          </div>
         </div>
       </div>
     </motion.div>
   );
 }
 
-export default DashboardPage;
+export default GuestDashboardPage;

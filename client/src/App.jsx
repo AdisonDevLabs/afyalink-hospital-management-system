@@ -7,11 +7,7 @@ import PrivateRoute from './components/PrivateRoute';
 
 // Lazy-loaded pages
 const LoginPage = lazy(() => import('./pages/LoginPage'));
-const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage'));
-const DoctorDashboardPage = lazy(() => import('./pages/DoctorDashboardPage'));
-const NurseDashboardPage = lazy(() => import('./pages/NurseDashboardPage'));
-const ReceptionistDashboardPage = lazy(() => import('./pages/ReceptionistDashboardPage'));
-const GuestDashboardPage = lazy(() => import('./pages/GuestDashboardPage'));
+const DashboardPage = lazy(() => import('./pages/AdminDashboardPage')); // Use the unified AdminDashboardPage
 const PatientsPage = lazy(() => import('./pages/PatientsPage'));
 const AppointmentsPage = lazy(() => import('./pages/AppointmentsPage'));
 const ClinicalNotesPage = lazy(() => import('./pages/ClinicalNotesPage'));
@@ -22,23 +18,22 @@ const UserProfilePage = lazy(() => import('./components/UserProfile'));
 const RegisterPage = lazy(() => import('./pages/RegisterPage'));
 const HomePagePublic = lazy(() => import('./pages/HomePagePublic'));
 
-// Redirect component that sends users to their role-specific dashboard
-function DashboardRedirect() {
-  const { user } = useAuth();
-  if (!user) return null;
-  return <Navigate to={`/dashboard/${user.role}`} replace />;
-}
+// REMOVED: DashboardRedirect component - no longer needed
 
 function AppContent() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isDemoMode } = useAuth(); 
   const navigate = useNavigate();
 
-  // Redirect logged-in users away from login page
+  // Redirect logged-in users away from login page to the base dashboard path.
   useEffect(() => {
-    if (isAuthenticated && window.location.pathname === '/login') {
+    if ((isAuthenticated || isDemoMode) && window.location.pathname === '/login') {
       navigate('/dashboard', { replace: true });
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, isDemoMode, navigate]);
+
+  const dashboardRedirect = (
+    <Navigate to="/dashboard" replace />
+  );
 
   return (
     <div className="App">
@@ -55,7 +50,7 @@ function AppContent() {
           <Route
             path="/login"
             element={
-              isAuthenticated
+              (isAuthenticated || isDemoMode)
                 ? <Navigate to="/dashboard" replace />
                 : <LoginPage />
             }
@@ -64,41 +59,27 @@ function AppContent() {
 
           {/* Protected Routes */}
           <Route element={<Layout />}>
-            <Route element={<PrivateRoute allowedRoles={['admin','doctor','nurse','receptionist','guest']} />}>
-              {/* Dashboard with role-based index redirect */}
-              <Route path="dashboard">
-                <Route index element={<DashboardRedirect />} />
+            {/* The main PrivateRoute wrapper */}
+            <Route element={<PrivateRoute allowedRoles={['admin','doctor','nurse','receptionist','guest_demo']} />}>
+              
+              {/* --- UNIFIED DASHBOARD ROUTE --- */}
+              {/* All users (including demo) with any role should land here */}
+              <Route path="dashboard" element={<DashboardPage />} />
 
-                <Route element={<PrivateRoute allowedRoles={['admin']} />}>
-                  <Route path="admin" element={<AdminDashboardPage />} />
-                </Route>
-                <Route element={<PrivateRoute allowedRoles={['doctor']} />}>
-                  <Route path="doctor" element={<DoctorDashboardPage />} />
-                </Route>
-                <Route element={<PrivateRoute allowedRoles={['receptionist']} />}>
-                  <Route path="receptionist" element={<ReceptionistDashboardPage />} />
-                </Route>
-                <Route element={<PrivateRoute allowedRoles={['nurse']} />}>
-                  <Route path="nurse" element={<NurseDashboardPage />} />
-                </Route>
-                <Route element={<PrivateRoute allowedRoles={['guest']} />}>
-                  <Route path="guest" element={<GuestDashboardPage />} />
-                </Route>
-              </Route>
-
-              {/* Shared Pages */}
+              {/* Shared Pages - All authorized roles have access to these */}
               <Route path="patients" element={<PatientsPage />} />
               <Route path="appointments" element={<AppointmentsPage />} />
               <Route path="clinical-notes" element={<ClinicalNotesPage />} />
               <Route path="clinical-notes/:patientId" element={<ClinicalNotesPage />} />
               <Route path="schedules" element={<ScheduleManagementPage />} />
               <Route path="profile" element={<UserProfilePage />} />
-
-              {/* Admin & Guest-only */}
-              <Route element={<PrivateRoute allowedRoles={['admin','guest']} />}>
+              
+              {/* Admin & Guest-only (still protected by PrivateRoute) */}
+              <Route element={<PrivateRoute allowedRoles={['admin', 'guest_demo']} />}>
                 <Route path="users" element={<UsersManagementPage />} />
                 <Route path="departments" element={<DepartmentsManagementPage />} />
               </Route>
+              
             </Route>
           </Route>
 
@@ -106,8 +87,8 @@ function AppContent() {
           <Route
             path="*"
             element={
-              isAuthenticated
-                ? <DashboardRedirect />
+              (isAuthenticated || isDemoMode)
+                ? dashboardRedirect
                 : <Navigate to="/login" replace />
             }
           />

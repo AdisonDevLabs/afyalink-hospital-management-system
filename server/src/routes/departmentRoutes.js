@@ -3,13 +3,17 @@ const router = express.Router();
 const departmentController = require('../controllers/departmentController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
-router.get('/count', protect, authorize('receptionist', 'admin', 'doctor', 'nurse', 'guest'), departmentController.getDepartmentsCount);
+const conditionallyProtect = (req, res, next) => {
+  protect(req, res, next);
+};
 
-router.get('/potential-heads', protect, authorize('admin', 'guest'), departmentController.getPotentialDepartmentHeads);
+router.get('/count', conditionallyProtect, authorize('receptionist', 'admin', 'doctor', 'nurse', 'guest_demo'), departmentController.getDepartmentsCount);
 
-router.get('/', protect, authorize('admin', 'doctor', 'receptionist', 'nurse', 'guest'), departmentController.getAllDepartments);
+router.get('/potential-heads', conditionallyProtect, authorize('admin', 'guest_demo'), departmentController.getPotentialDepartmentHeads);
 
-router.get('/:id', protect, authorize('admin', 'doctor', 'receptionist', 'nurse', 'guest'), departmentController.getDepartmentById);
+router.get('/', conditionallyProtect, authorize('admin', 'doctor', 'receptionist', 'nurse', 'guest_demo'), departmentController.getAllDepartments);
+
+router.get('/:id', conditionallyProtect, authorize('admin', 'doctor', 'receptionist', 'nurse', 'guest_demo'), departmentController.getDepartmentById);
 
 router.post('/', protect, authorize('admin'), departmentController.createDepartment);
 
@@ -17,6 +21,6 @@ router.put('/:id', protect, authorize('admin'), departmentController.updateDepar
 
 router.delete('/:id', protect, authorize('admin'), departmentController.deleteDepartment);
 
-router.get('/:id/staff', protect, authorize('admin', 'doctor', 'receptionist', 'nurse', 'guest'), departmentController.getStaffByDepartment);
+router.get('/:id/staff', conditionallyProtect, authorize('admin', 'doctor', 'receptionist', 'nurse', 'guest_demo'), departmentController.getStaffByDepartment);
 
 module.exports = router;
