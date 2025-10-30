@@ -100,6 +100,7 @@ exports.getAllPatients = async (req, res) => {
 
   try {
     const allPatients = await pool.query(query, queryParams);
+    console.log(allPatients)
     res.status(200).json({ patients: allPatients.rows });
   } catch (error) {
     console.error('Error fetching all patients:', error.stack);

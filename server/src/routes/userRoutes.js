@@ -37,7 +37,7 @@ const upload = multer({
   }
 });
 
-router.get('/profile', conditionallyProtect, authorize('guest_demo'), userController.getProfile);
+router.get('/profile', conditionallyProtect, authorize('admin', 'doctor', 'nurse', 'receptionist', 'guest_demo'), userController.getProfile);
 
 router.put('/profile', conditionallyProtect, upload.single('profile_picture'), userController.updateProfile);
 

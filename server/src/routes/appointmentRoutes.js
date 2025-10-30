@@ -9,9 +9,9 @@ const conditionallyProtect = (req, res, next) => {
 
 router.post('/', conditionallyProtect, authorize('admin', 'receptionist'), appointmentController.createAppointment);
 
-router.get('/', conditionallyProtect, authorize('guest_demo'), appointmentController.getAllAppointments);
+router.get('/', conditionallyProtect, authorize('admin','receptionist', 'doctor', 'nurse', 'guest_demo'), appointmentController.getAllAppointments);
 
-router.get('/:id', conditionallyProtect, authorize('guest_demo'), appointmentController.getAppointmentById);
+router.get('/:id', conditionallyProtect, authorize('admin', 'doctor', 'nurse', 'receptionist', 'guest_demo'), appointmentController.getAppointmentById);
 
 router.put('/:id', conditionallyProtect, authorize('admin', 'receptionist', 'doctor'), appointmentController.updateAppointment);
 

@@ -163,7 +163,7 @@ const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, userName }) => {
 
 const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
-// --- Main UsersManagementPage Component ---
+// --- Main UsersManagementPage Component --- user && user.role
 function UsersManagementPage() {
   const { user, isAuthenticated, loading: authLoading, token, getApiPrefix } = useAuth();
   const navigate = useNavigate();
@@ -228,10 +228,14 @@ function UsersManagementPage() {
     }
   }, [token, searchTerm, filterRole, navigate]);
 
+  const roles = ['admin', 'guest_demo'];
+
   useEffect(() => {
-    if (!authLoading && isAuthenticated && user?.role === 'admin', 'guest_demo') { // Simplified user role check
+
+    const isAuthorized = user && roles.includes(user?.role);
+    if (!authLoading && isAuthenticated && isAuthorized) { // Simplified user role check
       fetchUsers();
-    } else if (!authLoading && (!isAuthenticated || user?.role !== 'admin', 'guest_demo')) {
+    } else if (!authLoading && (!isAuthenticated || !isAuthorized)) {
       navigate('/unauthorized');
     }
   }, [authLoading, isAuthenticated, user, navigate, fetchUsers, getApiPrefix]);
@@ -394,8 +398,10 @@ function UsersManagementPage() {
   const containerVariants = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.1 } } };
   const itemVariants = { hidden: { y: 20, opacity: 0 }, visible: { y: 0, opacity: 1 } };
 
+  
+
   if (authLoading) return <div className="flex justify-center items-center h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300 text-lg text-gray-700 dark:text-gray-300">Loading authentication...</div>;
-  if (!isAuthenticated || user?.role !== 'admin') return <div className="flex justify-center items-center h-screen bg-red-50 dark:bg-red-900 transition-colors duration-300 text-lg text-red-700 dark:text-red-100">Unauthorized Access. Only administrators can view this page.</div>;
+  if (!isAuthenticated || !roles.includes(user?.role)) return <div className="flex justify-center items-center h-screen bg-red-50 dark:bg-red-900 transition-colors duration-300 text-lg text-red-700 dark:text-red-100">Unauthorized Access. Only administrators can view this page.</div>;
 
   const indexOfLastUser = currentPage * usersPerPage;
   const indexOfFirstUser = indexOfLastUser - usersPerPage;

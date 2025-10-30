@@ -1,7 +1,10 @@
+// client/src/pages/LoginPage.jsx
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion'; // Import motion for animations
+import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
+import { apiClient } from '../services/apiClient';
 
 // Animation variants for Framer Motion
 const pageVariants = {
@@ -31,8 +34,6 @@ const inputVariants = {
   visible: { y: 0, opacity: 1 }
 };
 
-const backendUrl = import.meta.env.VITE_BACKEND_URL;
-
 function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -49,36 +50,23 @@ function LoginPage() {
     setError(null);
     setLoading(true);
 
-    const apiUrl = `${backendUrl}${getApiPrefix()}/auth/login`;
+    const apiPrefix = getApiPrefix();
 
     try {
-      const response = await fetch(apiUrl, {
+      const responseData = await apiClient({
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
+        endpoint: 'auth/login',
+        body: { username, password },
+        token: null,
+        apiPrefix: apiPrefix,
       });
 
-      if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.message || 'Login failed. Please check your credentials.');
-      }
-
-      const data = await response.json();
-
-      if (response.ok) {
-        login(data.user, data.token);
-        navigate('/dashboard', { replace: true });
-      } else {
-        if (response.status === 403 && data.message.includes('Login is disabled in Demo Mode')) {
-          setError('Login attempts are blocked while in Demo Mode URL. Please user the "Enter Demo Mode" button below for the read-only access, or remove the /demo prefix from the URL to login.');
-        } else {
-          setError(data.message || 'Login failed. Please check your credentials.');
-        }
-      }
+      // apiClient throws on non-2xx status, so if we reach here, it's successful
+      login(responseData.user, responseData.token);
+      navigate('/dashboard');
       
     } catch (err) {
-      console.error('Login error:', err);
-      setError(err.message || 'An unexpected error occurred during login.');
+      setError(err.message || 'Login failed. Please check your credentials.');
     } finally {
       setLoading(false);
     }
