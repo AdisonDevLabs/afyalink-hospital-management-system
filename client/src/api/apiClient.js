@@ -2,7 +2,7 @@
 
 import axios from 'axios';
 
-const BASE_URL = process.env.VITE_API_URL || 'http://localhost:5007/api';
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5007/api';
 
 export const apiClient = axios.create({
   baseURL: BASE_URL,
@@ -14,3 +14,5 @@ export const apiClient = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+export default apiClient;

@@ -6,7 +6,7 @@ import apiClient from './apiClient';
 
 export const login = async (credentials) => {
   // returns the response.data object directly due to the interceptor
-  return await apiClient.post('/auth/login', credentials);
+  return await apiClient.post('/api/auth/login', credentials);
 };
 
 export const logout = async () => {

@@ -8,7 +8,7 @@ export default defineConfig(({ mode }) => ({
   server: {
     port: 5005,
     proxy: {
-      '/api': loadEnv(mode, process.cwd(), '').VITE_BACKEND_URL || 'http://localhost:5006',
+      //'/api': loadEnv(mode, process.cwd(), '').VITE_BACKEND_URL || 'http://localhost:5006',
     },
   },
 }))
