@@ -9,7 +9,7 @@ const conditionallyProtect = (req, res, next) => {
 
 router.post('/', conditionallyProtect, authorize('admin', 'receptionist'), patientController.createPatient);
 
-router.get('/', conditionallyProtect, authorize('admin', 'receptionist', 'doctor', 'guest_demo'), patientController.getAllPatients);
+router.get('/', conditionallyProtect, authorize('admin', 'receptionist', 'nurse', 'doctor', 'guest_demo'), patientController.getAllPatients);
 
 router.get('/count', conditionallyProtect, authorize('admin', 'doctor', 'nurse', 'receptionist', 'guest_demo'), patientController.getPatientCount);
 

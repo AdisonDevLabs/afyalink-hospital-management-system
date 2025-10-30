@@ -48,7 +48,6 @@ export const AuthProvider = ({ children }) => {
   const login = (userData, jwtToken) => {
     // *** ADD THESE LOGS ***
     console.log('AuthContext Login: userData RECEIVED by login function:', userData);
-    console.log('AuthContext Login: profile_picture in RECEIVED userData:', userData?.profile_picture);
     // *********************
 
     setIsDemoMode(false);

@@ -1,3 +1,5 @@
+// server/server.js
+
 require('dotenv').config();
 
 const express = require('express');
@@ -33,7 +35,8 @@ const { restrictInDemo } = require('./src/middleware/demoMode');
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
-app.use(restrictInDemo)
+
+
 
 app.get('/', (req, res) => {
   res.status(200).json({ message: 'AfyaLink HMS Backend is Running' });
@@ -44,25 +47,30 @@ app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
 const uploadsDir = path.join(__dirname, 'public', 'uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
-}
+};
+const apiRouter = express.Router();
 
-app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/patients', patientRoutes);
-app.use('/api/appointments', appointmentRoutes);
-app.use('/api/clinical-notes', clinicalNoteRoutes);
-app.use('/api/departments', departmentRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/schedules', scheduleRoutes);
-app.use('/api/lab-reports', labReportRoutes);
-app.use('/api/messages', messageRoutes);
-app.use('/api/medications', medicationRoutes);
-app.use('/api/vitals', vitalRoutes);
-app.use('/api/beds', bedRoutes);
-app.use('/api/alerts', alertRoutes);
-app.use('/api', activityRoutes);
-app.use('/api', paymentRoutes);
-app.use('/api/orders', orderRoutes);
+apiRouter.use('/auth', authRoutes);
+apiRouter.use('/users', userRoutes);
+apiRouter.use('/patients', patientRoutes);
+apiRouter.use('/appointments', appointmentRoutes);
+apiRouter.use('/clinical-notes', clinicalNoteRoutes);
+apiRouter.use('/departments', departmentRoutes);
+apiRouter.use('/admin', adminRoutes);
+apiRouter.use('/schedules', scheduleRoutes);
+apiRouter.use('/lab-reports', labReportRoutes);
+apiRouter.use('/messages', messageRoutes);
+apiRouter.use('/medications', medicationRoutes);
+apiRouter.use('/vitals', vitalRoutes);
+apiRouter.use('/beds', bedRoutes);
+apiRouter.use('/alerts', alertRoutes);
+apiRouter.use('', activityRoutes);
+apiRouter.use('', paymentRoutes);
+apiRouter.use('/orders', orderRoutes);
+
+app.use('/api', apiRouter);
+
+app.use('/demo/api', restrictInDemo, apiRouter);
 
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });

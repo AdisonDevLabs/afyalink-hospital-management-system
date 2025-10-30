@@ -7,7 +7,10 @@ import PrivateRoute from './components/PrivateRoute';
 
 // Lazy-loaded pages
 const LoginPage = lazy(() => import('./pages/LoginPage'));
-const DashboardPage = lazy(() => import('./pages/AdminDashboardPage')); // Use the unified AdminDashboardPage
+const AdminDashboard = lazy(() => import('./pages/AdminDashboardPage'));
+const DoctorDashboard = lazy(() => import('./pages/DoctorDashboardPage'));
+const NurseDashboard = lazy(() => import('./pages/NurseDashboardPage'));
+const ReceptionistDashboard = lazy(() => import('./pages/ReceptionistDashboardPage'));
 const PatientsPage = lazy(() => import('./pages/PatientsPage'));
 const AppointmentsPage = lazy(() => import('./pages/AppointmentsPage'));
 const ClinicalNotesPage = lazy(() => import('./pages/ClinicalNotesPage'));
@@ -18,7 +21,26 @@ const UserProfilePage = lazy(() => import('./components/UserProfile'));
 const RegisterPage = lazy(() => import('./pages/RegisterPage'));
 const HomePagePublic = lazy(() => import('./pages/HomePagePublic'));
 
-// REMOVED: DashboardRedirect component - no longer needed
+const DashboardRouter = () => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return <div className="p-4 text-center">Loading dashboard...</div>;
+  }
+  const role = user?.role;
+
+  if (role === 'doctor') {
+    return <DoctorDashboard />
+  }
+  if (role === 'nurse') {
+    return <NurseDashboard />
+  }
+  if (role === 'receptionist') {
+    return <ReceptionistDashboard />
+  }
+  return <AdminDashboard />
+
+}
 
 function AppContent() {
   const { isAuthenticated, isDemoMode } = useAuth(); 
@@ -64,7 +86,7 @@ function AppContent() {
               
               {/* --- UNIFIED DASHBOARD ROUTE --- */}
               {/* All users (including demo) with any role should land here */}
-              <Route path="dashboard" element={<DashboardPage />} />
+              <Route path="dashboard" element={<DashboardRouter />} />
 
               {/* Shared Pages - All authorized roles have access to these */}
               <Route path="patients" element={<PatientsPage />} />
