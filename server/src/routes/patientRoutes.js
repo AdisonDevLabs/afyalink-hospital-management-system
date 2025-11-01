@@ -3,22 +3,25 @@ const router = express.Router();
 const patientController = require('../controllers/patientController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
-const conditionallyProtect = (req, res, next) => {
-  protect(req, res, next);
-};
+// POST /api/patients
+router.post('/', protect, authorize('admin', 'receptionist'), patientController.createPatient);
 
-router.post('/', conditionallyProtect, authorize('admin', 'receptionist'), patientController.createPatient);
+// GET /api/patients
+router.get('/', protect, authorize('admin', 'receptionist', 'nurse', 'doctor', 'guest_demo'), patientController.getAllPatients);
 
-router.get('/', conditionallyProtect, authorize('admin', 'receptionist', 'nurse', 'doctor', 'guest_demo'), patientController.getAllPatients);
+// GET /api/patients/count
+router.get('/count', protect, authorize('admin', 'doctor', 'nurse', 'receptionist', 'guest_demo'), patientController.getPatientCount);
 
-router.get('/count', conditionallyProtect, authorize('admin', 'doctor', 'nurse', 'receptionist', 'guest_demo'), patientController.getPatientCount);
+// GET /api/patients/recent
+router.get('/recent', protect, authorize('admin', 'receptionist', 'doctor', 'nurse', 'guest_demo'), patientController.getRecentPatients);
 
-router.get('/recent', conditionallyProtect, authorize('admin', 'receptionist', 'doctor', 'nurse', 'guest_demo'), patientController.getRecentPatients);
+// GET /api/patients/:id
+router.get('/:id', protect, authorize('admin', 'receptionist', 'doctor', 'nurse', 'guest_demo'), patientController.getPatientById);
 
-router.get('/:id', conditionallyProtect, authorize('admin', 'receptionist', 'doctor', 'nurse', 'guest_demo'), patientController.getPatientById);
+// PUT /api/patients/:id
+router.put('/:id', protect, authorize('admin', 'receptionist'), patientController.updatePatient);
 
-router.put('/:id', conditionallyProtect, authorize('admin', 'receptionist'), patientController.updatePatient);
-
-router.delete('/:id', conditionallyProtect, authorize('admin'), patientController.deletePatient);
+// DELETE /api/patients/:id
+router.delete('/:id', protect, authorize('admin'), patientController.deletePatient);
 
 module.exports = router;

@@ -23,7 +23,6 @@ const pool = require('./src/config/db');
 // -- Routes Imports ---
 const authRoutes = require('./src/routes/authRoutes');
 const patientRoutes = require('./src/routes/patientRoutes');
-const appointmentRoutes = require('./src/routes/appointmentRoutes');
 const clinicalNoteRoutes = require('./src/routes/clinicalNoteRoutes');
 const userRoutes = require('./src/routes/userRoutes');
 const departmentRoutes = require('./src/routes/departmentRoutes');
@@ -41,10 +40,20 @@ const orderRoutes = require('./src/routes/orderRoutes');
 
 // --- Configuration and General Middleware ---
 app.use(helmet());
+
+const allowedOrigins = [process.env.CLIENT_URL || 'http://localhost:5005'];
+
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5005',
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true // ESSENTIAL for sending/receiving cookies (JWTs)
 }));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser()); // Parses cookies and populates req.cookies
@@ -78,10 +87,12 @@ apiRouter.use(restrictInDemo);
 // --- PROTECTED ROUTES
 apiRouter.use('/users', userRoutes);
 apiRouter.use('/patients', patientRoutes);
-apiRouter.use('/appointments', appointmentRoutes);
+apiRouter.use('/appointments', scheduleRoutes);
 apiRouter.use('/clinical-notes', clinicalNoteRoutes);
 apiRouter.use('/departments', departmentRoutes);
-apiRouter.use('/admin', adminRoutes);
+
+apiRouter.use('/admin', require('./src/middleware/authMiddleware').authorize('admin', 'guest_demo'), adminRoutes);
+
 apiRouter.use('/schedules', scheduleRoutes);
 apiRouter.use('/lab-reports', labReportRoutes);
 apiRouter.use('/messages', messageRoutes);
@@ -95,18 +106,70 @@ apiRouter.use('/orders', orderRoutes);
 
 app.use('/api', apiRouter);
 
+// -----------------------------------------------
+// --- Centralized Error Handling Middleware ---
+// -----------------------------------------------
+
+// Capture 404 routes first
+app.use((req, res, next) => {
+  const error = new Error(`Not Found - ${req.originalUrl}`);
+  error.statusCode = 404;
+  next(error);
+});
+// Catches all 'next(err)' calls
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(err.statusCode || 500).send({
-    message: 'An unexpected error occured.',
-    error: err.message
+
+  const statusCode = err.statusCode || 500;
+  if (statusCode >= 500) {
+    console.error(err.stack);
+  } else {
+    console.warn(`Client Error ${statusCode} on ${req.method} ${req.originalUrl}: ${err.message}`);
+  }
+  
+  res.status(err.statusCode).json({
+    message: err.message || 'An unexpected server error occured.',
+    stack: process.env.NODE_ENV === 'production' ? null : err.stack
   });
 });
 
-// --- Server and WebSocket Setup
+// --------------------------------------
+// --- Server and WebSocket Setup ---
+// --------------------------------------
+
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
+wss.on('connection', (ws, req) => {
+  console.log('Client connected to WebSocket.');
+  ws.send(JSON.stringify({ type: 'status', message: 'Welcome to the live data stream!' }));
+
+  const interval = setInterval(() => {
+    const availableBeds = Math.floor(Math.random() * 20) + 5;
+    const totalBeds = 50;
+    const newAlerts = [
+    { id: Date.now(), message: `New critical event detected! Bed ${Math.floor(Math.random() * totalBeds) + 1} status changed.`, type: 'critical', timestamp: new Date().toISOString() },
+    ];
+
+    ws.send(JSON.stringify({ type: 'bed_update', availableBeds, totalBeds }));
+
+    if (Math.random() > 0.7) {
+      ws.send(JSON.stringify({ type: 'new_alert', alert: newAlerts[0] }));
+    }
+  }, 3000);
+
+  ws.on('message', (message) => {
+    console.log(`Received message from client: ${message}`);
+  });
+
+  ws.on('close', () => {
+    console.log('Client disconnected from WebSocket.');
+    clearInterval(interval);
+  });
+
+  ws.on('error', (error) => {
+    console.error('WebSocket error occurred:', error);
+  });
+});
 
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

@@ -1,3 +1,5 @@
+// server/src/controllers/departmentController.js
+
 const pool = require('../config/db');
 
 exports.createDepartment = async (req, res) => {
@@ -5,6 +7,14 @@ exports.createDepartment = async (req, res) => {
 
   if (!name) {
     return res.status(400).json({ message: 'Department name is required.' });
+  }
+
+  // Head of Department ID check
+  if (head_of_department_id) {
+    const headRes = await pool.query('SELECT role FROM users WHERE id = $1', [head_of_department_id]);
+    if (headRes.rows.length === 0 || !['admin', 'doctor'].includes(headRes.rows[0].role)) {
+      return res.status(400).json({ message: 'Invalid Head of Department ID provided. Must be an existing Doctor or Admin user.' });
+    }
   }
 
   try {
@@ -27,6 +37,12 @@ exports.createDepartment = async (req, res) => {
   } 
   catch (error) {
     console.error('Error creating department:', error.stack);
+    if (error.code === '23505') {
+      return res.status(409).json({ message: 'A department with this name already exists.' });
+    }
+    if (error.code === '23503') {
+      return res.status(400).json({ message: 'Invalid Head of Department ID (Foreign Key violation).' });
+    }
     res.status(500).json({ message: 'Server error when creating department.' });
   }
 };
@@ -141,7 +157,15 @@ exports.updateDepartment = async (req, res) => {
   const { id } = req.params;
   const { name, description, head_of_department_id } = req.body;
 
+  // Head of Department ID check for updates
+  if (head_of_department_id !== undefined && head_of_department_id !== null) {
+    const headRes = await pool.query('SELECT role FROM users WHERE id = $1', [head_of_department_id]);
+    if (headRes.rows.length === 0 || !['admin', 'doctor'].includes(headRes.rows[0].role)) {
+      return res.status(400).json({ message: 'Invalid Head of Department ID provided. Must be an existing Doctor or Admin user.' });
+    }
+  }
   try {
+
     if (name) {
       const existingDepartment = await pool.query(
         'SELECT id FROM departments WHERE name = $1 AND id <> $2',
@@ -156,7 +180,7 @@ exports.updateDepartment = async (req, res) => {
       `UPDATE departments
        SET name = COALESCE($1, name),
            description = COALESCE($2, description),
-           head_of_department_id = COALESCE($3, head_of_department_id),
+           head_of_department_id = $3,
            updated_at = CURRENT_TIMESTAMP
        WHERE id = $4
        RETURNING *`,
@@ -177,6 +201,8 @@ exports.updateDepartment = async (req, res) => {
       return res.status(400).json({ message: 'Invalid data format provided.' });
     } else if (error.code === '23505') {
       return res.status(409).json({ message: 'A department with this name already exists.' });
+    } else if (error.code === '23503') {
+      return res.status(400).json({ message: 'Invalid Head of Department ID (Foreign Key violation).' });
     }
     res.status(500).json({ message: 'Server error when updating department.' });
   }

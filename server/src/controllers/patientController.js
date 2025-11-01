@@ -1,30 +1,20 @@
+// server/src/controllers/patientController.js
+
 const pool = require('../config/db');
 
 exports.createPatient = async (req, res) => {
+  // Only Admin/Receptionist can register new patients.
   const {
     first_name, last_name, date_of_birth, gender, national_id,
     contact_phone, email, address, assigned_nurse_id, photo_url, is_admitted = false,
     emergency_contact_name, emergency_contact_phone, emergency_contact_relationship
   } = req.body;
 
-  if (!first_name || !last_name || !date_of_birth || !gender || !contact_phone) {
-    return res.status(400).json({ message: 'Missing required patient fields: first name, last name, date of birth, gender, contact phone.' });
+  if (!first_name || !last_name || !date_of_birth || !gender || !contact_phone || !national_id) {
+    return res.status(400).json({ message: 'Missing required patient fields.' });
   }
 
   try {
-    if (national_id) {
-      const existingPatient = await pool.query('SELECT id FROM patients WHERE national_id = $1', [national_id]);
-      if (existingPatient.rows.length > 0) {
-        return res.status(409).json({ message: 'Patient with this national ID already exists.' });
-      }
-    }
-
-    if (email) {
-      const existingPatient = await pool.query('SELECT id FROM patients WHERE email = $1', [email]);
-      if (existingPatient.rows.length > 0) {
-        return res.status(409).json({ message: 'Patient with this email already exists.' });
-      }
-    }
 
     const newPatient = await pool.query(
       `INSERT INTO patients (first_name, last_name, date_of_birth, gender, national_id, contact_phone, email, address, assigned_nurse_id, photo_url, is_admitted, emergency_contact_name, emergency_contact_phone, emergency_contact_relationship)
@@ -41,55 +31,57 @@ exports.createPatient = async (req, res) => {
     if (error.code === '23505') {
         return res.status(409).json({ message: 'Patient with this national ID or email already exists.' });
     }
+    if (error.code === 23503) {
+      return res.status(400).json({ message: 'Invalid assigned nurse ID or other relational data.' });
+    }
     res.status(500).json({ message: 'Server error when registering patient.' });
   }
 };
 
 exports.getAllPatients = async (req, res) => {
-  const { nurse_id, assigned_today } = req.query;
+  const { nurse_id: requested_nurse_id, assigned_today, search } = req.query;
+  const { role: user_role, id: user_id } = req.user;
+
   const queryParams = [];
   let paramIndex = 1;
+  let whereClauses = [];
 
   let query = `
-    SELECT
-      p.id,
-      p.first_name,
-      p.last_name,
-      p.date_of_birth,
-      p.gender,
-      p.national_id,
-      p.contact_phone,
-      p.email,
-      p.address,
-      p.created_at,
-      p.updated_at,
-      p.assigned_nurse_id,
-      p.photo_url,
-      p.emergency_contact_name,
-      p.emergency_contact_phone,
-      p.emergency_contact_relationship,
-      b.room_number,
-      b.bed_number
+    SELECT 
+      p.id, p.first_name, p.last_name, p.date_of_birth, p.gender, p.national_id, p.contact_phone, p.email, p.address,
+      p.created_at, p.updated_at, p.assigned_nurse_id, p.photo_url, p.is_admitted,
+      p.emergency_contact_name, p.emergency_contact_phone, p.emergency_contact_relationship,
+      b.room_number, b.bed_number
     FROM patients p
     LEFT JOIN beds b ON p.id = b.patient_id
   `;
-  let whereClauses = [];
 
-  if (nurse_id) {
+  // Restric Nurses to only their assigned patients if no specific ID is requested.
+  if (user_role === 'nurse') {
     whereClauses.push(`p.assigned_nurse_id = $${paramIndex++}`);
-    queryParams.push(nurse_id);
+    queryParams.push(user_id);
+    whereClauses.push(`p.is_admitted = TRUE`);
+  }
+  // Allow other authorized users (Admin, Doctor, Receptionist) to filter by nurse_id
+  else if (requested_nurse_id) {
+    whereClauses.push(`p.assigned_nurse_id = $${paramIndex++}`);
+    queryParams.push(requested_nurse_id);
     whereClauses.push(`p.is_admitted = TRUE`);
   }
 
+  // Filter by creation date
   if (assigned_today) {
-    const todayStart = new Date(assigned_today);
-    todayStart.setHours(0, 0, 0, 0);
-    const todayEnd = new Date(assigned_today);
-    todayEnd.setHours(23, 59, 59, 999);
-    whereClauses.push(`p.created_at >= $${paramIndex++}`);
-    queryParams.push(todayStart.toISOString());
-    whereClauses.push(`p.created_at <= $${paramIndex++}`);
-    queryParams.push(todayEnd.toISOString());
+    const date = new Date(assigned_today);
+    const startOfDay = new Date(date.setHours(0, 0, 0, 0)).toISOString();
+    const endOfDay = new Date(date.setHours(23, 59, 59, 999)).toISOString();
+    whereClauses.push(`p.created_at >= $${paramIndex++} AND p.created_at <= $${paramIndex++}`);
+    queryParams.push(startOfDay, endOfDay);
+  }
+
+  if (search) {
+    const searchTerm = `%${search}%`;
+    whereClauses.push(`(p.first_name ILIKE &&{paramIndex} OR p.last_name ILIKE &&{paramIndex} OR p.national_id ILIKE &&{paramIndex++})`);
+    queryParams.push(searchTerm);
   }
 
   if (whereClauses.length > 0) {
@@ -100,7 +92,6 @@ exports.getAllPatients = async (req, res) => {
 
   try {
     const allPatients = await pool.query(query, queryParams);
-    console.log(allPatients)
     res.status(200).json({ patients: allPatients.rows });
   } catch (error) {
     console.error('Error fetching all patients:', error.stack);
@@ -198,26 +189,40 @@ exports.getRecentPatients = async (req, res) => {
 
 exports.updatePatient = async (req, res) => {
   const { id } = req.params;
-  const {
-    first_name, last_name, date_of_birth, gender, national_id,
-    contact_phone, email, address, assigned_nurse_id, photo_url, is_admitted,
-    emergency_contact_name, emergency_contact_phone, emergency_contact_relationship
-  } = req.body;
+  const updates = req.body;
+
+  // Input Validation
+  if (Object.keys(updates).length === 0) {
+    return res.status(400).json({ message: 'No update fields provided.' });
+  }
+
+  // Ensure ID is valid
+  if (isNaN(id) || parseInt(id, 10) <= 0) {
+    return res.status(400).json({ message: 'Invalid patient ID format.' });
+  }
 
   try {
-    if (national_id) {
-      const existing = await pool.query('SELECT id FROM patients WHERE national_id = $1 AND id <> $2', [national_id, id]);
+    // Duplicate check
+    if (updates.national_id) {
+      const existing = await pool.query('SELECT id FROM patients WHERE national_id = $1 AND id <> $2', [updates.national_id, id]);
       if (existing.rows.length > 0) {
         return res.status(409).json({ message: 'This National ID is already associated with another patient.' });
       }
     }
 
-    if (email) {
-      const existing = await pool.query('SELECT id FROM patients WHERE email = $1 AND id <> $2', [email, id]);
+    if (updates.email) {
+      const existing = await pool.query('SELECT id FROM patients WHERE email = $1 AND id <> $2', [updates.email, id]);
       if (existing.rows.length > 0) {
         return res.status(409).json({ message: 'This email is already associated with another patient.' });
       }
     }
+
+
+    const {
+      first_name, last_name, date_of_birth, gender, national_id,
+      contact_phone, email, address, assigned_nurse_id, photo_url, is_admitted,
+      emergency_contact_name, emergency_contact_phone, emergency_contact_relationship
+    } = updates;
 
     const updatedPatient = await pool.query(
       `UPDATE patients SET
@@ -241,7 +246,7 @@ exports.updatePatient = async (req, res) => {
     );
 
     if (updatedPatient.rows.length === 0) {
-      return res.status(404).json({ message: 'Patient not found or no changes made.' });
+      return res.status(404).json({ message: 'Patient not found.' });
     }
     res.status(200).json({
       message: 'Patient updated successfully.',
@@ -250,6 +255,9 @@ exports.updatePatient = async (req, res) => {
   } 
   catch (error) {
     console.error('Error updating patient:', error.stack);
+    if (error.code === 23505) {
+      return res.status(409).json({ message: 'A conflict occured: National ID or Email already in use by another patient.' });
+    }
     res.status(500).json({ message: 'Server error when updating patient.' });
   }
 };
@@ -269,7 +277,9 @@ exports.deletePatient = async (req, res) => {
     console.error('Error deleting patient:', error.stack);
 
     if (error.code === '23503') {
-      return res.status(409).json({ message: 'Cannot delete patient: associated records (e.g., appointments, clinical notes) exist.' });
+      return res.status(409).json({
+        message: 'Cannot delete patient: This patient has associated records (e.g., appointments, notes, etc) and must be discharged or archived first.'
+      });
     }
     res.status(500).json({ message: 'Server error when deleting patient.' });
   }

@@ -16,5 +16,5 @@ export const logout = async () => {
 
 export const getProfile = async () => {
   // Uses the 'protect' middleware on the server via the auth_token cookie
-  return await apiClient.get('/auth/profile');
+  return await apiClient.get('/api/auth/profile');
 };
