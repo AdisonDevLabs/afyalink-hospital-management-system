@@ -1,20 +1,23 @@
+// server/src/routes/clinicalNoteRoutes.js
+
 const express = require('express');
 const router = express.Router();
 const clinicalNoteController = require('../controllers/clinicalNoteController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
-const conditionallyProtect = (req, res, next) => {
-  protect(req, res, next);
-};
+// POST /api/clinical-notes
+router.post('/', protect, authorize('admin', 'doctor', 'nurse'), clinicalNoteController.createClinicalNote);
 
-router.post('/', conditionallyProtect, authorize('admin', 'doctor', 'nurse'), clinicalNoteController.createClinicalNote);
+// GET /api/clinical-notes/patient/:patientId
+router.get('/patient/:patientId', protect, authorize('admin', 'doctor', 'nurse', 'guest_demo'), clinicalNoteController.getClinicalNotesByPatient);
 
-router.get('/patient/:patientId', conditionallyProtect, authorize('admin', 'doctor', 'nurse', 'guest_demo'), clinicalNoteController.getClinicalNotesByPatient);
+// GET /api/clinical-notes/:id
+router.get('/:id', protect, authorize('admin', 'doctor', 'nurse', 'guest_demo'), clinicalNoteController.getClinicalNoteById);
 
-router.get('/:id', conditionallyProtect, authorize('admin', 'doctor', 'nurse', 'guest_demo'), clinicalNoteController.getClinicalNoteById);
+// PUT /api/clinical-notes/:id
+router.put('/:id', protect, authorize('admin', 'doctor', 'nurse'), clinicalNoteController.updateClinicalNote);
 
-router.put('/:id', conditionallyProtect, authorize('admin', 'doctor', 'nurse'), clinicalNoteController.updateClinicalNote);
-
-router.delete('/:id', conditionallyProtect, authorize('admin', 'doctor'), clinicalNoteController.deleteClinicalNote);
+// DELETE /api/clinical-notes/:id
+router.delete('/:id', protect, authorize('admin', 'doctor'), clinicalNoteController.deleteClinicalNote);
 
 module.exports = router;

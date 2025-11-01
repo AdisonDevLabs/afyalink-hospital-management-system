@@ -1,14 +1,14 @@
+// server/src/routes/userRoutes.js
+
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 
 const userController = require('../controllers/userController');
+const adminController = require('../controllers/adminController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
-const conditionallyProtect = (req, res, next) => {
-  protect(req, res, next);
-};
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -37,22 +37,20 @@ const upload = multer({
   }
 });
 
-router.get('/profile', conditionallyProtect, authorize('admin', 'doctor', 'nurse', 'receptionist', 'guest_demo'), userController.getProfile);
+// --- Public/Read-Only Endpoints ---
 
-router.put('/profile', conditionallyProtect, upload.single('profile_picture'), userController.updateProfile);
+// GET /api/users/
+router.get('/', protect, authorize('admin', 'doctor', 'receptionist', 'nurse', 'guest_demo'), adminController.getAllUsers);
 
-router.post('/', conditionallyProtect, authorize('admin'), userController.registerUser);
+// GET /api/users/:id
+router.get('/:id', protect, authorize('admin', 'doctor', 'receptionist', 'nurse', 'guest_demo'), adminController.getUserById);
 
-router.get('/', conditionallyProtect, authorize('admin', 'doctor', 'receptionist', 'nurse', 'guest_demo'), userController.getAllUsers);
+// -- Self-Service Profile Management ---
 
-router.get('/:id', conditionallyProtect, authorize('admin', 'doctor', 'receptionist', 'nurse', 'guest_demo'), userController.getUserById);
+// GET /api/users/profile
+router.get('/profile', protect, userController.getProfile);
 
-router.put('/:id', conditionallyProtect, authorize('admin'), userController.updateUser);
-
-router.delete('/:id', conditionallyProtect, authorize('admin'), userController.deleteUser);
-
-router.put('/:id/toggle-status', conditionallyProtect, authorize('admin'), userController.toggleUserStatus);
-
-router.post('/:id/reset-password', conditionallyProtect, authorize('admin'), userController.resetUserPassword);
+// PUT /api/users/profile
+router.put('/profile', protect, upload.single('profile_picture'), userController.updateProfile);
 
 module.exports = router;

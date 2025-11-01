@@ -1,3 +1,5 @@
+// server/src/controllers/clinicalNoteController.js
+
 const pool = require('../config/db');
 
 exports.createClinicalNote = async (req, res) => {
@@ -73,30 +75,36 @@ exports.createClinicalNote = async (req, res) => {
 
 exports.getClinicalNotesByPatient = async (req, res) => {
   const { patientId } = req.params;
+  const { role: user_role, id: user_id } = req.user;
+
+  // Validate ID format
+  if (isNaN(patientId) || parseInt(patientId, 10) <= 0) {
+    return res.status(400).json({ message: 'Invalid patient ID format.' });
+  }
 
   try {
+    let authorizationCheckQuery = 'SELECT id, assigned_nurse_id FROM patients WHERE id = $1';
+    const patientResult = await pool.query(authorizationCheckQuery, [patientId]);
+
+    if (patientResult.rows.length === 0) {
+      return res.status(404).json({ message: 'Patient not found.' });
+    }
+
+    // Check if current user is authorized to view this patient's notes.
+    if (user_role === 'nurse' && patientResult.rows[0].asigned_nurse_id !== user_id) {
+      return res.status(403).json({ message: 'Access Denied. You are not assigned to this patient.' });
+    }
+
+    if (user_role === 'doctor' && !req.query.allow_all) {
+
+    }
     const notes = await pool.query(
       `SELECT
-        cn.id,
-        cn.visit_datetime,
-        cn.chief_complaint,
-        cn.diagnosis,
-        cn.medications_prescribed,
-        cn.vitals,
-        cn.notes,
-        cn.note_type,
-        cn.created_at,
-        cn.updated_at,
-        cn.doctor_id,
-        cn.appointment_id,
-        u.username AS doctor_username,
-        u.first_name AS doctor_first_name,
-        u.last_name AS doctor_last_name,
-        -- Include actual appointment details from 'appointments' table schema
-        a.appointment_date,
-        a.appointment_time,
-        a.status AS appointment_status,
-        a.reason AS appointment_reason -- Changed from appointment_type to reason
+        cn.id, cn.visit_datetime, cn.chief_complaint, cn.diagnosis,
+        cn.medications_prescribed,cn.vitals,cn.notes,cn.note_type,
+        cn.created_at, cn.updated_at, cn.doctor_id, cn.appointment_id,
+        u.username AS doctor_username, u.first_name AS doctor_first_name, u.last_name AS doctor_last_name,
+        a.appointment_date, a.appointment_time, a.status AS appointment_status, a.reason AS appointment_reason
       FROM clinical_notes cn
       JOIN users u ON cn.doctor_id = u.id
       LEFT JOIN appointments a ON cn.appointment_id = a.id
@@ -112,7 +120,13 @@ exports.getClinicalNotesByPatient = async (req, res) => {
 };
 
 exports.getClinicalNoteById = async (req, res) => {
-  const { id } = req.params;
+  const { id, patientId } = req.params;
+
+
+  // Validate ID format
+  if (isNaN(patientId) || parseInt(patientId, 10) <= 0) {
+    return res.status(400).json({ message: 'Invalid patient ID format.' });
+  }
 
   try {
     const note = await pool.query(
@@ -161,6 +175,13 @@ exports.updateClinicalNote = async (req, res) => {
   const { chief_complaint, diagnosis, medications_prescribed, vitals, notes, note_type, appointment_id } = req.body;
   const current_user_id = req.user.id;
   const current_user_role = req.user.role;
+
+  if (vitals && typeof vitals === 'object') {
+    req.body.vitals = JSON.stringify(vitals);
+  }
+  if (medications_prescribed && typeof medications_prescribed) {
+    req.body.medications_prescribed = JSON.stringify(medications_prescribed);
+  }
 
   try {
     const currentNote = await pool.query('SELECT doctor_id, note_type, patient_id FROM clinical_notes WHERE id = $1', [id]);

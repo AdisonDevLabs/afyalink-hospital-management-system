@@ -1,15 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, PointElement, LineElement } from 'chart.js';
 import { Bar, Pie } from 'react-chartjs-2';
+import { ShieldAlert, Users, CalendarCheck, FileText, DollarSign, Briefcase } from 'lucide-react';
+
+import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { ShieldAlert, Users, CalendarCheck, FileText, DollarSign, Briefcase } from 'lucide-react'; // Added icons
+import { useAdminService } from '../hooks/useAdminService';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, PointElement, LineElement);
 
-const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
 // Reusable Demo Mode Alert Component
 const DemoModeAlert = ({ theme }) => (
@@ -23,7 +24,7 @@ const DemoModeAlert = ({ theme }) => (
 );
 
 
-function DashboardPage() {
+function AdminDashboardPage() {
   const { user, isAuthenticated, loading: authLoading, token, isDemoMode, getApiPrefix } = useAuth();
   const navigate = useNavigate();
   const { theme } = useTheme();
@@ -32,6 +33,8 @@ function DashboardPage() {
   const [recentActivities, setRecentActivities] = useState([]);
   const [todaysAppointmentsList, setTodaysAppointmentsList] = useState([]);
   const [totalDepartments, setTotalDepartments] = useState(0); // New stat for demo/guest
+
+  const { fetchStats, fetchAppointmentStats, isLoading, error } = useAdminService();
 
   const getChartColors = useCallback((isDarkMode) => ({
     lineChartBackground: isDarkMode ? 'rgba(75, 192, 192, 0.4)' : 'rgba(75, 192, 192, 0.6)',
@@ -136,12 +139,10 @@ function DashboardPage() {
 
   // --- Data Fetching Hooks (Updated with isDemoMode Fallback) ---
 
-  const fetchAdminStats = useCallback(async () => {
-    if (!token) return;
+  const fetchAdminDashboardData = useCallback(async () => {
+    if (!isAuthenticated && isDemoMode) return;
     try {
-      const response = await fetch(`${backendUrl}${getApiPrefix()}/admin/stats`, { headers: { 'Authorization': `Bearer ${token}` } });
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      const data = await response.json();
+      const data = await fetchStats();
       setStats(data);
     } catch (error) {
       console.error('Error fetching admin stats:', error);
@@ -150,7 +151,27 @@ function DashboardPage() {
           setStats({ totalPatients: 1500, totalDoctors: 35, todaysAppointments: 12, revenueSummary: 15000 });
       }
     }
-  }, [token, getApiPrefix, isDemoMode]);
+    try {
+      const data = await fetchAppointmentStats();
+      const labels = data.map(item => item.status);
+      const counts = data.map(item => parseInt(item.count, 10));
+
+      setPieChartData(prevData => ({
+        ...prevData,
+        lebels: labels,
+        datasets: prevData.datasets.map(dataset => ({ ...dataset, data: counts })),
+      }));
+    } catch (err) {
+      console.error('Error fetching appointment status counts:', err);
+      if (isDemoMode) {
+        setPieChartData(prevData => ({
+          ...prevData,
+          labels: ['Scheduled', 'Completed', 'Cancelled', 'Rescheduled'],
+          datasets: prevData.datasets.map(dataset => ({ ...dataset, data: [150, 450, 50, 20] })),
+        }));
+      }
+    }
+  }, [isAuthenticated, isDemoMode, fetchStats, fetchAppointmentStats]);
 
   const fetchTodaysAppointments = useCallback(async () => {
     if (!token) return;
@@ -246,13 +267,13 @@ function DashboardPage() {
 
   useEffect(() => {
     if (isAuthenticated || isDemoMode) {
-      fetchAdminStats();
+      fetchAdminDashboardData();
       fetchTodaysAppointments();
       fetchAppointmentStatusCounts();
       fetchRecentActivities();
       fetchDepartmentsCount();
     }
-  }, [isAuthenticated, isDemoMode, fetchAdminStats, fetchTodaysAppointments, fetchAppointmentStatusCounts, fetchRecentActivities, fetchDepartmentsCount]);
+  }, [isAuthenticated, isDemoMode, fetchAdminDashboardData, fetchTodaysAppointments, fetchAppointmentStatusCounts, fetchRecentActivities, fetchDepartmentsCount]);
 
   const getActivityBadgeClasses = (type) => {
     switch (type) {
@@ -476,4 +497,4 @@ function DashboardPage() {
   );
 }
 
-export default DashboardPage;
+export default AdminDashboardPage;
