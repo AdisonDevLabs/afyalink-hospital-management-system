@@ -9,15 +9,20 @@ export const useUserService = () => {
 
   const fetchProfile = useCallback(() => execute(userService.getProfile), [execute]);
 
-  const editProfile = useCallback((updatedData) => execute(userService.updateProfile, updatedData), [execute])
+  const fetchProfilePicture = useCallback(() => execute(userService.getProfilePicture), [execute]);
 
-  const fetchAllUsers = useCallback((params) => useApiCaller(userService.getAllUsers, params), [execute])
+  const updateUserInfo = useCallback((updatedData) => execute(userService.updateUserInfo, updatedData), [execute])
+
+  const fetchAllUsers = useCallback((params) => execute(userService.getAllUsers, params), [execute])
+
+  const updateProfilePicture = useCallback((profileData) => execute(userService.updateProfilePicture, profileData), [execute])
 
   return {
     isLoading,
     error,
     fetchProfile,
-    editProfile,
+    updateUserInfo,
     fetchAllUsers,
+    updateProfilePicture,
   };
 };

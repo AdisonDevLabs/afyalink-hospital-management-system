@@ -1,24 +1,37 @@
 import React, { useState, useEffect } from 'react';
-import { Camera, User, Mail, Phone, Home, Briefcase, KeyRound, Save, XCircle, Edit3, Loader2, Calendar, Users, Lock } from 'lucide-react';
+import { Camera, User, Mail, Phone, Home, Briefcase, KeyRound, Save, XCircle, Edit3, Loader2, Calendar, Users, Lock, Trash2 } from 'lucide-react'; 
 import { useNavigate } from 'react-router-dom';
 import { toast, Toaster } from 'react-hot-toast';
-import { FaUserCircle } from 'react-icons/fa';
 
 // Reusable Field Component
 import ProfileField from '../components/common/ProfileField';
 
+// Updated Hooks and Context
 import { useUserService } from '../hooks/useUserService';
 import { useAuth } from '../context/AuthContext';
 
 
-const apiBackendUrl = import.meta.env.VITE_BACKEND_URL || '';
-const DEFAULT_AVATAR_URL = '/profile_picture/default-image.webp'
+// NOTE: import.meta is not available in all environments, using placeholder logic
+const VITE_BACKEND_URL = ''; // Placeholder for environment variable
+const apiBackendUrl = VITE_BACKEND_URL || '';
+
+// The backend path for the default image. (Using the path from your code)
+const DEFAULT_AVATAR_PATH = '/profile_picture/default-image.webp'; 
+// The full URL for the default image, used for rendering.
+const DEFAULT_AVATAR_URL = `${apiBackendUrl}${DEFAULT_AVATAR_PATH}`; 
+
 
 function UserProfile() {
-  const { user, token, loading: authLoading, logout, login } = useAuth();
+  // Destructure the NEW function: fetchProfilePicture
+  const { user, loading: authLoading, login } = useAuth();
+  const { 
+      isLoading: isServiceLoading, 
+      fetchProfile, 
+      fetchProfilePicture, // <--- NEWLY DESTRUCTURED FUNCTION
+      updateUserInfo, 
+      updateProfilePicture 
+  } = useUserService();
   const navigate = useNavigate();
-
-  const { isLoading, fetchProfile, editProfile } = useUserService();
 
   // Initialize state with all required and updatable fields
   const [profileData, setProfileData] = useState({
@@ -38,27 +51,42 @@ function UserProfile() {
   const [originalProfileData, setOriginalProfileData] = useState({});
   const [isEditing, setIsEditing] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
-  const [password, setPassword] = useState(''); // Separate state for password change
+  const [isPictureRemoved, setIsPictureRemoved] = useState(false); 
+  const [password, setPassword] = useState(''); 
   const [isSaving, setIsSaving] = useState(false);
+  
+  // Combine all loading states
+  const isLoading = authLoading || isServiceLoading || isSaving;
 
 
   useEffect(() => {
     const fetchUserProfileData = async () => {
-      if (authLoading) {
+      if (authLoading || !user) {
         return;
       }
       try {
-        const data = await fetchProfile();
+        // NOTE: We rely on the initial fetchProfile to still return the picture path,
+        // which is often simpler than fetching the data via two separate calls.
+        const response = await fetchProfile();
+        const data = response.user; 
 
-        // Ensure all keys are present, even if empty, for state consistency
+        // Determine the correct path/URL for the profile picture
+        // Use DEFAULT_AVATAR_PATH if data.profile_picture is null/undefined
+        // Assuming the backend sends the key 'profile_picture' for consistency
+        const picturePath = data.profile_picture || DEFAULT_AVATAR_PATH; 
+        const pictureUrl = picturePath.startsWith('http') || picturePath.startsWith('blob:') ? picturePath : `${apiBackendUrl}${picturePath}`;
+
         const sanitizedData = {
-            ...profileData, // Start with defaults
+            ...profileData, 
             ...data,
-            profile_picture: data.profile_picture
+            profile_picture: pictureUrl // Store the rendered URL
         };
+        
+        // Store the PATH/FILE NAME in original data for comparison
+        const originalData = { ...sanitizedData, profile_picture: picturePath };
 
         setProfileData(sanitizedData);
-        setOriginalProfileData(sanitizedData);
+        setOriginalProfileData(originalData);
         toast.success('Profile loaded successfully');
       } catch (error) {
         console.error('Error fetching user profile:', error);
@@ -70,11 +98,11 @@ function UserProfile() {
     
     // Cleanup URL object if a file was selected but navigation occurred
     return () => {
-        if (selectedFile) {
+        if (selectedFile && profileData.profile_picture.startsWith('blob:')) {
             URL.revokeObjectURL(profileData.profile_picture);
         }
     }
-  }, [authLoading]);
+  }, [authLoading, user]);
 
 
   const handleInputChange = (e) => {
@@ -93,6 +121,7 @@ function UserProfile() {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setSelectedFile(file);
+      setIsPictureRemoved(false); // If a new file is uploaded, it's not removed
 
       // Create local URL for immediate image preview
       const previewUrl = URL.createObjectURL(file);
@@ -102,6 +131,23 @@ function UserProfile() {
       }));
     }
   };
+  
+  const handleRemovePicture = () => {
+    // Revoke the local URL if it exists
+    if (selectedFile && profileData.profile_picture.startsWith('blob:')) {
+        URL.revokeObjectURL(profileData.profile_picture);
+    }
+    
+    setSelectedFile(null); // Clear any pending file upload
+    setIsPictureRemoved(true); // Flag for backend to delete picture
+    setProfileData(prevData => ({
+        ...prevData,
+        profile_picture: DEFAULT_AVATAR_URL, // Show default avatar immediately
+    }));
+
+    toast.success('Profile picture marked for removal on save.', { id: 'pic-remove-toast' });
+  };
+
 
   const handleSaveChanges = async () => {
     setIsSaving(true);
@@ -113,80 +159,156 @@ function UserProfile() {
       return;
     }
 
-    try {
-      const formData = new FormData();
+    const userInfoChanges = {};
+    let hasUserInfoChanges = false;
+    
+    // Fields that are updatable (excluding profile_picture and password)
+    const updatableTextualFields = [
+      'first_name', 'last_name', 'email', 'phone_number', 
+      'address', 'date_of_birth', 'gender', 'specialization', 'username'
+    ];
+    
+    // 1. Identify User Info Changes
+    updatableTextualFields.forEach(key => {
+      const originalValue = originalProfileData[key] || '';
+      const currentValue = profileData[key] || '';
       
-      // Fields that are updatable (excluding profile_picture and password handled separately)
-      const updatableTextualFields = [
-        'first_name', 'last_name', 'email', 'phone_number', 
-        'address', 'date_of_birth', 'gender', 'specialization'
-      ];
-      
-      // 1. Append textual fields
-      updatableTextualFields.forEach(key => {
-        // Only append if the value is different from the original OR if the original was empty (to allow setting data)
-        if (profileData[key] !== originalProfileData[key] || (profileData[key] && !originalProfileData[key])) {
-             formData.append(key, profileData[key]);
+      if (currentValue.toString() !== originalValue.toString()) {
+           userInfoChanges[key] = currentValue;
+           hasUserInfoChanges = true;
+      }
+    });
+    
+    // 2. Handle Password Change
+    if (password) {
+        userInfoChanges.password = password;
+        hasUserInfoChanges = true;
+    }
+
+    // 3. Identify Picture Changes
+    let hasPictureChanges = !!selectedFile || isPictureRemoved;
+    
+    // Check if any actual data needs to be saved
+    if (!hasUserInfoChanges && !hasPictureChanges) {
+        toast('No changes detected. Nothing to save.', { icon: 'ℹ️' });
+        setIsSaving(false);
+        setIsEditing(false);
+        return;
+    }
+    
+    const updatePromises = [];
+    let latestUserData = {}; // Object to collect merged data from both successful updates
+    
+    // --- 4. ASYNCHRONOUSLY Execute Updates ---
+    
+    // A. Update User Info (Textual/Password)
+    if (hasUserInfoChanges) {
+        updatePromises.push(
+            updateUserInfo(userInfoChanges)
+            .then(response => {
+                // Merge info updates into the latest data object
+                latestUserData = { ...latestUserData, ...response.user };
+                return 'info_success';
+            })
+            .catch(err => {
+                toast.error(`Info Update Failed: ${err.message}`, { id: 'info-fail' });
+                throw err;
+            })
+        );
+    }
+    
+    // B. Update Profile Picture
+    if (hasPictureChanges) {
+        const pictureFormData = new FormData();
+        if (selectedFile) {
+            pictureFormData.append('profilePic', selectedFile); 
+        } else if (isPictureRemoved) {
+             pictureFormData.append('remove_profile_picture', 'true');
         }
-      });
-      
-      // 2. Append password if changed/provided
-      if (password) {
-          formData.append('password', password);
-      }
-      
-      // 3. Append file if selected
-      if (selectedFile) {
-        // 'profilePic' must match the field name used in Multer middleware (if applicable)
-        formData.append('profilePic', selectedFile); 
-      }
-      
-      // Check if any actual data was added to the form
-      if (!Array.from(formData.keys()).length) {
-          toast('No changes detected. Nothing to save.', { icon: 'ℹ️' });
-          setIsSaving(false);
-          setIsEditing(false);
-          return;
-      }
+        
+        updatePromises.push(
+            updateProfilePicture(pictureFormData)
+            .then(response => {
+                // Merge picture updates (mainly profile_picture path) into the latest data object
+                // We rely on the backend response to have the full user object with the new picture path
+                latestUserData = { ...latestUserData, ...response.user }; 
+                return 'pic_success';
+            })
+            .catch(err => {
+                toast.error(`Picture Update Failed: ${err.message}`, { id: 'pic-fail' });
+                throw err;
+            })
+        );
+    }
 
-      // Call APIAPI
-      const responseData = await editProfile(formData);
-      
-      const updatedUserData = responseData.user;
+    try {
+        // Wait for all promises to resolve (they run in parallel)
+        await Promise.all(updatePromises);
+        
+        // At this point, latestUserData holds the merged, updated data from the server.
+        if (Object.keys(latestUserData).length > 0) {
+            
+            const newPicturePath = latestUserData.profile_picture || DEFAULT_AVATAR_PATH;
+            // The new picture URL might be a local blob URL if only the file was updated, 
+            // but the server response should contain the final path. We handle conversion here:
+            const newPictureUrl = newPicturePath.startsWith('http') || newPicturePath.startsWith('blob:') ? newPicturePath : `${apiBackendUrl}${newPicturePath}`;
+            
+            // 1. Update Auth Context (with the final, merged server data)
+            login(latestUserData);
+            
+            // 2. Update Local State (using the URL for display)
+            setProfileData(prevData => ({ 
+                ...prevData, 
+                ...latestUserData,
+                profile_picture: newPictureUrl, 
+            }));
+            
+            // 3. Set new original data for future comparisons (using the PATH for comparison)
+            setOriginalProfileData(prevData => ({ 
+                ...prevData, 
+                ...latestUserData,
+                profile_picture: newPicturePath, 
+            }));
 
-      console.log(updatedUserData);
-      // Update contexts and states
-      login(updatedUserData);
-      setProfileData(prevData => ({ ...prevData, ...updatedUserData }));
-      setOriginalProfileData(prevData => ({ ...prevData, ...updatedUserData }));
-      
-      // Clean up local states
-      setSelectedFile(null);
-      setPassword('');
-      
-      // If we used a local URL for preview, revoke it now
-      if(profileData.profile_picture.startsWith('blob:')) {
-          URL.revokeObjectURL(profileData.profile_picture);
-      }
-
-
-      toast.success('Profile updated successfully!');
-      setIsEditing(false);
-    } catch (error) {
-      console.error('Error updating profile:', error);
-      toast.error(error.message || 'Failed to update profile. Please try again.');
+            // 4. Cleanup and Reset
+            if (profileData.profile_picture.startsWith('blob:')) {
+                URL.revokeObjectURL(profileData.profile_picture);
+            }
+            setSelectedFile(null);
+            setPassword('');
+            setIsPictureRemoved(false);
+            
+            toast.success('Profile updated successfully!');
+            setIsEditing(false);
+        } else {
+             // Should only happen if Promise.all succeeded but returned no data (highly unlikely with this logic)
+             toast.success('Update completed successfully.');
+             setIsEditing(false);
+        }
+    } catch (finalError) {
+        // The individual catch blocks already handled and toasted specific errors.
+        console.error('Final Save orchestrator error caught:', finalError);
     } finally {
       setIsSaving(false);
     }
   };
 
+
   const handleCancelEdit = () => {
-    // Revert to original data, clearing any local file preview
-    setProfileData(originalProfileData);
+    // Revert to original data. We need to reconstruct the URL from the stored path.
+    const originalPicturePath = originalProfileData.profile_picture || DEFAULT_AVATAR_PATH;
+    const originalPictureUrl = originalPicturePath.startsWith('http') ? originalPicturePath : `${apiBackendUrl}${originalPicturePath}`;
+
+    setProfileData(prevData => ({ ...originalProfileData, profile_picture: originalPictureUrl }));
     setSelectedFile(null);
     setPassword('');
+    setIsPictureRemoved(false); // Reset removal flag
     setIsEditing(false);
     toast.dismiss();
+    // Revoke any pending preview URL
+    if (profileData.profile_picture.startsWith('blob:')) {
+        URL.revokeObjectURL(profileData.profile_picture);
+    }
   };
 
   const capitalize = (str) => {
@@ -195,13 +317,10 @@ function UserProfile() {
   };
 
 
-  // URL for the profile picture (either local preview or backend URL)
-  const finalProfilePictureUrl = profileData.profile_picture.startsWith('/uploads/profile_pictures') 
-    ? `${apiBackendUrl}${profileData.profile_picture}`
-    : profileData.profile_picture;
+  const finalProfilePictureUrl = profileData.profile_picture;
 
 
-  if (authLoading || isLoading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
         <Loader2 className="animate-spin text-blue-600 dark:text-blue-400 h-10 w-10 mr-3" />
@@ -226,6 +345,7 @@ function UserProfile() {
             {/* Profile Picture */}
             <div className="relative w-40 h-40 rounded-full bg-gradient-to-br from-blue-100 to-indigo-200 dark:from-gray-700 dark:to-gray-600 flex items-center justify-center overflow-hidden border-4 border-blue-500 dark:border-blue-400 shadow-lg group mb-4">
               <img
+                key={finalProfilePictureUrl} 
                 src={finalProfilePictureUrl}
                 alt="Profile"
                 className="w-full h-full object-cover rounded-full transition-transform duration-300 group-hover:scale-105"
@@ -233,21 +353,34 @@ function UserProfile() {
               />
 
               {isEditing && (
-                <label
-                  htmlFor="profile-picture-upload"
-                  className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-60 text-white cursor-pointer rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-sm font-medium"
-                  title="Change profile picture"
-                >
-                  <Camera size={28} className="mb-1" />
-                  <span>Upload Photo</span>
-                  <input
-                    id="profile-picture-upload"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="hidden"
-                  />
-                </label>
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-60 text-white cursor-pointer rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-in-out text-sm font-medium">
+                    <label
+                      htmlFor="profile-picture-upload"
+                      className="p-2 cursor-pointer hover:bg-white/20 rounded-full transition-colors flex items-center"
+                      title="Change profile picture"
+                    >
+                      <Camera size={28} className="mb-1" />
+                    </label>
+                    <input
+                      id="profile-picture-upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                    
+                    {/* Remove Picture Button (only shown if a picture is currently set and not the default path, OR a file is selected for preview) */}
+                    {((originalProfileData.profile_picture && originalProfileData.profile_picture !== DEFAULT_AVATAR_PATH) || selectedFile) && !isPictureRemoved && (
+                        <button
+                            type="button"
+                            onClick={handleRemovePicture}
+                            className="p-2 mt-1 text-red-400 hover:text-red-300 hover:bg-white/20 rounded-full transition-colors flex items-center"
+                            title="Remove profile picture"
+                        >
+                            <Trash2 size={24} />
+                        </button>
+                    )}
+                </div>
               )}
             </div>
             
