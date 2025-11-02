@@ -25,14 +25,14 @@ const DemoModeAlert = ({ theme }) => (
 
 
 function AdminDashboardPage() {
-  const { user, isAuthenticated, loading: authLoading, token, isDemoMode, getApiPrefix } = useAuth();
+  const { user, isAuthenticated, loading: authLoading, token, isDemoMode } = useAuth();
   const navigate = useNavigate();
   const { theme } = useTheme();
 
   const [stats, setStats] = useState({ totalPatients: 0, totalDoctors: 0, todaysAppointments: 0, revenueSummary: 0 });
   const [recentActivities, setRecentActivities] = useState([]);
   const [todaysAppointmentsList, setTodaysAppointmentsList] = useState([]);
-  const [totalDepartments, setTotalDepartments] = useState(0); // New stat for demo/guest
+  const [totalDepartments, setTotalDepartments] = useState(0);
 
   const { fetchStats, fetchAppointmentStats, isLoading, error } = useAdminService();
 
@@ -144,8 +144,8 @@ function AdminDashboardPage() {
     try {
       const data = await fetchStats();
       setStats(data);
-    } catch (error) {
-      console.error('Error fetching admin stats:', error);
+    } catch (err) {
+      console.error('Error fetching admin stats:', err);
       if (isDemoMode) {
           // Fallback data for Demo Mode
           setStats({ totalPatients: 1500, totalDoctors: 35, todaysAppointments: 12, revenueSummary: 15000 });
@@ -174,24 +174,17 @@ function AdminDashboardPage() {
   }, [isAuthenticated, isDemoMode, fetchStats, fetchAppointmentStats]);
 
   const fetchTodaysAppointments = useCallback(async () => {
-    if (!token) return;
-    try {
-      const today = new Date().toISOString().split('T')[0];
-      const response = await fetch(`${backendUrl}${getApiPrefix()}/appointments?date=${today}&status=Scheduled`, { headers: { 'Authorization': `Bearer ${token}` } });
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      const data = await response.json();
-      setTodaysAppointmentsList(data);
-    } catch (error) {
-      console.error('Error fetching today\'s appointments:', error);
-      if (isDemoMode) {
-        setTodaysAppointmentsList([
-            { id: 1, patient_name: 'Jane Doe', appointment_time: '9:00 AM', doctor_name: 'Dr. Smith' },
-            { id: 2, patient_name: 'John Smith', appointment_time: '10:30 AM', doctor_name: 'Dr. Lee' },
-            { id: 3, patient_name: 'Sarah Chen', appointment_time: '11:00 AM', doctor_name: 'Dr. Smith' },
-        ]);
-      }
+    if (isDemoMode) {
+      setTodaysAppointmentsList([
+        { id: 1, patient_name: 'Jane Doe', appointment_time: '9:00 AM', doctor_name: 'Dr. Smith' },
+        { id: 2, patient_name: 'John Smith', appointment_time: '10:30 AM', doctor_name: 'Dr. Lee' },
+        { id: 3, patient_name: 'Sarah Chen', appointment_time: '11:00 AM', doctor_name: 'Dr. Smith' },
+      ]);
+    } else {
+      console.warn("Using mock data for today's appointments. Please implement real appointment fetching.");
+      setTodaysAppointmentsList([]);
     }
-  }, [token, getApiPrefix, isDemoMode]);
+  }, [isDemoMode]);
 
   const fetchRecentActivities = useCallback(async () => {
     // Only fetch for non-demo users if you don't have a demo-specific mock endpoint
@@ -205,19 +198,9 @@ function AdminDashboardPage() {
       return;
     }
     
-    if (!token || isDemoMode) return; // Skip if in demo mode or no token
-
-    try {
-      const response = await fetch(`${backendUrl}${getApiPrefix()}/activities/recent`, { headers: { 'Authorization': `Bearer ${token}` } });
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      const data = await response.json();
-      setRecentActivities(data);
-    } catch (error) {
-      console.error('Error fetching recent activities:', error);
-      // Fallback for real users if API fails (optional)
-      setRecentActivities([]); 
-    }
-  }, [token, getApiPrefix, isDemoMode]);
+    // Placeholder for real API call
+    setRecentActivities([]);
+  }, [isDemoMode]);
 
   const fetchAppointmentStatusCounts = useCallback(async () => {
     if (!token) return;
@@ -245,24 +228,16 @@ function AdminDashboardPage() {
         }));
       }
     }
-  }, [token, getApiPrefix, isDemoMode]);
+  }, [token, isDemoMode]);
 
   const fetchDepartmentsCount = useCallback(async () => {
-    if (!token) return;
-    try {
-      const response = await fetch(`${backendUrl}${getApiPrefix()}/departments`, { 
-        headers: { 'Authorization': `Bearer ${token}` } 
-      });
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      const data = await response.json();
-      setTotalDepartments(data.length);
-    } catch (error) {
-      console.error('Error fetching departments count:', error);
-      if (isDemoMode) {
-        setTotalDepartments(15);
-      }
+    if (isDemoMode) {
+      setTotalDepartments(15);
+    } else {
+      // Placeholder for real API call
+      setTotalDepartments(0);
     }
-  }, [token, getApiPrefix, isDemoMode]);
+  }, [isDemoMode]);
 
 
   useEffect(() => {
@@ -286,8 +261,8 @@ function AdminDashboardPage() {
   };
 
   // --- JSX Rendering ---
-  if (authLoading) {
-    return <div className="flex justify-center items-center h-screen">Loading Authentication...</div>;
+  if (authLoading || isLoading) {
+    return <div className={`flex justify-center items-center h-screen ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>Loading Dashboard Data...</div>;
   }
   
   const CARD_VARIANTS = {
