@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import * as authService from '../api/authService';
+import * as authService from '../api/services/authService';
 
 /**
  * Custom hook to handle login/logout API calls and integrate with AuthContext.

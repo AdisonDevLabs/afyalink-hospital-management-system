@@ -1,6 +1,6 @@
 // client/src/api/authService.js
 
-import apiClient from './apiClient';
+import apiClient from '../apiClient';
 
 // Handles all authentication-related API calls.
 

@@ -1,25 +1,9 @@
-import { useState, useCallback } from "react";
-import * as adminService from '../api/adminService';
+import { useCallback } from "react";
+import * as adminService from '../api/services/adminService';
+import { useApiCaller } from "./useApiCaller";
 
 export const useAdminService = () => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-  const execute = useCallback(async (apiCall, ...args) => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const data = await apiCall(...args);
-      return data;
-    } catch (err) {
-      const errorMessage = err.message || 'An unexpected error occured during the request.';
-      setError(errorMessage);
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const { isLoading, error, execute } = useApiCaller();
 
   const fetchStats = useCallback(() => execute(adminService.getAdminStats), [execute]);
 
