@@ -16,7 +16,7 @@ const envSchema = z.object({
 
   // Database
   // Uses a conditional check for DATABASE_URL for Vercel/Heroku style env
-  DATABSE_URL: z.string().optional(),
+  DATABASE_URL: z.string().optional(),
   DB_HOST: z.string().optional(),
   DB_PORT: z.preprocess(
     (a) => (a ? parseInt(z.string().parse(a), 10) : undefined),
@@ -27,7 +27,7 @@ const envSchema = z.object({
   DB_DATABASE: z.string().optional(),
 }).refine((data) => {
   // If DATABASE_URL is not present, all DB_* MUST be present.
-  if (!data.DATABSE_URL) {
+  if (!data.DATABASE_URL) {
     return data.DB_HOST && data.DB_PORT && data.DB_USER && data.DB_PASSWORD && data.DB_DATABASE;
   }
   return true;

@@ -38,15 +38,25 @@ const API_V1 = '/api/v1';
 // Security
 app.use(
   helmet({
-    contentSecurityPolicy: false,
+    contentSecurityPolicy: process.env.NODE_ENV === 'production' ? undefined : false,
     crossOriginResourcePolicy: { policy: "cross-origin" },
   })
 );
 
 // Cross-Origin Resource Sharing
+const allowedOrigins = [
+  process.env.CLIENT_URL || "http://localhost:5005",
+];
+
 app.use(
   cors({
-    origin: "http://localhost:5005",
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS blocked: ${origin} not allowed.`));
+      }
+    },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
@@ -120,7 +130,7 @@ app.use((err, req, res, next) => {
   console.error('SERVER ERROR:', err.stack);
   res.status(err.status || 500).json({
     message: err.message || 'Internal Server Error',
-    error: process.env.NODE_ENV === 'developemnt' ? err: {},
+    error: process.env.NODE_ENV === 'developement' ? err: {},
   });
 });
 
