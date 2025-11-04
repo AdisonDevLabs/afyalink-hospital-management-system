@@ -2,3 +2,5 @@ client/.env
 server/.env
 afyalink_backup.dump
 afyalink_backup1.dump
+init-db.sql
+afyalink_backup1.dump
