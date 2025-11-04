@@ -1,52 +1,38 @@
-// server/src/controllers/scheduleController.js
-
 const pool = require('../config/db');
 
+const isDoctorOrAdmin = async (userID) => {
+    if (isNaN(parseInt(userID))) {
+        return false;
+    }
+    const userResult = await pool.query('SELECT role FROM users WHERE id = $1', [userID]);
+    return userResult.rows.length > 0 && (userResult.rows[0].role === 'doctor' || userResult.rows[0].role === 'admin');
+};
+
 exports.getAllSchedules = async (req, res) => {
-  const { role: user_role, id: user_id } = req.user;
-  const { doctor_id: filter_doctor_id, patient_id: filter_patient_id } = req.query;
-
-  let query = `
-    SELECT
-      a.id, a.patient_id, a.reason AS original_reason, a.appointment_date, a.appointment_time, a.end_time, a.doctor_id, a.status, a.department_id,
-      p.first_name AS patient_first_name, p.last_name AS patient_last_name,
-      u.first_name AS doctor_first_name, u.last_name AS doctor_last_name, u.username AS doctor_username,
-      d.name AS department_name
-    FROM appointments a
-    JOIN patients p ON a.patient_id = p.id
-    JOIN users u ON a.doctor_id = u.id
-    LEFT JOIN departments d ON a.department_id = d.id
-  `;
-  const queryParams = [];
-  let whereClauses = [];
-  let paramIndex = 1;
-
-  //Nurses and Doctors see only their own appointments
-  if (user_role === 'doctor') {
-    whereClauses.push(`a.doctor_id = $${paramIndex++}`);
-    queryParams.push(user_id);
-  }
-
-  // Filtering for Admins/Receptionist 
-  if (user_role !== 'doctor' && user_role !== 'nurse') {
-    if (filter_doctor_id) {
-        whereClauses.push(`a.doctor_id = $${paramIndex++}`)
-        queryParams.push(filter_doctor_id);
-    }
-    if (filter_patient_id) {
-        whereClauses.push(`a.patient_id = $${paramIndex++}`);
-        queryParams.push(filter_patient_id);
-    }
-  }
-
-  if (whereClauses.length > 0) {
-    query += `WHERE ${whereClauses.join(' AND ')}`;
-  }
-
-  query += `ORDER BY a.appointment_date DESC, a.appointment_time DESC`;
-
   try {
-    const result = await pool.query(query, queryParams);
+    const result = await pool.query(`
+      SELECT
+          a.id,
+          a.patient_id,
+          a.reason AS original_reason,
+          a.appointment_date,
+          a.appointment_time,
+          a.end_time,
+          a.doctor_id,
+          a.status,
+          a.department_id,
+          p.first_name AS patient_first_name,
+          p.last_name AS patient_last_name,
+          u.first_name AS doctor_first_name,
+          u.last_name AS doctor_last_name,
+          u.username AS doctor_username,
+          d.name AS department_name
+      FROM appointments a
+      JOIN patients p ON a.patient_id = p.id
+      JOIN users u ON a.doctor_id = u.id
+      LEFT JOIN departments d ON a.department_id = d.id
+      ORDER BY a.appointment_date DESC, a.appointment_time DESC
+    `);
     res.status(200).json(result.rows);
   } 
   catch (error) {
@@ -56,28 +42,28 @@ exports.getAllSchedules = async (req, res) => {
 };
 
 exports.createAppointment = async (req, res) => {
-  const { patient_id, doctor_id, appointment_date, appointment_time, end_time, reason, status, department_id } = req.body;
+    const { patient_id, doctor_id, appointment_date, appointment_time, end_time, reason, status, department_id } = req.body;
 
-  if (!patient_id || !doctor_id || !appointment_date || !appointment_time || !end_time || !reason || !status || !department_id) {
-    return res.status(400).json({ message: 'Missing required appointment fields.' });
-  }
+    if (!patient_id || !doctor_id || !appointment_date || !appointment_time || !end_time || !reason || !status || !department_id) {
+        return res.status(400).json({ message: 'Missing required appointment fields.' });
+    }
 
-  try {
-    const result = await pool.query(
-    `INSERT INTO appointments (patient_id, doctor_id,  appointment_date, appointment_time, end_time, reason, status, department_id)
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
-    [patient_id, doctor_id, appointment_date, appointment_time, end_time, reason, status || 'Scheduled', department_id]
-    );
-    res.status(201).json(result.rows[0]);
-  } 
-  catch (error) {
-  console.error('Error creating appointment:', error.stack);
+    try {
+        const result = await pool.query(
+            `INSERT INTO appointments (patient_id, doctor_id, appointment_date, appointment_time, end_time, reason, status, department_id)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+            [patient_id, doctor_id, appointment_date, appointment_time, end_time, reason, status || 'Scheduled', department_id]
+        );
+        res.status(201).json(result.rows[0]);
+    } 
+    catch (error) {
+        console.error('Error creating appointment:', error.stack);
 
-  if (error.message && error.message.includes('violates not-null constraint')) {
-    return res.status(400).json({ message: 'Failed to create appointment: Patient ID, Doctor ID, Date, Times, or Reason cannot be empty.' });
-  }
-  res.status(500).json({ message: 'Server error creating appointment.' });
-  }
+        if (error.message && error.message.includes('violates not-null constraint')) {
+            return res.status(400).json({ message: 'Failed to create appointment: Patient ID, Doctor ID, Date, Times, or Reason cannot be empty.' });
+        }
+        res.status(500).json({ message: 'Server error creating appointment.' });
+    }
 };
 
 exports.getAppointmentById = async (req, res) => {
@@ -96,70 +82,38 @@ exports.getAppointmentById = async (req, res) => {
 };
 
 exports.updateAppointment = async (req, res) => {
-  const { id } = req.params;
-  const { patient_id, doctor_id, appointment_date, appointment_time, end_time, reason, status, department_id } = req.body;
-  const { role: user_role, id: user_id } = req.user;
+    const { id } = req.params;
+    const { patient_id, doctor_id, appointment_date, appointment_time, end_time, reason, status, department_id } = req.body;
 
-  // Check if appointment exists and get the assigned doctor
-  const existingAppointment = await pool.query('SELECT doctor_id FROM appointments WHERE id = $1', [id]);
-  if (existingAppointment.rows.length === 0) {
-    return res.status(404).json({ message: 'Appointment not found' });
-  }
-  const assigned_doctor_id = existingAppointment.rows[0].doctor_id;
-
-  // Only Admin or assigned Doctor can proceed.
-  if (user_role !== 'admin' && user_id !== assigned_doctor_id) {
-    return res.status(403).json({ message: 'Access Denied. Only the assigned doctor or an admin can update this appointment.' });
-  }
-  // Prevent a doctor from changing the appointment to another doctor's ID, unless they are admin.
-  if (user_role === 'doctor' && doctor_id && doctor_id !== user_id) {
-    return res.status(403).json({ message: 'Doctors cannot reassign appointments to other doctors.' });
-  }
-
-  if (!patient_id || !doctor_id || !appointment_date || !appointment_time || !end_time || !reason || !status || !department_id) {
-    return res.status(400).json({ message: 'Missing required appointment fields for update.' });
-  }
-
-  try {
-    const result = await pool.query(
-      `UPDATE appointments
-        SET patient_id = $1, doctor_id = $2, appointment_date = $3, appointment_time = $4, end_time = $5, reason = $6, status = $7, department_id = $8, updated_at = NOW()
-        WHERE id = $9 RETURNING *`,
-      [patient_id, doctor_id, appointment_date, appointment_time, end_time, reason, status, department_id, id]
-    );
-    if (result.rows.length === 0) {
-      return res.status(404).json({ message: 'Appointment not found.' });
+    if (!patient_id || !doctor_id || !appointment_date || !appointment_time || !end_time || !reason || !status || !department_id) {
+        return res.status(400).json({ message: 'Missing required appointment fields for update.' });
     }
-    res.status(200).json(result.rows[0]);
-  } catch (error) {
-    console.error('Error updating appointment:', error.stack);
 
-    if (error.message && error.message.includes('violates not-null constraint')) {
-      return res.status(400).json({ message: 'Failed to update appointment: Patient ID, Doctor ID, Date, Times, or Reason cannot be empty.' });
+    try {
+        const result = await pool.query(
+            `UPDATE appointments
+             SET patient_id = $1, doctor_id = $2, appointment_date = $3, appointment_time = $4, end_time = $5, reason = $6, status = $7, department_id = $8, updated_at = NOW()
+             WHERE id = $9 RETURNING *`,
+            [patient_id, doctor_id, appointment_date, appointment_time, end_time, reason, status, department_id, id]
+        );
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'Appointment not found.' });
+        }
+        res.status(200).json(result.rows[0]);
+    } catch (error) {
+        console.error('Error updating appointment:', error.stack);
+
+        if (error.message && error.message.includes('violates not-null constraint')) {
+            return res.status(400).json({ message: 'Failed to update appointment: Patient ID, Doctor ID, Date, Times, or Reason cannot be empty.' });
+        }
+        res.status(500).json({ message: 'Server error updating appointment.' });
     }
-    res.status(500).json({ message: 'Server error updating appointment.' });
-  }
 };
 
 exports.deleteAppointment = async (req, res) => {
     const { id } = req.params;
-    const { role: user_role, id: user_id } = req.user;
-
     try {
-        // Check if the appointment exists and get assigned doctor_id.
-        const existingAppointment = await pool.query('SELECT doctor_id FROM appointments WHERE id = $1', [id]);
-        if (existingAppointment.rows.length === 0) {
-            return res.status(404).json({ message: 'Appointment not found.' });
-        }
-        const assigned_doctor_id = existingAppointment.rows[0].doctor_id;
-
-        // Only Admin or assigned Doctor can proceed.
-        if (user_role !== 'admin' && user_id !== assigned_doctor_id) {
-            return res.status(403).json({ message: 'Access Denied. Only the assigned doctor or an admin can delete the appointment.' });
-        }
-
         const result = await pool.query('DELETE FROM appointments WHERE id = $1 RETURNING id', [id]);
-        
         if (result.rows.length === 0) {
             return res.status(404).json({ message: 'Appointment not found.' });
         }

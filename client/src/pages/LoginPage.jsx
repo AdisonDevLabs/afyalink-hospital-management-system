@@ -1,9 +1,7 @@
-// client/src/pages/LoginPage.jsx
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { useAuthService } from '../hooks/useAuthService';
+import { motion } from 'framer-motion'; // Import motion for animations
+import { useAuth } from '../context/AuthContext';
 
 // Animation variants for Framer Motion
 const pageVariants = {
@@ -33,33 +31,46 @@ const inputVariants = {
   visible: { y: 0, opacity: 1 }
 };
 
+const backendUrl = import.meta.env.VITE_BACKEND_URL;
+const API_V1 = '/api/v1';
+
 function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState(null);
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const { loginUser, isLoading, error, setError } = useAuthService();
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(null);
+    setLoading(true);
 
     try {
-      // Call the simplified function from the service hook
-      await loginUser({ username, password });
+      const response = await fetch(`${backendUrl}${API_V1}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
+
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.message || 'Login failed. Please check your credentials.');
+      }
+
+      const data = await response.json();
+      login(data.user, data.token);
       navigate('/dashboard');
-      
-    } catch (err) {
-    }
-  };
 
-  const handleDemoMode = async () => {
-    try {
-      await loginUser({ username: 'demo', password: 'demo' });
-      navigate('/dashboard', { replace: true });
     } catch (err) {
-      setError('Failed to enter demo mode. Server maybe unreachable.');
+      console.error('Login error:', err);
+      setError(err.message || 'An unexpected error occurred during login.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -106,7 +117,7 @@ function LoginPage() {
                 placeholder="Username or Email"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                disabled={isLoading}
+                disabled={loading}
               />
             </motion.div>
             <motion.div variants={inputVariants} className="relative">
@@ -127,7 +138,7 @@ function LoginPage() {
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                disabled={isLoading}
+                disabled={loading}
               />
               <div className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer">
                 {/* Toggle password visibility icon */}
@@ -136,7 +147,7 @@ function LoginPage() {
                   onClick={() => setShowPassword(!showPassword)}
                   className="text-gray-400 hover:text-gray-600 focus:outline-none dark:text-gray-500 dark:hover:text-gray-300" // Added dark mode text colors
                   aria-label={showPassword ? "Hide password" : "Show password"}
-                  disabled={isLoading}
+                  disabled={loading}
                 >
                   {showPassword ? (
                     <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -162,7 +173,7 @@ function LoginPage() {
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded-sm cursor-pointer dark:bg-gray-700" // Added dark mode border and background
-                disabled={isLoading}
+                disabled={loading}
               />
               <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900 dark:text-gray-300 cursor-pointer"> {/* Added dark mode text color */}
                 Remember me
@@ -192,9 +203,9 @@ function LoginPage() {
             variants={inputVariants}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            disabled={isLoading}
+            disabled={loading}
           >
-            {isLoading ? (
+            {loading ? (
               <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -202,30 +213,6 @@ function LoginPage() {
             ) : (
               'Login'
             )}
-          </motion.button>
-
-          {/* --- START: NEW DEMO MODE UI --- */}
-          <div className="relative mt-6">
-            <div className="absolute inset-0 flex items-center" aria-hidden="true">
-              <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
-            </div>
-            <div className="relative flex justify-center">
-              <span className="bg-white dark:bg-gray-800 px-2 text-sm text-gray-500 dark:text-gray-400">
-                OR
-              </span>
-            </div>
-          </div>
-
-          <motion.button
-            onClick={handleDemoMode}
-            type='button'
-            className='w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-lg text-base font-medium text-blue-600 bg-blue-100 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300 dark:hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800 transition duration-300 ease-in-out transform hover:scale-105'
-            variants={inputVariants}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            disabled={isLoading}
-          >
-            Enter Read-Only Demo Mode
           </motion.button>
           <motion.div variants={inputVariants} className="text-sm text-center">
             <p className="text-sm text-gray-600 transition-colors duration-300 dark:text-gray-300"> {/* Added dark mode text color */}

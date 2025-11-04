@@ -163,9 +163,9 @@ const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, userName }) => {
 
 const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
-// --- Main UsersManagementPage Component --- user && user.role
+// --- Main UsersManagementPage Component ---
 function UsersManagementPage() {
-  const { user, isAuthenticated, loading: authLoading, token, getApiPrefix } = useAuth();
+  const { user, isAuthenticated, loading: authLoading, token } = useAuth();
   const navigate = useNavigate();
 
   const [users, setUsers] = useState([]);
@@ -209,7 +209,7 @@ function UsersManagementPage() {
       if (searchTerm) queryParams.append('search', searchTerm);
       if (filterRole) queryParams.append('role', filterRole);
 
-      const response = await fetch(`${backendUrl}${getApiPrefix()}/users?${queryParams.toString()}`, {
+      const response = await fetch(`${backendUrl}/api/users?${queryParams.toString()}`, {
         headers: { 'Authorization': `Bearer ${token}` },
       });
 
@@ -228,17 +228,13 @@ function UsersManagementPage() {
     }
   }, [token, searchTerm, filterRole, navigate]);
 
-  const roles = ['admin', 'guest_demo'];
-
   useEffect(() => {
-
-    const isAuthorized = user && roles.includes(user?.role);
-    if (!authLoading && isAuthenticated && isAuthorized) { // Simplified user role check
+    if (!authLoading && isAuthenticated && user?.role === 'admin') { // Simplified user role check
       fetchUsers();
-    } else if (!authLoading && (!isAuthenticated || !isAuthorized)) {
+    } else if (!authLoading && (!isAuthenticated || user?.role !== 'admin')) {
       navigate('/unauthorized');
     }
-  }, [authLoading, isAuthenticated, user, navigate, fetchUsers, getApiPrefix]);
+  }, [authLoading, isAuthenticated, user, navigate, fetchUsers]);
 
   useEffect(() => {
     const handler = setTimeout(() => { fetchUsers(); }, 300);
@@ -262,7 +258,7 @@ function UsersManagementPage() {
   const handleToggleStatus = async (userId, currentStatus) => {
     if (!token) { setNotification({ message: 'Authentication required.', type: 'error' }); return; }
     try {
-      const response = await fetch(`${backendUrl}${getApiPrefix()}/users/${userId}/toggle-status`, {
+      const response = await fetch(`${backendUrl}/api/users/${userId}/toggle-status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ is_active: !currentStatus })
@@ -283,7 +279,7 @@ function UsersManagementPage() {
     if (!token) { setNotification({ message: 'Authentication required.', type: 'error' }); return; }
     setNotification({ message: `Sending password reset for user ${userId}...`, type: 'info' });
     try {
-      const response = await fetch(`${backendUrl}${getApiPrefix()}/users/${userId}/reset-password`, {
+      const response = await fetch(`${backendUrl}/api/users/${userId}/reset-password`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -346,7 +342,7 @@ function UsersManagementPage() {
     const { confirmPassword, ...dataToSend } = formData;
     if (editingUser && dataToSend.password === '') delete dataToSend.password;
 
-    const url = editingUser ? `${backendUrl}${getApiPrefix()}/users/${editingUser.id}` : `${backendUrl}${getApiPrefix()}/users`;
+    const url = editingUser ? `${backendUrl}/api/users/${editingUser.id}` : `${backendUrl}/api/users`;
     const method = editingUser ? 'PUT' : 'POST';
 
     try {
@@ -376,7 +372,7 @@ function UsersManagementPage() {
     if (!userToDelete || !token) return;
 
     try {
-      const response = await fetch(`${backendUrl}${getApiPrefix()}/users/${userToDelete.id}`, {
+      const response = await fetch(`${backendUrl}/api/users/${userToDelete.id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` },
       });
@@ -398,10 +394,8 @@ function UsersManagementPage() {
   const containerVariants = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.1 } } };
   const itemVariants = { hidden: { y: 20, opacity: 0 }, visible: { y: 0, opacity: 1 } };
 
-  
-
   if (authLoading) return <div className="flex justify-center items-center h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300 text-lg text-gray-700 dark:text-gray-300">Loading authentication...</div>;
-  if (!isAuthenticated || !roles.includes(user?.role)) return <div className="flex justify-center items-center h-screen bg-red-50 dark:bg-red-900 transition-colors duration-300 text-lg text-red-700 dark:text-red-100">Unauthorized Access. Only administrators can view this page.</div>;
+  if (!isAuthenticated || user?.role !== 'admin') return <div className="flex justify-center items-center h-screen bg-red-50 dark:bg-red-900 transition-colors duration-300 text-lg text-red-700 dark:text-red-100">Unauthorized Access. Only administrators can view this page.</div>;
 
   const indexOfLastUser = currentPage * usersPerPage;
   const indexOfFirstUser = indexOfLastUser - usersPerPage;

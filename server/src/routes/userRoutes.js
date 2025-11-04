@@ -1,14 +1,10 @@
-// server/src/routes/userRoutes.js
-
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 
 const userController = require('../controllers/userController');
-const adminController = require('../controllers/adminController');
 const { protect, authorize } = require('../middleware/authMiddleware');
-
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -37,20 +33,22 @@ const upload = multer({
   }
 });
 
-// --- Public/Read-Only Endpoints ---
-
-// GET /api/users/
-router.get('/', protect, authorize('admin', 'doctor', 'receptionist', 'nurse', 'guest_demo'), adminController.getAllUsers);
-
-// GET /api/users/:id
-router.get('/:id', protect, authorize('admin', 'doctor', 'receptionist', 'nurse', 'guest_demo'), adminController.getUserById);
-
-// -- Self-Service Profile Management ---
-
-// GET /api/users/profile
 router.get('/profile', protect, userController.getProfile);
 
-// PUT /api/users/profile
 router.put('/profile', protect, upload.single('profile_picture'), userController.updateProfile);
+
+router.post('/', protect, authorize('admin'), userController.registerUser);
+
+router.get('/', protect, authorize('admin', 'doctor', 'receptionist', 'nurse', 'guest'), userController.getAllUsers);
+
+router.get('/:id', protect, authorize('admin', 'doctor', 'receptionist', 'nurse', 'guest'), userController.getUserById);
+
+router.put('/:id', protect, authorize('admin'), userController.updateUser);
+
+router.delete('/:id', protect, authorize('admin'), userController.deleteUser);
+
+router.put('/:id/toggle-status', protect, authorize('admin'), userController.toggleUserStatus);
+
+router.post('/:id/reset-password', protect, authorize('admin'), userController.resetUserPassword);
 
 module.exports = router;

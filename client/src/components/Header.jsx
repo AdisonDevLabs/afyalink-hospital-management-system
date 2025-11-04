@@ -10,7 +10,7 @@ const capitalize = (str) => {
   return str.charAt(0).toUpperCase() + str.slice(1);
 };
 
-const backendUrl = import.meta.env.VITE_API_URL;
+const backendUrl = import.meta.env.VITE_BACKEND_URL;
 const apiBackendUrl = backendUrl.replace('/api', '');
 
 function Header({ toggleSidebar }) {

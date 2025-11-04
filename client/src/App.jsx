@@ -7,10 +7,11 @@ import PrivateRoute from './components/PrivateRoute';
 
 // Lazy-loaded pages
 const LoginPage = lazy(() => import('./pages/LoginPage'));
-const AdminDashboard = lazy(() => import('./pages/AdminDashboardPage'));
-const DoctorDashboard = lazy(() => import('./pages/DoctorDashboardPage'));
-const NurseDashboard = lazy(() => import('./pages/NurseDashboardPage'));
-const ReceptionistDashboard = lazy(() => import('./pages/ReceptionistDashboardPage'));
+const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage'));
+const DoctorDashboardPage = lazy(() => import('./pages/DoctorDashboardPage'));
+const NurseDashboardPage = lazy(() => import('./pages/NurseDashboardPage'));
+const ReceptionistDashboardPage = lazy(() => import('./pages/ReceptionistDashboardPage'));
+const GuestDashboardPage = lazy(() => import('./pages/GuestDashboardPage'));
 const PatientsPage = lazy(() => import('./pages/PatientsPage'));
 const AppointmentsPage = lazy(() => import('./pages/AppointmentsPage'));
 const ClinicalNotesPage = lazy(() => import('./pages/ClinicalNotesPage'));
@@ -21,41 +22,23 @@ const UserProfilePage = lazy(() => import('./components/UserProfile'));
 const RegisterPage = lazy(() => import('./pages/RegisterPage'));
 const HomePagePublic = lazy(() => import('./pages/HomePagePublic'));
 
-const DashboardRouter = () => {
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return <div className="p-4 text-center">Loading dashboard...</div>;
-  }
-  const role = user?.role;
-
-  if (role === 'doctor') {
-    return <DoctorDashboard />
-  }
-  if (role === 'nurse') {
-    return <NurseDashboard />
-  }
-  if (role === 'receptionist') {
-    return <ReceptionistDashboard />
-  }
-  return <AdminDashboard />
-
+// Redirect component that sends users to their role-specific dashboard
+function DashboardRedirect() {
+  const { user } = useAuth();
+  if (!user) return null;
+  return <Navigate to={`/dashboard/${user.role}`} replace />;
 }
 
 function AppContent() {
-  const { isAuthenticated, isDemoMode } = useAuth(); 
+  const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect logged-in users away from login page to the base dashboard path.
+  // Redirect logged-in users away from login page
   useEffect(() => {
-    if ((isAuthenticated || isDemoMode) && window.location.pathname === '/login') {
+    if (isAuthenticated && window.location.pathname === '/login') {
       navigate('/dashboard', { replace: true });
     }
-  }, [isAuthenticated, isDemoMode, navigate]);
-
-  const dashboardRedirect = (
-    <Navigate to="/dashboard" replace />
-  );
+  }, [isAuthenticated, navigate]);
 
   return (
     <div className="App">
@@ -72,7 +55,7 @@ function AppContent() {
           <Route
             path="/login"
             element={
-              (isAuthenticated || isDemoMode)
+              isAuthenticated
                 ? <Navigate to="/dashboard" replace />
                 : <LoginPage />
             }
@@ -81,27 +64,41 @@ function AppContent() {
 
           {/* Protected Routes */}
           <Route element={<Layout />}>
-            {/* The main PrivateRoute wrapper */}
-            <Route element={<PrivateRoute allowedRoles={['admin','doctor','nurse','receptionist','guest_demo']} />}>
-              
-              {/* --- UNIFIED DASHBOARD ROUTE --- */}
-              {/* All users (including demo) with any role should land here */}
-              <Route path="dashboard" element={<DashboardRouter />} />
+            <Route element={<PrivateRoute allowedRoles={['admin','doctor','nurse','receptionist','guest']} />}>
+              {/* Dashboard with role-based index redirect */}
+              <Route path="dashboard">
+                <Route index element={<DashboardRedirect />} />
 
-              {/* Shared Pages - All authorized roles have access to these */}
+                <Route element={<PrivateRoute allowedRoles={['admin']} />}>
+                  <Route path="admin" element={<AdminDashboardPage />} />
+                </Route>
+                <Route element={<PrivateRoute allowedRoles={['doctor']} />}>
+                  <Route path="doctor" element={<DoctorDashboardPage />} />
+                </Route>
+                <Route element={<PrivateRoute allowedRoles={['receptionist']} />}>
+                  <Route path="receptionist" element={<ReceptionistDashboardPage />} />
+                </Route>
+                <Route element={<PrivateRoute allowedRoles={['nurse']} />}>
+                  <Route path="nurse" element={<NurseDashboardPage />} />
+                </Route>
+                <Route element={<PrivateRoute allowedRoles={['guest']} />}>
+                  <Route path="guest" element={<GuestDashboardPage />} />
+                </Route>
+              </Route>
+
+              {/* Shared Pages */}
               <Route path="patients" element={<PatientsPage />} />
               <Route path="appointments" element={<AppointmentsPage />} />
               <Route path="clinical-notes" element={<ClinicalNotesPage />} />
               <Route path="clinical-notes/:patientId" element={<ClinicalNotesPage />} />
               <Route path="schedules" element={<ScheduleManagementPage />} />
               <Route path="profile" element={<UserProfilePage />} />
-              
-              {/* Admin & Guest-only (still protected by PrivateRoute) */}
-              <Route element={<PrivateRoute allowedRoles={['admin', 'guest_demo']} />}>
+
+              {/* Admin & Guest-only */}
+              <Route element={<PrivateRoute allowedRoles={['admin','guest']} />}>
                 <Route path="users" element={<UsersManagementPage />} />
                 <Route path="departments" element={<DepartmentsManagementPage />} />
               </Route>
-              
             </Route>
           </Route>
 
@@ -109,8 +106,8 @@ function AppContent() {
           <Route
             path="*"
             element={
-              (isAuthenticated || isDemoMode)
-                ? dashboardRedirect
+              isAuthenticated
+                ? <DashboardRedirect />
                 : <Navigate to="/login" replace />
             }
           />

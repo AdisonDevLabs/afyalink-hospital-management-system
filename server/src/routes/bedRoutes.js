@@ -3,10 +3,6 @@ const router = express.Router();
 const bedController = require('../controllers/bedController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
-const conditionallyProtect = (req, res, next) => {
-  protect(req, res, next);
-};
-
-router.get('/availability', conditionallyProtect, authorize('nurse', 'doctor', 'admin', 'receptionist', 'guest_demo'), bedController.getBedOccupancy);
+router.get('/availability', protect, authorize('nurse', 'doctor', 'admin', 'receptionist'), bedController.getBedOccupancy);
 
 module.exports = router;

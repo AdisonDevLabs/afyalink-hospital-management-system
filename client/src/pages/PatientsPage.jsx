@@ -5,12 +5,6 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
-import Notification from '../components/Notification';
-import Modal from '../components/Modal';
-import DeleteConfirmationModal from '../components/DeleteConfirmationModal';
-import { FormInput, FormSelect, FormTextArea } from '../components/FormComponents';
-import { patientsApi } from '../hooks/patientsApi';
-
 // --- Animation Variants ---
 const pageVariants = {
   initial: { opacity: 0, y: 20 },
@@ -23,19 +17,180 @@ const itemVariants = {
   visible: { y: 0, opacity: 1 },
 };
 
+const modalVariants = {
+  hidden: { opacity: 0, scale: 0.9 },
+  visible: { opacity: 1, scale: 1, transition: { duration: 0.2, ease: "easeOut" } },
+  exit: { opacity: 0, scale: 0.9, transition: { duration: 0.15, ease: "easeIn" } },
+};
+
+// --- Reusable Notification Component (no change, as it's already optimized) ---
+const Notification = ({ message, type, onClose }) => {
+  if (!message) return null;
+
+  const bgColor = type === 'success' ? 'bg-green-100 dark:bg-green-900' : 'bg-red-100 dark:bg-red-900';
+  const borderColor = type === 'success' ? 'border-green-400 dark:border-green-700' : 'border-red-400 dark:border-red-700';
+  const textColor = type === 'success' ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300';
+  const iconColor = type === 'success' ? 'text-green-500 dark:text-green-400' : 'text-red-500 dark:text-red-400';
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -50, x: "-50%" }}
+      animate={{ opacity: 1, y: 0, x: "-50%" }}
+      exit={{ opacity: 0, y: -50, x: "-50%" }}
+      transition={{ duration: 0.3 }}
+      className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 p-4 rounded-lg shadow-lg dark:shadow-none flex items-center space-x-3 
+                  ${bgColor} ${borderColor} ${textColor} border-l-4`}
+      role="alert"
+    >
+      {type === 'success' ? (
+        <svg className={`h-6 w-6 ${iconColor}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+      ) : (
+        <svg className={`h-6 w-6 ${iconColor}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2A9 9 0 111 10a9 9 0 0118 0z"></path></svg>
+      )}
+      <span className="font-medium">{message}</span>
+      <button onClick={onClose} className={`absolute top-1 right-1 ${iconColor} hover:text-gray-900 dark:hover:text-gray-100`}>
+        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+      </button>
+    </motion.div>
+  );
+};
+
+// --- Simple Modal Component (no change, as it's already optimized) ---
+const Modal = ({ isOpen, onClose, children, title }) => {
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4"
+        >
+          <motion.div
+            variants={modalVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl dark:shadow-none w-full max-w-2xl transform sm:my-8 sm:align-middle sm:w-full"
+          >
+            <div className="flex justify-between items-center p-5 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 rounded-t-lg">
+              <h3 className="text-2xl font-semibold text-gray-800 dark:text-gray-100">{title}</h3>
+              <button
+                onClick={onClose}
+                className="text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-gray-600 rounded-md p-1 dark:text-gray-300 dark:hover:text-gray-100"
+                aria-label="Close modal"
+              >
+                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+              </button>
+            </div>
+            <div className="p-6 max-h-[80vh] overflow-y-auto">
+              {children}
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+};
+
+// --- Delete Confirmation Modal (no change, as it's already optimized) ---
+const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, patientName }) => {
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="Confirm Deletion">
+      <div className="text-center p-5">
+        <svg className="mx-auto mb-4 h-16 w-16 text-red-500 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+        <h3 className="mb-5 text-lg font-normal text-gray-700 dark:text-gray-300">
+          Are you sure you want to delete the record for <span className="font-semibold">{patientName}</span>?
+          This action cannot be undone.
+        </h3>
+        <div className="flex justify-center gap-4">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={onConfirm}
+            className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-5 rounded-lg shadow-md transition duration-300"
+          >
+            Yes, I'm sure
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={onClose}
+            className="bg-gray-300 hover:bg-gray-400 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-semibold py-2 px-5 rounded-lg shadow-md transition duration-300"
+          >
+            No, cancel
+          </motion.button>
+        </div>
+      </div>
+    </Modal>
+  );
+};
+
+// --- Extracted Form Components for Reusability ---
+const FormInput = ({ label, id, type = 'text', value, onChange, placeholder, required = false, className = '', ...props }) => (
+  <div>
+    <label htmlFor={id} className='block text-gray-700 text-sm font-medium mb-1 dark:text-gray-300'>
+      {label} {required && <span className="text-red-500">*</span>}:
+    </label>
+    <input
+      type={type}
+      id={id}
+      name={id}
+      value={value}
+      onChange={onChange}
+      className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 ${className}`}
+      placeholder={placeholder}
+      required={required}
+      {...props}
+    />
+  </div>
+);
+
+const FormSelect = ({ label, id, value, onChange, options, required = false, className = '', ...props }) => (
+  <div>
+    <label htmlFor={id} className='block text-gray-700 text-sm font-medium mb-1 dark:text-gray-300'>
+      {label} {required && <span className="text-red-500">*</span>}:
+    </label>
+    <select
+      id={id}
+      name={id}
+      value={value}
+      onChange={onChange}
+      className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 ${className}`}
+      required={required}
+      {...props}
+    >
+      {options.map(option => (
+        <option key={option.value} value={option.value}>{option.label}</option>
+      ))}
+    </select>
+  </div>
+);
+
+const FormTextArea = ({ label, id, value, onChange, placeholder, rows = '3', className = '', ...props }) => (
+  <div>
+    <label htmlFor={id} className='block text-gray-700 text-sm font-medium mb-1 dark:text-gray-300'>
+      {label}:
+    </label>
+    <textarea
+      id={id}
+      name={id}
+      value={value}
+      onChange={onChange}
+      rows={rows}
+      className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 ${className}`}
+      placeholder={placeholder}
+      {...props}
+    ></textarea>
+  </div>
+);
+
 
 const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
 function PatientsPage() {
-  const { token, isAuthenticated, user, loading: authLoading, getApiPrefix } = useAuth();
+  const { token, isAuthenticated, user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const isDemoUser = user?.role === 'guest_demo';
-  const {
-    fetchPatients: fetchPatientsApi,
-    createPatient: createPatientApi,
-    updatePatient: updatePatientApi,
-    deletePatient: deletePatientApi
-  } = patientsApi();
 
   const [patients, setPatients] = useState([]);
   const [pageLoading, setPageLoading] = useState(true);
@@ -54,23 +209,12 @@ function PatientsPage() {
   const [patientsPerPage] = useState(10);
 
   const [formData, setFormData] = useState({
-    first_name: '',
-    last_name: '',
-    date_of_birth: '',
-    gender: '',
-    national_id: '',
-    contact_phone: '',
-    email: '',
-    address: '',
-    emergency_contact_name: '',
-    emergency_contact_phone: '',
-    emergency_contact_relationship: '',
-    allergies: '',
-    conditions: '',
-    photo_id_file: null,
-    photo_id_url: ''
+    first_name: '', last_name: '', date_of_birth: '', gender: '',
+    national_id: '', contact_phone: '', email: '', address: '',
+    emergency_contact_name: '', emergency_contact_phone: '',
+    emergency_contact_relationship: '', allergies: '', conditions: '',
+    photo_id_file: null, photo_id_url: ''
   });
-
   const [photoPreviewUrl, setPhotoPreviewUrl] = useState('');
 
   const showNotification = useCallback((message, type) => {
@@ -85,7 +229,15 @@ function PatientsPage() {
     setNotification({ message: null, type: null });
 
     try {
-      const data = await fetchPatientsApi();
+      const response = await fetch(`${backendUrl}/api/patients`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.message || 'Failed to fetch patients.');
+      }
+      const data = await response.json();
 
       if (data && Array.isArray(data.patients)) {
         setPatients(data.patients);
@@ -139,68 +291,50 @@ function PatientsPage() {
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     setNotification({ message: null, type: null });
-    if (isDemoUser) {
-      const isEditing = !!modalState.editingPatient;
-      showNotification(`Action blocked: Patient ${isEditing ? 'update' : 'creation'} is disabled in Demo Mode.`, 'error');
-    }
 
-    const {
-      first_name,
-      last_name,
-      date_of_birth,
-      gender,
-      contact_phone
-    } = formData;
+    const { first_name, last_name, date_of_birth, gender, contact_phone } = formData;
     if (!first_name || !last_name || !date_of_birth || !gender || !contact_phone) {
       setNotification({ message: 'Please fill in all required fields: First Name, Last Name, Date of Birth, Gender, Contact Phone.', type: 'error' });
       return;
     }
 
     const isEditing = !!modalState.editingPatient;
+    const url = isEditing ? `${backendUrl}/api/patients/${modalState.editingPatient.id}` : `${backendUrl}/api/patients`;
+    const method = isEditing ? 'PUT' : 'POST';
 
     try {
-      if (formData.photo_id_file) {
-        const url = isEditing ? `${backendUrl}${getApiPrefix()}/patients/${modalState.editingPatient.id}` : `${backendUrl}${getApiPrefix()}/patients`;
-        const method = isEditing ? 'PUT' : 'POST';
+      let body;
+      let headers = { 'Authorization': `Bearer ${token}` };
 
-        let body = new FormData()
+      if (formData.photo_id_file) {
+        body = new FormData();
         for (const key in formData) {
           if (formData[key] !== null && key !== 'photo_id_url') {
             body.append(key, formData[key]);
           }
         }
-        const response = await fetch(url, {
-          method,
-          headers: { 'Authorization': `Bearer ${token}`},
-          body
-        });
-        if (!response.ok) {
-          const errData = await response.json();
-          throw new Error(errData.message || `Failed to ${isEditing ? 'update' : 'add'} patient.`);
-        }
       } else {
-        const patientData = { ...formData };
-        delete patientData.photo_id_file;
-        delete patientData.photo_id_url;
-
-        if (isEditing) {
-          await updatePatientApi(modalState.editingPatient.id, patientData);
-        } else {
-          await createPatientApi(patientData);
-        }
+        body = JSON.stringify(formData);
+        headers['Content-Type'] = 'application/json';
       }
+
+      const response = await fetch(url, { method, headers, body });
+
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.message || `Failed to ${isEditing ? 'update' : 'add'} patient.`);
+      }
+
       await fetchPatients();
       showNotification(`Patient ${isEditing ? 'updated' : 'added'} successfully!`, 'success');
       setModalState(prev => ({ ...prev, showPatientForm: false, editingPatient: null }));
       resetFormData();
+
     } catch (err) {
-        console.error(`Error ${isEditing ? 'updating' : 'adding'} patient:`, err);
-        showNotification(err.message || `An error occurred while ${isEditing ? 'updating' : 'adding'} the patient.`, 'error');
+      console.error(`Error ${isEditing ? 'updating' : 'adding'} patient:`, err);
+      showNotification(err.message || `An error occurred while ${isEditing ? 'updating' : 'adding'} the patient.`, 'error');
     }
   };
-    
-    
-
 
   const handleDeleteClick = useCallback((patientId, patientName) => {
     setModalState(prev => ({ ...prev, showDeleteConfirm: true, patientToDelete: { id: patientId, name: patientName } }));
@@ -210,18 +344,18 @@ function PatientsPage() {
     setModalState(prev => ({ ...prev, showDeleteConfirm: false }));
     if (!modalState.patientToDelete) return;
 
-    if (isDemoUser) {
-      showNotification('Action blocked: Patient deletion is disabled in Demo Mode.', 'error');
-      setModalState(prev => ({ ...prev, patientToDelete: null }));
-      return;
-    };
-
     setPageLoading(true);
     setNotification({ message: null, type: null });
 
     try {
-      await deletePatientApi(modalState.patientToDelete.id);
-
+      const response = await fetch(`${backendUrl}/api/patients/${modalState.patientToDelete.id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.message || 'Failed to delete patient.');
+      }
       await fetchPatients();
       showNotification('Patient deleted successfully!', 'success');
     } catch (err) {
@@ -279,10 +413,10 @@ function PatientsPage() {
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   // Permissions (no change, as they are role-based logic)
-  const canManagePatients = user && (user.role === 'admin' || user.role === 'receptionist' || user.role === 'guest_demo');
-  const canViewClinicalNotes = user && (user.role === 'admin' || user.role === 'doctor' || user.role === 'nurse' || user.role === 'guest_demo');
-  const canViewAppointments = user && (user.role === 'admin' || user.role === 'receptionist' || user.role === 'doctor' || user.role === 'nurse' || user.role === 'guest_demo');
-  const canViewMedicalHistory = user && (user.role === 'admin' || user.role === 'doctor' || user.role === 'nurse' || user.role === 'guest_demo');
+  const canManagePatients = user && (user.role === 'admin' || user.role === 'receptionist');
+  const canViewClinicalNotes = user && (user.role === 'admin' || user.role === 'doctor' || user.role === 'nurse');
+  const canViewAppointments = user && (user.role === 'admin' || user.role === 'receptionist' || user.role === 'doctor' || user.role === 'nurse');
+  const canViewMedicalHistory = user && (user.role === 'admin' || user.role === 'doctor' || user.role === 'nurse');
 
   if (authLoading) return (
     <div className='flex justify-center items-center h-screen bg-gray-100 dark:bg-gray-900'>
