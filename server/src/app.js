@@ -56,7 +56,7 @@ app.use(
 // Rate Limiting: Limits requests to prevent brute-force attacks
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 mins
-  max: 100, // Limit each IP to 100 requests per windowMs
+  max: 1000, // Limit each IP to 100 requests per windowMs
   standardHeaders: true,
   legacyHeaders: false,
 });
