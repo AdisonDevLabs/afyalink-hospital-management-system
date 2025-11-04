@@ -58,15 +58,22 @@ It provides hospitals with a robust, modern platform for managing patients, doct
 ### Environment Setup
 Create a `.env` file in the `/server` directory:
   ```properties
-  PORT=5000
+    # --- Application Configuration ---
+    NODE_ENV=indicate_if_it_is_development_production_or_test
+    PORT=indicate_your_PORT
+    API_VERSION=v1
 
-  DB_USER=afyalink_user
-  DB_HOST=localhost
-  DB_DATABASE=afyalink_db
-  DB_PASSWORD=afyalink_password
-  DB_PORT=5432
+    # --- JWT Configuration ---
+    JWT_SECRET=your_super_secret_32_characters
+    JWT_EXPIRES_IN=1h
 
-  JWT_SECRET=your_jwt_secret_key_here
+    # --- Database Configuration (Local) ---
+    DB_HOST=your_localhost
+    DB_PORT=your_db_port_often_5432
+    DB_USER=your_db_user
+    DB_PASSWORD=your_db_password
+    DB_DATABASE=your_db_database_name
+    CLIENT_URL=client_url
   ```
 
 ### Run with Docker Compose
@@ -119,7 +126,7 @@ Ensure you have a running PostgreSQL instance configured via `.env`
 ## Live Demo
 
 Deployed on **Render** and can be accessed via this link:
-`https://afyalink-hms-frontend.onrender.com/`
+**https://afyalink-hms.onrender.com/**
 
 
 ## Contributions $ Support
