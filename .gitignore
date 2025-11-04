@@ -1,5 +1,8 @@
 client/.env
 server/.env
+client/pnpm-lock.yaml
+server/pnpm-lock.yaml
+server/pnpm-lock.yaml
 afyalink_backup.dump
 afyalink_backup1.dump
 init-db.sql
