@@ -155,14 +155,14 @@ function DoctorDashboardPage() {
             const todayDateString = new Date().toISOString().split('T')[0];
 
             const endpoints = {
-                todaysAppointments: `${backendUrl}/api/appointments?doctor_id=${user.id}&date=${todayDateString}&status=Scheduled`,
-                allAppointments: `${backendUrl}/api/appointments?doctor_id=${user.id}`,
-                labReports: `${backendUrl}/api/lab-reports?doctor_id=${user.id}&status=pending`,
-                admittedPatients: `${backendUrl}/api/patients?admitted_by=${user.id}`,
-                criticalAlerts: `${backendUrl}/api/alerts/by-user?recipient_id=${user.id}&severity=critical`,
-                patientCount: `${backendUrl}/api/patients/count?doctor_id=${user.id}`,
-                recentActivities: `${backendUrl}/api/doctor-activities?doctor_id=${user.id}&limit=5`,
-                unreadMessages: `${backendUrl}/api/messages?recipient_id=${user.id}&status=unread`,
+                todaysAppointments: `${backendUrl}/api/v1/appointments?doctor_id=${user.id}&date=${todayDateString}&status=Scheduled`,
+                allAppointments: `${backendUrl}/api/v1/appointments?doctor_id=${user.id}`,
+                labReports: `${backendUrl}/api/v1/lab-reports?doctor_id=${user.id}&status=pending`,
+                admittedPatients: `${backendUrl}/api/v1/patients?admitted_by=${user.id}`,
+                criticalAlerts: `${backendUrl}/api/v1/alerts/by-user?recipient_id=${user.id}&severity=critical`,
+                patientCount: `${backendUrl}/api/v1/patients/count?doctor_id=${user.id}`,
+                recentActivities: `${backendUrl}/api/v1/doctor-activities?doctor_id=${user.id}&limit=5`,
+                unreadMessages: `${backendUrl}/api/v1/messages?recipient_id=${user.id}&status=unread`,
             };
 
             const fetchPromises = Object.values(endpoints).map(url =>

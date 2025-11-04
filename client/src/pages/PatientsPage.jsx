@@ -229,7 +229,7 @@ function PatientsPage() {
     setNotification({ message: null, type: null });
 
     try {
-      const response = await fetch(`${backendUrl}/api/patients`, {
+      const response = await fetch(`${backendUrl}/api/v1/patients`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -299,7 +299,7 @@ function PatientsPage() {
     }
 
     const isEditing = !!modalState.editingPatient;
-    const url = isEditing ? `${backendUrl}/api/patients/${modalState.editingPatient.id}` : `${backendUrl}/api/patients`;
+    const url = isEditing ? `${backendUrl}/api/v1/patients/${modalState.editingPatient.id}` : `${backendUrl}/api/v1/patients`;
     const method = isEditing ? 'PUT' : 'POST';
 
     try {
@@ -348,7 +348,7 @@ function PatientsPage() {
     setNotification({ message: null, type: null });
 
     try {
-      const response = await fetch(`${backendUrl}/api/patients/${modalState.patientToDelete.id}`, {
+      const response = await fetch(`${backendUrl}/api/v1/patients/${modalState.patientToDelete.id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });

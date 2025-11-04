@@ -119,7 +119,7 @@ function AppointmentsPage() {
         ...(searchTerm && { search: searchTerm }),
       }).toString();
 
-      const response = await fetch(`${backendUrl}/api/appointments?${queryParams}`, { headers: { 'Authorization': `Bearer ${token}` } });
+      const response = await fetch(`${backendUrl}/api/v1/appointments?${queryParams}`, { headers: { 'Authorization': `Bearer ${token}` } });
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       setAppointments(await response.json());
     } catch (error) {
@@ -134,7 +134,7 @@ function AppointmentsPage() {
   const fetchPatients = useCallback(async () => {
     if (!token) return;
     try {
-      const response = await fetch(`${backendUrl}/api/patients`, { headers: { 'Authorization': `Bearer ${token}` } });
+      const response = await fetch(`${backendUrl}/api/v1/patients`, { headers: { 'Authorization': `Bearer ${token}` } });
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       setPatientsList((await response.json()).patients || []);
     } catch (error) {
@@ -147,7 +147,7 @@ function AppointmentsPage() {
   const fetchDoctors = useCallback(async () => {
     if (!token) return;
     try {
-      const response = await fetch(`${backendUrl}/api/users?role=doctor`, { headers: { 'Authorization': `Bearer ${token}` } });
+      const response = await fetch(`${backendUrl}/api/v1/users?role=doctor`, { headers: { 'Authorization': `Bearer ${token}` } });
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       setDoctorsList(await response.json() || []);
     } catch (error) {
@@ -160,7 +160,7 @@ function AppointmentsPage() {
   const fetchDepartments = useCallback(async () => {
     if (!token) return;
     try {
-      const response = await fetch(`${backendUrl}/api/departments`, { headers: { 'Authorization': `Bearer ${token}` } });
+      const response = await fetch(`${backendUrl}/api/v1/departments`, { headers: { 'Authorization': `Bearer ${token}` } });
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       setDepartmentsList(await response.json() || []);
     } catch (error) {
@@ -230,7 +230,7 @@ function AppointmentsPage() {
     setLoading(true);
     try {
       const method = editingAppointment ? 'PUT' : 'POST';
-      const url = editingAppointment ? `${backendUrl}/api/appointments/${editingAppointment.id}` : `${backendUrl}/api/appointments`;
+      const url = editingAppointment ? `${backendUrl}/api/v1/appointments/${editingAppointment.id}` : `${backendUrl}/api/v1/appointments`;
       const response = await fetch(url, {
         method, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify(formData),
@@ -257,7 +257,7 @@ function AppointmentsPage() {
     if (!appointmentToDelete) return;
     setLoading(true);
     try {
-      const response = await fetch(`${backendUrl}/api/appointments/${appointmentToDelete}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+      const response = await fetch(`${backendUrl}/api/v1/appointments/${appointmentToDelete}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || `HTTP error! status: ${response.status}`);

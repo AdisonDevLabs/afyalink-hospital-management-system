@@ -98,16 +98,16 @@ function NurseDashboardPage() {
         alertsData, scheduleData, totalPatientsUnderCareData,
         medicationsAdministeredTodayData, vitalsRecordedTodayData, newDoctorOrdersData,
       ] = await Promise.all([
-        fetchJson(`${backendUrl}/api/patients?nurse_id=${user.id}&assigned_today=${today}`, 'assigned patients'),
-        fetchJson(`${backendUrl}/api/medications/due?nurse_id=${user.id}`, 'due medications'),
-        fetchJson(`${backendUrl}/api/vitals/needs-update?nurse_id=${user.id}`, 'vitals needing update'),
-        fetchJson(`${backendUrl}/api/beds/availability`, 'bed occupancy'),
-        fetchJson(`${backendUrl}/api/alerts?recipient_role=nurse`, 'emergency alerts'),
-        fetchJson(`${backendUrl}/api/schedules?user_id=${user.id}&date=${today}`, 'shift schedule'),
-        fetchJson(`${backendUrl}/api/patients/count?nurse_id=${user.id}`, 'total patients under care count'),
-        fetchJson(`${backendUrl}/api/medications/administered/count?nurse_id=${user.id}&date=${today}`, 'medications administered today count'),
-        fetchJson(`${backendUrl}/api/vitals/recorded/count?nurse_id=${user.id}&date=${today}`, 'vitals recorded today count'),
-        fetchJson(`${backendUrl}/api/orders/new?nurse_id=${user.id}`, 'new doctor orders'),
+        fetchJson(`${backendUrl}/api/v1/patients?nurse_id=${user.id}&assigned_today=${today}`, 'assigned patients'),
+        fetchJson(`${backendUrl}/api/v1/medications/due?nurse_id=${user.id}`, 'due medications'),
+        fetchJson(`${backendUrl}/api/v1/vitals/needs-update?nurse_id=${user.id}`, 'vitals needing update'),
+        fetchJson(`${backendUrl}/api/v1/beds/availability`, 'bed occupancy'),
+        fetchJson(`${backendUrl}/api/v1/alerts?recipient_role=nurse`, 'emergency alerts'),
+        fetchJson(`${backendUrl}/api/v1/schedules?user_id=${user.id}&date=${today}`, 'shift schedule'),
+        fetchJson(`${backendUrl}/api/v1/patients/count?nurse_id=${user.id}`, 'total patients under care count'),
+        fetchJson(`${backendUrl}/api/v1/medications/administered/count?nurse_id=${user.id}&date=${today}`, 'medications administered today count'),
+        fetchJson(`${backendUrl}/api/v1/vitals/recorded/count?nurse_id=${user.id}&date=${today}`, 'vitals recorded today count'),
+        fetchJson(`${backendUrl}/api/v1/orders/new?nurse_id=${user.id}`, 'new doctor orders'),
       ]);
 
       const simulatedVitalsHistory = {};

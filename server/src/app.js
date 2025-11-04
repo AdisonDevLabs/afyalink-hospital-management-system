@@ -7,6 +7,8 @@ const fs = require('fs');
 const helmet = require('helmet');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
+const morgan = require('morgan');
+const hpp = require('hpp');
 
 const pool = require('./config/db');
 
@@ -34,7 +36,22 @@ const API_V1 = '/api/v1';
 // --- Middleware Configuration  ---
 
 // Security
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  })
+);
+
+// Cross-Origin Resource Sharing
+app.use(
+  cors({
+    origin: "http://localhost:5005",
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  })
+);
 
 // Rate Limiting: Limits requests to prevent brute-force attacks
 const apiLimiter = rateLimit({
@@ -45,15 +62,18 @@ const apiLimiter = rateLimit({
 });
 app.use(API_V1, apiLimiter);
 
+// Prevent HTTP parameter polution
+app.use(hpp());
 // Data Parsing
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10kb' }));
+app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
-// Cross-Origin Resource Sharing
-app.use(cors());
 
 // Response Compression
 app.use(compression());
+
+// Request logging and audit trails
+if (process.env.NODE_ENV !== 'test') app.use(morgan('combined'));
 
 // --- Static and Uploads Setup ---
 // Creates the uploads directory if it doesn't exist

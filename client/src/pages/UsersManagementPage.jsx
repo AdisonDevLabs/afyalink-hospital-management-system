@@ -209,7 +209,7 @@ function UsersManagementPage() {
       if (searchTerm) queryParams.append('search', searchTerm);
       if (filterRole) queryParams.append('role', filterRole);
 
-      const response = await fetch(`${backendUrl}/api/users?${queryParams.toString()}`, {
+      const response = await fetch(`${backendUrl}/api/v1/users?${queryParams.toString()}`, {
         headers: { 'Authorization': `Bearer ${token}` },
       });
 
@@ -258,7 +258,7 @@ function UsersManagementPage() {
   const handleToggleStatus = async (userId, currentStatus) => {
     if (!token) { setNotification({ message: 'Authentication required.', type: 'error' }); return; }
     try {
-      const response = await fetch(`${backendUrl}/api/users/${userId}/toggle-status`, {
+      const response = await fetch(`${backendUrl}/api/v1/users/${userId}/toggle-status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ is_active: !currentStatus })
@@ -279,7 +279,7 @@ function UsersManagementPage() {
     if (!token) { setNotification({ message: 'Authentication required.', type: 'error' }); return; }
     setNotification({ message: `Sending password reset for user ${userId}...`, type: 'info' });
     try {
-      const response = await fetch(`${backendUrl}/api/users/${userId}/reset-password`, {
+      const response = await fetch(`${backendUrl}/api/v1/users/${userId}/reset-password`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -342,7 +342,7 @@ function UsersManagementPage() {
     const { confirmPassword, ...dataToSend } = formData;
     if (editingUser && dataToSend.password === '') delete dataToSend.password;
 
-    const url = editingUser ? `${backendUrl}/api/users/${editingUser.id}` : `${backendUrl}/api/users`;
+    const url = editingUser ? `${backendUrl}/api/v1/users/${editingUser.id}` : `${backendUrl}/api/v1/users`;
     const method = editingUser ? 'PUT' : 'POST';
 
     try {
@@ -372,7 +372,7 @@ function UsersManagementPage() {
     if (!userToDelete || !token) return;
 
     try {
-      const response = await fetch(`${backendUrl}/api/users/${userToDelete.id}`, {
+      const response = await fetch(`${backendUrl}/api/v1/users/${userToDelete.id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` },
       });

@@ -143,13 +143,13 @@ function ReceptionistDashboardPage() {
                 patientsCountResponse, adminsCountResponse, departmentsCountResponse,
                 pendingPaymentsResponse,
             ] = await Promise.all([
-                fetch(`${backendUrl}/api/appointments?date=${today}`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch(`${backendUrl}/api/patients/recent`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch(`${backendUrl}/api/beds/availability`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch(`${backendUrl}/api/patients/count`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch(`${backendUrl}/api/admin/stats`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch(`${backendUrl}/api/departments/count`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch(`${backendUrl}/api/payments/pending/count`, { headers: { 'Authorization': `Bearer ${token}` } }),
+                fetch(`${backendUrl}/api/v1/appointments?date=${today}`, { headers: { 'Authorization': `Bearer ${token}` } }),
+                fetch(`${backendUrl}/api/v1/patients/recent`, { headers: { 'Authorization': `Bearer ${token}` } }),
+                fetch(`${backendUrl}/api/v1/beds/availability`, { headers: { 'Authorization': `Bearer ${token}` } }),
+                fetch(`${backendUrl}/api/v1/patients/count`, { headers: { 'Authorization': `Bearer ${token}` } }),
+                fetch(`${backendUrl}/api/v1/admin/stats`, { headers: { 'Authorization': `Bearer ${token}` } }),
+                fetch(`${backendUrl}/api/v1/departments/count`, { headers: { 'Authorization': `Bearer ${token}` } }),
+                fetch(`${backendUrl}/api/v1/payments/pending/count`, { headers: { 'Authorization': `Bearer ${token}` } }),
             ]);
 
             const [
@@ -207,7 +207,7 @@ function ReceptionistDashboardPage() {
 
     const handleCheckIn = async (appointmentId) => {
         try {
-            const response = await fetch(`${backendUrl}/api/appointments/${appointmentId}`, {
+            const response = await fetch(`${backendUrl}/api/v1/appointments/${appointmentId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ status: 'checked-in' }),

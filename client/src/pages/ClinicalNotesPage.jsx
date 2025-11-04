@@ -61,7 +61,7 @@ const Modal = ({ isOpen, onClose, children, title }) => {
 
 const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
-//${backendUrl}/api
+//${backendUrl}/api/v1
 
 function ClinicalNotesPage() {
   const { token, isAuthenticated, user, loading: authLoading } = useAuth();
@@ -126,7 +126,7 @@ function ClinicalNotesPage() {
 
     const fetchPatients = async () => {
       try {
-        const patientsRes = await fetch(`${backendUrl}/api/patients`, { headers: { 'Authorization': `Bearer ${token}` } });
+        const patientsRes = await fetch(`${backendUrl}/api/v1/patients`, { headers: { 'Authorization': `Bearer ${token}` } });
         if (!patientsRes.ok) throw new Error('Failed to fetch patients.');
         const patientsData = await patientsRes.json();
         setPatientsList(Array.isArray(patientsData.patients) ? patientsData.patients : []);
@@ -158,7 +158,7 @@ function ClinicalNotesPage() {
       setNotification({ message: null, type: null });
       try {
         // Fetch patient details
-        const patientRes = await fetch(`${backendUrl}/api/patients/${selectedPatientId}`, { headers: { 'Authorization': `Bearer ${token}` } });
+        const patientRes = await fetch(`${backendUrl}/api/v1/patients/${selectedPatientId}`, { headers: { 'Authorization': `Bearer ${token}` } });
         if (!patientRes.ok) {
           const errorData = await patientRes.json();
           throw new Error(errorData.message || 'Patient not found.');
@@ -167,7 +167,7 @@ function ClinicalNotesPage() {
         setPatient(patientData.patient); // Access the 'patient' key
 
         // Fetch clinical notes for the selected patient
-        const notesRes = await fetch(`${backendUrl}/api/clinical-notes/patient/${selectedPatientId}`, {
+        const notesRes = await fetch(`${backendUrl}/api/v1/clinical-notes/patient/${selectedPatientId}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (!notesRes.ok) {
@@ -196,7 +196,7 @@ function ClinicalNotesPage() {
       if (showNoteModal && selectedPatientId && token) {
         try {
           // Changed the API endpoint to use a query parameter for patient_id
-          const response = await fetch(`${backendUrl}/api/appointments?patient_id=${selectedPatientId}`, {
+          const response = await fetch(`${backendUrl}/api/v1/appointments?patient_id=${selectedPatientId}`, {
             headers: { 'Authorization': `Bearer ${token}` }
           });
           if (!response.ok) {
@@ -268,8 +268,8 @@ function ClinicalNotesPage() {
       };
 
       const url = editingNote
-        ? `${backendUrl}/api/clinical-notes/${editingNote.id}`
-        : `${backendUrl}/api/clinical-notes`;
+        ? `${backendUrl}/api/v1/clinical-notes/${editingNote.id}`
+        : `${backendUrl}/api/v1/clinical-notes`;
       const method = editingNote ? 'PUT' : 'POST';
 
       const response = await fetch(url, {
@@ -287,7 +287,7 @@ function ClinicalNotesPage() {
       }
 
       // Re-fetch notes after successful operation
-      const updatedNotesRes = await fetch(`${backendUrl}/api/clinical-notes/patient/${selectedPatientId}`, {
+      const updatedNotesRes = await fetch(`${backendUrl}/api/v1/clinical-notes/patient/${selectedPatientId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!updatedNotesRes.ok) {
@@ -332,7 +332,7 @@ function ClinicalNotesPage() {
     setPageLoading(true);
     setNotification({ message: null, type: null });
     try {
-      const response = await fetch(`${backendUrl}/api/clinical-notes/${noteId}`, {
+      const response = await fetch(`${backendUrl}/api/v1/clinical-notes/${noteId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`

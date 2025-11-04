@@ -93,7 +93,7 @@ function RegisterPage() {
 
 
     try {
-      const response = await fetch(`${backendUrl}/api/register`, {
+      const response = await fetch(`${backendUrl}/api/v1/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
