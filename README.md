@@ -143,5 +143,5 @@ This project is licensed under the MIT License, free to use, modify and distribu
 ## Author
 **Adison Dev Labs**
 Inovating healthcare through modern web technology
-**https://github.com/AdisonDevLabs**
-**adisondevlabs@gmail.com**
+* **https://github.com/AdisonDevLabs**
+* **adisondevlabs@gmail.com**
