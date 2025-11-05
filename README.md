@@ -34,7 +34,7 @@ It provides hospitals with a robust, modern platform for managing patients, doct
 ## Features
 * Secure **JWT-based authentication**
 * **Role-based access control** (admin, doctor, nurse, receptionist)
-* **Patient Management** (registration, history, billing)
+* **Patient Management** (registration, history)
 * **Appointment scheduling** and tracking
 * **Doctor availability** and profile management
 * **Data visualization** dashboards using Chart.js
@@ -121,7 +121,7 @@ Ensure you have a running PostgreSQL instance configured via `.env`
   ```
 
 ## Screenshots
-
+To be added soon.
 
 ## Live Demo
 
@@ -145,6 +145,3 @@ This project is licensed under the MIT License, free to use, modify and distribu
 Inovating healthcare through modern web technology
 **https://github.com/AdisonDevLabs**
 **adisondevlabs@gmail.com**
-
-## Keywords
-`Hospital Management System`, `React Node PostgreSQL`, `Full Stack`, `Docker`, `Vite`, `Tailwind CSS`, `AfyaLink`, `HealthTech`, `Web App`
