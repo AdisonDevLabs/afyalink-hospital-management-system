@@ -3,7 +3,6 @@ import { Menu, LogOut } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import ThemeToggle from './ThemeToggle';
-import afyalinkLogo from '../assets/afyalink-logo.svg';
 
 const capitalize = (str) => {
   if (!str) return '';
@@ -29,18 +28,28 @@ function Header({ toggleSidebar }) {
   };
 
   return (
-    <header className="bg-white h-20 dark:bg-gray-900 text-white p-4 shadow-lg fixed top-0 left-0 w-full z-30 flex items-center justify-between pr-2 lg:pl-2 md:pl-4 shadow-md dark:shadow-lg px-2 py-4">
+    <header className="bg-white dark:bg-gray-900 text-white h-20 fixed top-0 left-0 w-full z-50 flex items-center justify-between px-4 md:px-6 transition-colors duration-300">
       <button
         onClick={toggleSidebar}
-        className="pl-2 text-gray-500 cursor-pointer hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 block md:hidden"
+        className="text-orange-500 hover:text-orange-600 dark:text-orange-500 dark:hover:text-orange-600 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-orange-500 md:hidden"
         aria-label="Toggle Navigation"
       >
-        <Menu className="h-8 w-8" />
+        <Menu className="h-7 w-7" />
       </button>
 
-      <div className="flex-grow ml-">
+      <div className="flex-1 flex justify-center md:justify-start">
         <Link to="/dashboard" className="flex items-center">
-          <img src={afyalinkLogo} alt="AfyaLink Logo" className="h-20 mt-2 w-auto hidden md:block" />
+          <div className="relative h-16 w-16">
+            <img
+              src='/assets/afyalink-logo2.svg'
+              alt="AfyaLink Logo Light"
+              className="absolute inset-0 h-full w-auto md:block dark:hidden animate-fade-in"
+            />
+            <img
+              src='/assets/afyalink-logo.svg'
+              alt='AfyaLink Logo Dark'
+              className="absolute inset-0 h-full w-auto hidden dark:md:block animate-fade-in" />
+          </div>
         </Link>
       </div>
 
@@ -48,7 +57,7 @@ function Header({ toggleSidebar }) {
         <ThemeToggle />
         {user && (
           <div className="flex items-center space-x-4">
-            <div className="relative w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center overflow-hidden">
+            <div className="relative w-10 h-10 rounded-full bg-black flex items-center justify-center overflow-hidden">
               {user.profile_picture ? (
                 <img
                   src={user.profile_picture.startsWith('/uploads/')
@@ -58,18 +67,18 @@ function Header({ toggleSidebar }) {
                   className="w-full h-full object-cover rounded-full"
                 />
               ) : (
-                <span className="text-gray-700 dark:text-gray-300 text-lg font-semibold">
+                <span className="text-black dark:text-white text-lg font-semibold">
                   {user.first_name ? user.first_name.charAt(0).toUpperCase() : (user.username ? user.username.charAt(0).toUpperCase() : '')}
                 </span>
               )}
             </div>
 
-            <span className="text-gray-600 font-medium text-sm hidden md:block dark:text-gray-400">
-              Hello, {user.first_name || user.username} ({capitalize(user.role)})
+            <span className="text-black font-medium text-sm hidden md:block dark:text-white">
+              Hello, {user.first_name || user.username} [{capitalize(user.role)}]
             </span>
             <button
               onClick={handleLogout}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1.5 px-3 rounded-md shadow-sm hover:shadow-md transition duration-200 ease-in-out text-sm flex items-center gap-x-2"
+              className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-1.5 px-3 rounded-md shadow-sm hover:shadow-md transition duration-200 ease-in-out text-sm flex items-center gap-x-2"
             >
               <LogOut size={16} />
               <span className="hidden sm:inline">Logout</span>

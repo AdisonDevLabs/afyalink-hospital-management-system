@@ -1,161 +1,47 @@
-// frontend/src/pages/NurseDashboardPage.jsx
+// client/src/features/dashboards/pages/NurseDashboardPage.jsx
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '../context/AuthContext';
+import React, { useEffect } from 'react';
+import { useAuth } from '../../../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  CalendarCheck, User, Loader2, FlaskConical, MessageSquareText, Bed, Clock, TrendingUp,
-  Pill, HeartPulse, ClipboardList, BellRing, Stethoscope, FileText, CheckCircle, PlusCircle,
-  Activity, ArrowRight, CalendarDays, Edit, Download, AlertTriangle, Camera
+  Loader2, User, Pill, HeartPulse, ClipboardList, BellRing, Stethoscope, FileText, CheckCircle, PlusCircle,
+  Activity, ArrowRight, Edit, Download, AlertTriangle, Camera, Bed, Clock, TrendingUp
 } from 'lucide-react';
 
-const Notification = ({ message, type, onClose }) => {
-  if (!message) return null;
-  const bgColor = type === 'success' ? 'bg-green-100 dark:bg-green-900' : 'bg-red-100 dark:bg-red-900';
-  const borderColor = type === 'success' ? 'border-green-400 dark:border-green-700' : 'border-red-400 dark:border-red-700';
-  const textColor = type === 'success' ? 'text-green-700 dark:text-green-100' : 'text-red-700 dark:text-red-100';
+import { useNurseDashboardData } from '../hooks/useNurseDashboardData';
+import MetricCard from '../components/MetricCard';
+import { getPatientAvatar, getVitalStatusColor } from '../utils/dashboardUtils';
 
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: -50, scale: 0.8 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -50, scale: 0.8 }}
-      transition={{ duration: 0.3 }}
-      className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-xl flex items-center space-x-3 ${bgColor} ${borderColor} ${textColor} border-l-4`}
-      role="alert"
-    >
-      {type === 'success' ? (
-        <svg className="h-6 w-6 text-green-500 dark:text-green-300" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
-      ) : (
-        <svg className="h-6 w-6 text-red-500 dark:text-red-300" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" /></svg>
-      )}
-      <div className="font-medium">{message}</div>
-      <button onClick={onClose} className="ml-auto -mx-1.5 -my-1.5 bg-transparent text-gray-500 rounded-lg p-1.5 hover:bg-gray-300 transition-colors inline-flex h-8 w-8 items-center justify-center dark:text-gray-300 dark:hover:bg-gray-700">
-        <span className="sr-only">Close alert</span>
-        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
-      </button>
-    </motion.div>
-  );
-};
+import Notification from '../../../components/Notification';
 
-const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
 function NurseDashboardPage() {
-  const { user, isAuthenticated, loading: authLoading, token } = useAuth();
+  // Global Auth Context Hook
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const [dashboardData, setDashboardData] = useState({
-    patientsAssignedToday: [], medicationsDueNow: [], vitalsNeedingUpdate: [],
-    bedOccupancy: { available: 0, occupied: 0, total: 0, breakdown: {} },
-    emergencyAlerts: [], shiftSchedule: [], totalPatientsUnderCare: 0,
-    medicationsAdministeredToday: 0, vitalsRecordedToday: 0, newDoctorOrders: [],
-    simulatedVitalsHistory: {}, simulatedEmergencyAlerts: [],
-  });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [notification, setNotification] = useState({ message: null, type: null });
 
-  const fetchSimulatedVitalsHistory = useCallback((patientId) => {
-    const generateDummyVitals = () => {
-      const history = [];
-      const now = new Date();
-      for (let i = 0; i < 7; i++) {
-        const date = new Date(now.getTime() - i * 3600 * 1000 * 4);
-        history.unshift({
-          timestamp: date.toISOString(),
-          bp: `${Math.floor(Math.random() * (140 - 90) + 90)}/${Math.floor(Math.random() * (90 - 60) + 60)}`,
-          hr: Math.floor(Math.random() * (100 - 60) + 60),
-          temp: (Math.random() * (37.5 - 36.5) + 36.5).toFixed(1),
-          spo2: Math.floor(Math.random() * (100 - 95) + 95),
-        });
-      }
-      return history;
-    };
-    return generateDummyVitals();
-  }, []);
+  // Feature-specific Hook for Data and Logic
+  const {
+    dashboardData, loading, error, notification, handleAcknowledgeAlert, closeNotification
+  } = useNurseDashboardData();
 
-  const simulateEmergencyAlerts = useCallback(() => {
-    return [
-      { id: 1, type: 'Code Blue', patient_name: 'Jane Doe', room_number: 'ICU 3', timestamp: new Date(Date.now() - 5 * 60 * 1000).toISOString(), acknowledged: false },
-      { id: 2, type: 'Fall Alert', patient_name: 'John Smith', room_number: 'Ward 201', timestamp: new Date(Date.now() - 15 * 60 * 1000).toISOString(), acknowledged: false },
-    ];
-  }, []);
-
-  const fetchDashboardData = useCallback(async () => {
-    if (!token || !user?.id) { setLoading(false); return; }
-    setLoading(true); setError(null);
-    try {
-      const today = new Date().toISOString().split('T')[0];
-      const headers = { 'Authorization': `Bearer ${token}` };
-      const fetchJson = async (url, name) => {
-        const res = await fetch(url, { headers });
-        if (!res.ok) { const errorText = await res.text(); throw new Error(`Failed to fetch ${name}: ${res.status} - ${errorText}`); }
-        return res.json();
-      };
-
-      const [
-        patientsData, medicationsDueData, vitalsNeedingUpdateData, bedOccupancyData,
-        alertsData, scheduleData, totalPatientsUnderCareData,
-        medicationsAdministeredTodayData, vitalsRecordedTodayData, newDoctorOrdersData,
-      ] = await Promise.all([
-        fetchJson(`${backendUrl}/api/v1/patients?nurse_id=${user.id}&assigned_today=${today}`, 'assigned patients'),
-        fetchJson(`${backendUrl}/api/v1/medications/due?nurse_id=${user.id}`, 'due medications'),
-        fetchJson(`${backendUrl}/api/v1/vitals/needs-update?nurse_id=${user.id}`, 'vitals needing update'),
-        fetchJson(`${backendUrl}/api/v1/beds/availability`, 'bed occupancy'),
-        fetchJson(`${backendUrl}/api/v1/alerts?recipient_role=nurse`, 'emergency alerts'),
-        fetchJson(`${backendUrl}/api/v1/schedules?user_id=${user.id}&date=${today}`, 'shift schedule'),
-        fetchJson(`${backendUrl}/api/v1/patients/count?nurse_id=${user.id}`, 'total patients under care count'),
-        fetchJson(`${backendUrl}/api/v1/medications/administered/count?nurse_id=${user.id}&date=${today}`, 'medications administered today count'),
-        fetchJson(`${backendUrl}/api/v1/vitals/recorded/count?nurse_id=${user.id}&date=${today}`, 'vitals recorded today count'),
-        fetchJson(`${backendUrl}/api/v1/orders/new?nurse_id=${user.id}`, 'new doctor orders'),
-      ]);
-
-      const simulatedVitalsHistory = {};
-      (patientsData.patients || []).forEach(patient => {
-        simulatedVitalsHistory[patient.id] = fetchSimulatedVitalsHistory(patient.id);
-      });
-
-      setDashboardData({
-        patientsAssignedToday: patientsData.patients || [],
-        medicationsDueNow: medicationsDueData.medications || [],
-        vitalsNeedingUpdate: vitalsNeedingUpdateData.vitals || [],
-        bedOccupancy: bedOccupancyData || { available: 0, occupied: 0, total: 0, breakdown: {} },
-        emergencyAlerts: alertsData.alerts || [],
-        shiftSchedule: scheduleData.shifts || [],
-        totalPatientsUnderCare: totalPatientsUnderCareData.count || 0,
-        medicationsAdministeredToday: medicationsAdministeredTodayData.count || 0,
-        vitalsRecordedToday: vitalsRecordedTodayData.count || 0,
-        newDoctorOrders: newDoctorOrdersData.orders || [],
-        simulatedVitalsHistory,
-        simulatedEmergencyAlerts: simulateEmergencyAlerts(),
-      });
-    } catch (err) {
-      console.error('Error fetching nurse dashboard data:', err);
-      setError(err.message || 'Failed to load dashboard data.');
-      setNotification({ message: 'Failed to load dashboard data. Please try again.', type: 'error' });
-    } finally {
-      setLoading(false);
-    }
-  }, [token, user?.id, fetchSimulatedVitalsHistory, simulateEmergencyAlerts]);
-
+  // --- Auth and Redirection Logic ---
   useEffect(() => {
-    if (isAuthenticated && user?.role === 'nurse') {
-      const refreshInterval = setInterval(fetchDashboardData, 5 * 60 * 1000);
-      return () => clearInterval(refreshInterval);
+    if (!authLoading && (!isAuthenticated || user.role !== 'nurse')) {
+      // Small delay to ensure the user sees the unauthorized message before redirect
+      const timeout = setTimeout(() => navigate('/unauthorized'), 1000);
+      return () => clearTimeout(timeout);
     }
-  }, [isAuthenticated, user, fetchDashboardData]);
+  }, [authLoading, isAuthenticated, user, navigate]);
 
-  useEffect(() => {
-    if (!authLoading && isAuthenticated && user && user.role === 'nurse') {
-      fetchDashboardData();
-    } else if (!authLoading && (!isAuthenticated || user.role !== 'nurse')) {
-      navigate('/unauthorized');
-    }
-  }, [authLoading, isAuthenticated, user, navigate, fetchDashboardData]);
 
+  // --- UI Presentation Constants ---
   const containerVariants = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.08 } } };
   const itemVariants = { hidden: { y: 20, opacity: 0 }, visible: { y: 0, opacity: 1 } };
+  const currentDate = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
+  // --- Loading/Unauthorized Views ---
   if (authLoading || loading) {
     return (
       <div className="flex flex-col justify-center items-center h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
@@ -165,76 +51,20 @@ function NurseDashboardPage() {
     );
   }
 
+  // The unauthorized check in useEffect handles the redirect, but this renders the temporary state.
   if (!isAuthenticated || user.role !== 'nurse') {
-    return (
-      <div className="flex justify-center items-center h-screen bg-red-50 dark:bg-red-900 transition-colors duration-300">
-        <div className="text-xl font-semibold text-red-700 dark:text-red-100 p-8 bg-white dark:bg-gray-800 rounded-lg shadow-md border border-red-300 dark:border-red-700 transition-colors duration-300">
-          <p className="flex items-center"><span className="mr-2 text-2xl">⚠️</span> Unauthorized Access!</p>
-          <p className="mt-2 text-base text-gray-600 dark:text-gray-300">Only nurses can view this page. Redirecting...</p>
+    console.log(user);
+     return (
+        <div className="flex justify-center items-center h-screen bg-red-50 dark:bg-red-900 transition-colors duration-300">
+          <div className="text-xl font-semibold text-red-700 dark:text-red-100 p-8 bg-white dark:bg-gray-800 rounded-lg shadow-md border border-red-300 dark:border-red-700 transition-colors duration-300">
+            <p className="flex items-center"><span className="mr-2 text-2xl"></span> Unauthorized Access!</p>
+            <p className="mt-2 text-base text-gray-600 dark:text-gray-300">Only nurses can view this page. Redirecting...</p>
+          </div>
         </div>
-      </div>
-    );
+      );
   }
 
-  const MetricCard = ({ title, value, icon: Icon, colorClass, link, linkText }) => (
-    <motion.div
-      variants={itemVariants}
-      className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 flex flex-col justify-between transform transition-all duration-300 ease-in-out hover:shadow-xl hover:-translate-y-1 group"
-    >
-      <div className="flex justify-between items-start mb-4">
-        <div>
-          <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">{title}</h3>
-          <p className={`text-4xl font-bold mt-1 ${colorClass} dark:text-opacity-90`}>{value.toLocaleString()}</p>
-        </div>
-        {Icon && (
-          <div className={`p-3 rounded-full ${colorClass.replace('text-', 'bg-').replace('600', '100')} ${colorClass} group-hover:scale-110 transition-transform
-                          dark:${colorClass.replace('text-', 'bg-').replace('600', '900')} dark:${colorClass.replace('600', '400')}`}>
-            <Icon className="h-8 w-8" />
-          </div>
-        )}
-      </div>
-      {link && (
-        <Link to={link} className="text-blue-600 hover:text-blue-800 font-medium inline-flex items-center group transition duration-200 mt-2 text-sm
-                                   dark:text-blue-400 dark:hover:text-blue-300">
-          {linkText}
-          <ArrowRight className="w-4 h-4 ml-1 transform group-hover:translate-x-1 transition-transform duration-200" />
-        </Link>
-      )}
-    </motion.div>
-  );
-
-  const getPatientAvatar = (patient) => {
-    if (patient.photo_url) return <img src={patient.photo_url} alt={patient.first_name} className="h-8 w-8 rounded-full object-cover mr-2" />;
-    const initials = `${patient.first_name ? patient.first_name[0] : ''}${patient.last_name ? patient.last_name[0] : ''}`.toUpperCase();
-    const hash = initials.charCodeAt(0) + (initials.charCodeAt(1) || 0);
-    const colors = ['blue', 'green', 'indigo', 'purple', 'pink', 'yellow', 'teal', 'cyan'];
-    const baseColor = colors[hash % colors.length];
-    return (
-      <div className={`h-8 w-8 rounded-full flex items-center justify-center font-semibold text-sm bg-${baseColor}-200 text-${baseColor}-800 dark:bg-${baseColor}-700 dark:text-${baseColor}-100 mr-2 flex-shrink-0`}>
-        {initials || '?'}
-      </div>
-    );
-  };
-
-  const getVitalStatusColor = (vital) => {
-    const bpSystolic = parseInt(vital.bp?.split('/')[0]);
-    const hr = parseInt(vital.hr);
-    const temp = parseFloat(vital.temp);
-    const spo2 = parseInt(vital.spo2);
-    if (bpSystolic > 160 || bpSystolic < 90 || hr > 120 || hr < 50 || temp > 38.5 || spo2 < 90) return 'text-red-600 dark:text-red-400';
-    if (bpSystolic > 140 || bpSystolic < 100 || hr > 100 || hr < 60 || temp > 37.8 || spo2 < 94) return 'text-orange-600 dark:text-orange-400';
-    return 'text-green-600 dark:text-green-400';
-  };
-
-  const handleAcknowledgeAlert = (alertId) => {
-    setDashboardData(prevData => ({
-      ...prevData,
-      simulatedEmergencyAlerts: prevData.simulatedEmergencyAlerts.map(alert =>
-        alert.id === alertId ? { ...alert, acknowledged: true } : alert
-      )
-    }));
-    setNotification({ message: 'Emergency alert acknowledged.', type: 'success' });
-  };
+  // --- Main Render ---
 
   return (
     <motion.div
@@ -243,17 +73,14 @@ function NurseDashboardPage() {
       initial="hidden"
       animate="visible"
     >
-      <AnimatePresence>
-        {notification.message && (
-          <Notification message={notification.message} type={notification.type} onClose={() => setNotification({ message: null, type: null })} />
-        )}
-      </AnimatePresence>
+      <Notification message={notification.message} type={notification.type} onClose={closeNotification} />
 
       <motion.div variants={itemVariants} className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-gray-100 leading-tight">
-          Welcome Back, Nurse {user ? user.last_name : ''}! 👋
-          <p className="text-lg font-medium text-gray-600 dark:text-gray-300 mt-2">Your vital overview for today's shift.</p>
-        </h1>
+        <div>
+          <h1 className='text-3xl font-bold text-gray-800 dark:text-gray-100'>Welcome back, {user ? user.first_name : 'User'}</h1>
+          <p className='text-gray-600 dark:text-gray-400 mt-1'>Today is {currentDate}</p>
+        </div>
+        
         <div className="flex space-x-3">
              <Link to="/patients/assigned" className="hidden md:flex items-center bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-5 rounded-lg shadow-md transition duration-300 transform hover:scale-105 dark:bg-blue-700 dark:hover:bg-blue-600">
                 <User className="mr-2 h-5 w-5" /> View My Patients
@@ -271,6 +98,7 @@ function NurseDashboardPage() {
         </div>
       )}
 
+      {/* --- Metric Cards Section --- */}
       <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <MetricCard title="Patients Assigned Today" value={dashboardData.patientsAssignedToday.length} icon={User} colorClass="text-blue-600" link="/patients/assigned" linkText="View Today's Patients" />
         <MetricCard title="Medications Due Now" value={dashboardData.medicationsDueNow.length} icon={Pill} colorClass="text-red-600" link="/medications/due" linkText="Administer Medications" />
@@ -283,6 +111,7 @@ function NurseDashboardPage() {
       </section>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        {/* Quick Actions */}
         <motion.div variants={itemVariants} className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 col-span-1">
           <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-100 mb-6 border-b border-gray-100 dark:border-gray-700 pb-4 flex items-center">
               <Activity className="h-6 w-6 text-blue-600 dark:text-blue-400 mr-2" /> Quick Actions
@@ -294,7 +123,8 @@ function NurseDashboardPage() {
             <Link to="/nursing-notes/new" className="flex items-center justify-center w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg shadow-md transition duration-300 transform hover:scale-[1.02] dark:bg-green-700 dark:hover:bg-green-600">
               <Edit className="mr-2 h-5 w-5" /> Write Nursing Note
             </Link>
-            <button onClick={() => { setNotification({ message: 'Shift handover initiated!', type: 'success' }); }} className="flex items-center justify-center w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-4 rounded-lg shadow-md transition duration-300 transform hover:scale-[1.02] dark:bg-purple-700 dark:hover:bg-purple-600">
+            {/* Direct state change via local page component onClick */}
+            <button onClick={() => { closeNotification(); setNotification({ message: 'Shift handover initiated!', type: 'success' }); }} className="flex items-center justify-center w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-4 rounded-lg shadow-md transition duration-300 transform hover:scale-[1.02] dark:bg-purple-700 dark:hover:bg-purple-600">
               <Download className="mr-2 h-5 w-5" /> Generate Handover Report
             </button>
             <Link to="/imaging/upload" className="flex items-center justify-center w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-3 px-4 rounded-lg shadow-md transition duration-300 transform hover:scale-[1.02] dark:bg-orange-700 dark:hover:bg-orange-600">
@@ -303,6 +133,7 @@ function NurseDashboardPage() {
           </div>
         </motion.div>
 
+        {/* Emergency Tracker */}
         <motion.section variants={itemVariants} className="bg-red-50 dark:bg-red-900 p-6 rounded-xl shadow-lg border border-red-200 dark:border-red-700 col-span-full lg:col-span-2">
           <div className="flex justify-between items-center mb-4 border-b border-red-200 dark:border-red-700 pb-4">
               <h2 className="text-xl font-semibold text-red-800 dark:text-red-100 flex items-center">
@@ -329,6 +160,7 @@ function NurseDashboardPage() {
                       </p>
                       <p className="text-sm text-red-600 dark:text-red-300 mt-1">Room: {alert.room_number} | {new Date(alert.timestamp).toLocaleTimeString()}</p>
                     </div>
+                    {/* Acknowledge handler from hook */}
                     <button onClick={() => handleAcknowledgeAlert(alert.id)} className="bg-red-600 hover:bg-red-700 text-white text-xs px-3 py-1 rounded-full transition-colors font-medium shadow-sm dark:bg-red-700 dark:hover:bg-red-600">
                       Acknowledge
                     </button>
@@ -341,6 +173,7 @@ function NurseDashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* My Assigned Patients */}
         <motion.section variants={itemVariants} className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700">
           <div className="flex justify-between items-center mb-4 border-b border-gray-100 dark:border-gray-700 pb-4">
               <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 flex items-center">
@@ -361,7 +194,8 @@ function NurseDashboardPage() {
                     initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} transition={{ duration: 0.2 }}
                   >
                     <div className="flex items-center">
-                      {getPatientAvatar(patient)}
+                      {/* Helper function from utils */}
+                      {getPatientAvatar(patient)} 
                       <div>
                         <p className="font-medium text-gray-800 dark:text-gray-100">
                           <Link to={`/patients/${patient.id}`} className="hover:underline text-blue-600 dark:text-blue-400 dark:hover:text-blue-300">
@@ -381,6 +215,7 @@ function NurseDashboardPage() {
           )}
         </motion.section>
 
+        {/* Medications Due Now */}
         <motion.section variants={itemVariants} className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700">
           <div className="flex justify-between items-center mb-4 border-b border-gray-100 dark:border-gray-700 pb-4">
               <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 flex items-center">
@@ -401,7 +236,8 @@ function NurseDashboardPage() {
                     initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} transition={{ duration: 0.2 }}
                   >
                     <div className="flex items-center">
-                      {getPatientAvatar(med)}
+                      {/* Helper function from utils */}
+                      {getPatientAvatar(med)} 
                       <div>
                         <p className="font-medium text-gray-800 dark:text-gray-100">
                           <Link to={`/patients/${med.patient_id}`} className="hover:underline text-blue-600 dark:text-blue-400 dark:hover:text-blue-300">
@@ -422,6 +258,7 @@ function NurseDashboardPage() {
           )}
         </motion.section>
 
+        {/* Vitals Needing Update */}
         <motion.section variants={itemVariants} className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700">
           <div className="flex justify-between items-center mb-4 border-b border-gray-100 dark:border-gray-700 pb-4">
               <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 flex items-center">
@@ -438,12 +275,16 @@ function NurseDashboardPage() {
               <AnimatePresence>
                 {dashboardData.vitalsNeedingUpdate.slice(0, 5).map((vital) => (
                   <motion.li
-                    key={vital.id} className={`flex items-center justify-between py-3 px-2 hover:bg-gray-50 transition-colors rounded-md dark:hover:bg-gray-700 ${getVitalStatusColor(dashboardData.simulatedVitalsHistory[vital.patient_id]?.[dashboardData.simulatedVitalsHistory[vital.patient_id].length - 1] || {}) === 'text-red-600 dark:text-red-400' ? 'bg-red-50 border-red-200 dark:bg-red-900 dark:border-red-700' : ''}`}
+                    key={vital.id} 
+                    // Helper function from utils for color status
+                    className={`flex items-center justify-between py-3 px-2 hover:bg-gray-50 transition-colors rounded-md dark:hover:bg-gray-700 ${getVitalStatusColor(dashboardData.simulatedVitalsHistory[vital.patient_id]?.[dashboardData.simulatedVitalsHistory[vital.patient_id].length - 1] || {}) === 'text-red-600 dark:text-red-400' ? 'bg-red-50 border-red-200 dark:bg-red-900 dark:border-red-700' : ''}`}
                     initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} transition={{ duration: 0.2 }}
                   >
                     <div className="flex items-center">
-                      {getPatientAvatar(vital)}
+                      {/* Helper function from utils */}
+                      {getPatientAvatar(vital)} 
                       <div>
+                        {/* Helper function from utils for color status */}
                         <p className={`font-medium text-gray-800 dark:text-gray-100 ${getVitalStatusColor(dashboardData.simulatedVitalsHistory[vital.patient_id]?.[dashboardData.simulatedVitalsHistory[vital.patient_id].length - 1] || {})}`}>
                           <Link to={`/patients/${vital.patient_id}`} className="hover:underline text-blue-600 dark:text-blue-400 dark:hover:text-blue-300">
                               {vital.patient_name || `Patient ID: ${vital.patient_id}`}
@@ -462,6 +303,7 @@ function NurseDashboardPage() {
           )}
         </motion.section>
 
+        {/* Vitals Trends Overview */}
         <motion.section variants={itemVariants} className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 col-span-full">
           <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4 border-b border-gray-100 dark:border-gray-700 pb-4 flex items-center">
               <TrendingUp className="h-6 w-6 text-cyan-600 dark:text-cyan-400 mr-2" /> Vitals Trends Overview (Conceptual)
@@ -485,6 +327,7 @@ function NurseDashboardPage() {
           ))}
         </motion.section>
 
+        {/* New Doctor Orders */}
         <motion.section variants={itemVariants} className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700">
           <div className="flex justify-between items-center mb-4 border-b border-gray-100 dark:border-gray-700 pb-4">
               <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 flex items-center">
@@ -526,6 +369,7 @@ function NurseDashboardPage() {
           )}
         </motion.section>
 
+        {/* Your Shift Schedule Today */}
         <motion.section variants={itemVariants} className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700">
           <div className="flex justify-between items-center mb-4 border-b border-gray-100 dark:border-gray-700 pb-4">
               <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 flex items-center">
@@ -562,6 +406,7 @@ function NurseDashboardPage() {
           )}
         </motion.section>
 
+        {/* Bed Occupancy Snapshot */}
         <motion.section variants={itemVariants} className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700">
           <div className="flex justify-between items-center mb-4 border-b border-gray-100 dark:border-gray-700 pb-4">
               <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 flex items-center">

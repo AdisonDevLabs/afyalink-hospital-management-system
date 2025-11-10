@@ -66,6 +66,9 @@ module.exports = {
         'wp-crisp': '6px 6px 0px rgba(0, 0, 0, 1)',
       },
       keyframes: {
+        'spin-slow': {
+          to: { transform: 'rotate(360deg)' },
+        },
         'fade-in-up': {
           '0%': {
             opacity: '0',
@@ -90,6 +93,7 @@ module.exports = {
         }
       },
       animation: {
+        'spin-slow': 'spin-slow 3s infinite',
         'fade-in-up': 'fade-in-up 0.8s ease-out forwards',
         'fade-in': 'fade-in 0.8s ease-out forwards',
         'slide-in-right': 'slide-in-right 0.6s ease-out forwards',

@@ -1,7 +1,7 @@
 // frontend/src/pages/ReceptionistDashboardPage.jsx
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../../../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -9,7 +9,7 @@ import {
   DollarSign, ClipboardList, TrendingUp
 } from 'lucide-react';
 
-// --- Reusable Notification Component (already good, keep as is) ---
+// --- Reusable Notification Component ---
 const Notification = ({ message, type, onClose }) => {
   if (!message) return null;
 

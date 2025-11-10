@@ -1,89 +1,93 @@
 import React, { useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import afyalinkLogo from '../assets/afyalink-logo.svg';
 import { motion } from 'framer-motion';
-import {
-  LayoutDashboard, Users, HeartPulse, Calendar, User, ClipboardList, Building2, ChevronLeft
-} from 'lucide-react';
+import { ChevronLeft } from 'lucide-react';
 
 const capitalize = (str) => {
   if (!str) return '';
   return str.charAt(0).toUpperCase() + str.slice(1);
 };
 
-function Navbar({ isSidebarExpanded, toggleSidebar }) {
+// Navbar receives navLinks as a prop from DashboardLayout
+function Navbar({ isSidebarExpanded, toggleSidebar, navLinks }) { 
   const { user } = useAuth();
   const location = useLocation();
   const navRef = useRef(null);
 
-  const navLinks = [
-    { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["admin", "doctor", "receptionist", "nurse", "guest"] },
-    { to: "/users", label: "Users", icon: Users, roles: ["admin", "guest"] },
-    { to: "/patients", label: "Patients", icon: HeartPulse, roles: ["admin", "doctor", "receptionist", "nurse", "guest"] },
-    { to: "/appointments", label: "Appointments", icon: Calendar, roles: ["admin", "doctor", "receptionist", "nurse", "guest"] },
-    { to: "/clinical-notes", label: "Clinical Notes", icon: ClipboardList, roles: ["admin", "doctor", "nurse", "guest"] },
-    { to: "/departments", label: "Departments", icon: Building2, roles: ["admin", "guest"] },
-    { to: "/schedules", label: "Schedules", icon: Calendar, roles: ["admin", "doctor", "receptionist", "nurse", "guest"] },
-    { to: "/profile", label: "My Profile", icon: User, roles: ["admin", "doctor", "receptionist", "nurse", "guest"] },
-  ];
-
   return (
-    <>
-      <nav
-        ref={navRef}
-        className={`fixed top-[80px] left-0 bottom-0 bg-white shadow-xl z-20 bg-green-600 transition-all duration-400 ease-in-out
-          ${isSidebarExpanded ? 'w-48' : 'w-18'} flex flex-col hidden md:flex
-          dark:bg-gray-900 dark:shadow-none dark:border-r dark:border-gray-700`}
-      >
-        <div className="flex-grow mt-6 px-2">
-          <div className="space-y-2">
-            {user && navLinks.map((link) => {
-              const isActive = location.pathname === link.to;
-              return link.roles.includes(user.role) && (
-                <Link
-                  key={link.to}
-                  to={link.to}
-                  className={`
-                    flex items-center gap-x-3 px-3 py-2 rounded-md text-base font-medium w-full
-                    transition-colors duration-300
-                    ${isActive
-                      ? 'bg-blue-100 text-blue-700 hover:text-blue-800 dark:bg-blue-700 dark:text-white dark:hover:text-gray-200'
-                      : 'text-gray-600 hover:bg-gray-100 hover:text-blue-600 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-blue-400'
-                    }
-                    ${isSidebarExpanded ? 'justify-start' : 'justify-center'}
-                  `}
-                >
-                  {link.icon && <link.icon size={25} className="dark:text-gray-200" />}
-                  {isSidebarExpanded && (
-                    <motion.span
-                      initial={{ opacity: 0, width: 0 }}
-                      animate={{ opacity: 1, width: 'auto' }}
-                      exit={{ opacity: 0, width: 0 }}
-                      transition={{ duration: 0.2 }}
-                      className="whitespace-nowrap"
-                    >
-                      {link.label}
-                    </motion.span>
-                  )}
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="flex-shrink-0 p-4 border-t border-gray-200 mt-auto dark:border-gray-700">
-          <button
-            onClick={toggleSidebar}
-            className={`w-full flex items-center justify-center py-2 rounded-md text-gray-600 hover:bg-gray-100 hover:text-blue-600 transition-colors duration-300
-              ${isSidebarExpanded ? 'justify-end' : 'justify-center'} dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-blue-400`}
-            aria-label="Toggle Sidebar"
+    <motion.nav
+      ref={navRef}
+      initial={{ width: isSidebarExpanded ? 192 : 64 }}
+      animate={{ width: isSidebarExpanded ? 192 : 64 }}
+      transition={{ duration: 0.2, ease: "easeInOut" }}
+      className={`fixed top-0 left-0 h-screen bg-white dark:bg-gray-900 shadow-xl z-50 flex flex-col pt-4 border-r border-gray-200 dark:border-gray-700 transition-colors duration-300`}
+    >{/*
+      <div className={`p-4 flex items-center mb-6 overflow-hidden ${isSidebarExpanded ? 'justify-start' : 'justify-center'}`}>
+        <img
+          src='/assets/afyalink-logo2.svg'
+          alt="AfyaLink Logo"
+          className={`transition-all duration-200 ${isSidebarExpanded ? 'w-8 h-8 mr-2' : 'w-8 h-8'}`}
+        />
+        {isSidebarExpanded && (
+          <motion.span
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.1, duration: 0.2 }}
+            className="text-xl font-bold text-blue-600 dark:text-blue-400 whitespace-nowrap"
           >
-            <ChevronLeft className={`h-6 w-6 transition-transform duration-300 ${isSidebarExpanded ? '' : 'rotate-180'} dark:text-gray-300`} />
-          </button>
+            AfyaLink
+          </motion.span>
+        )}
+      </div>*/}
+
+      <div className="flex-grow mt-20 overflow-y-auto overflow-x-hidden p-2">
+        <div className="space-y-1">
+          {user && navLinks.map((link) => {
+            const isActive = location.pathname.startsWith(link.to);
+            return link.roles.includes(user.role) && (
+              <Link
+                key={link.to}
+                to={link.to}
+                className={`
+                  flex items-center h-10 rounded-lg text-sm font-medium transition-colors duration-200
+                  ${isSidebarExpanded ? 'px-3 gap-x-3' : 'px-0'}
+                  ${isActive
+                    ? 'bg-orange-500 text-white shadow-md dark:bg-orange-500'
+                    : 'text-black hover:bg-orange-500 hover:text-white dark:text-white dark:hover:bg-orange-500 dark:hover:text-white'
+                  }
+                  ${isSidebarExpanded ? 'justify-start' : 'justify-center'}
+                `}
+              >
+                {link.icon && <link.icon size={25} className="dark:text-gray-200" />}
+                {isSidebarExpanded && (
+                  <motion.span
+                    initial={{ opacity: 0, width: 0 }}
+                    animate={{ opacity: 1, width: 'auto' }}
+                    exit={{ opacity: 0, width: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="whitespace-nowrap"
+                  >
+                    {link.label}
+                  </motion.span>
+                )}
+              </Link>
+            );
+          })}
         </div>
-      </nav>
-    </>
+      </div>
+
+      <div className="flex-shrink-0 p-4 border-t border-orange-500 mt-auto dark:border-orange-500">
+        <button
+          onClick={toggleSidebar}
+          className={`w-full flex items-center justify-center py-2 rounded-md bg-orange-500 text-white hover:bg-orange-600 transition-colors duration-300
+            ${isSidebarExpanded ? 'justify-end' : 'justify-center'} dark:text-orange-500 dark:hover:bg-orange-600`}
+          aria-label="Toggle Sidebar"
+        >
+          <ChevronLeft className={`h-6 w-6 transition-transform duration-300 ${isSidebarExpanded ? '' : 'rotate-180'} dark:text-white`} />
+        </button>
+      </div>
+    </motion.nav>
   );
 }
 

@@ -17,12 +17,15 @@ services:
     environment:
       NODE_ENV: production
       PORT: ${PORT}
+      API_VERSION: ${API_VERSION}
       DB_USER: ${DB_USER}
       DB_HOST: postgres
       DB_DATABASE: ${DB_DATABASE}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_PORT: 5432
       JWT_SECRET: ${JWT_SECRET}
+      CLIENT_URL: ${CLIENT_URL}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
     ports:
       - "${PORT}:${PORT}"
     depends_on:

@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../../../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, PointElement, LineElement } from 'chart.js';
 import { Bar, Pie } from 'react-chartjs-2';
-import { useTheme } from '../context/ThemeContext';
+import { useTheme } from '../../../context/ThemeContext';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, PointElement, LineElement);
 
@@ -176,7 +176,7 @@ function DashboardPage() {
 
   const fetchRecentActivities = useCallback(async () => {
     if (!token) return;
-    // Using dummy data as per original implementation
+    // Using dummy data
     const dummyActivities = [
       { id: 1, description: 'Dr. Smith completed an appointment with Jane Doe.', type: 'appointment', date: '2025-07-09' },
       { id: 2, description: 'New patient John Smith registered.', type: 'registration', date: '2025-07-08' },
@@ -221,7 +221,7 @@ function DashboardPage() {
       animate='visible'
     >
       <motion.div variants={itemVariants} className='mb-6'>
-        <h1 className='text-3xl font-bold text-gray-800 dark:text-gray-100'>Welcome, {user ? user.first_name : 'User'}!</h1>
+        <h1 className='text-3xl font-bold text-gray-800 dark:text-gray-100'>Welcome back, {user ? user.first_name : 'User'}</h1>
         <p className='text-gray-600 dark:text-gray-400 mt-1'>Today is {currentDate}</p>
       </motion.div>
 

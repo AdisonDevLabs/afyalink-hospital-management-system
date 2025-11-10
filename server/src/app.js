@@ -31,7 +31,7 @@ const paymentRoutes = require('./routes/paymentRoutes');
 const orderRoutes = require('./routes/orderRoutes');
 
 const app = express();
-const API_V1 = '/api/v1';
+const API_VERSION = '/api/v1';
 
 // --- Middleware Configuration  ---
 
@@ -70,7 +70,7 @@ const apiLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
-app.use(API_V1, apiLimiter);
+app.use(API_VERSION, apiLimiter);
 
 // Prevent HTTP parameter polution
 app.use(hpp());
@@ -101,23 +101,23 @@ app.get('/', (req, res) => {
 });
 
 // --- API Routes ---
-app.use(`${API_V1}/auth`, authRoutes);
-app.use(`${API_V1}/users`, userRoutes);
-app.use(`${API_V1}/patients`, patientRoutes);
-app.use(`${API_V1}/appointments`, appointmentRoutes);
-app.use(`${API_V1}/clinical-notes`, clinicalNoteRoutes);
-app.use(`${API_V1}/departments`, departmentRoutes);
-app.use(`${API_V1}/admin`, adminRoutes);
-app.use(`${API_V1}/schedules`, scheduleRoutes);
-app.use(`${API_V1}/lab-reports`, labReportRoutes);
-app.use(`${API_V1}/messages`, messageRoutes);
-app.use(`${API_V1}/medications`, medicationRoutes);
-app.use(`${API_V1}/vitals`, vitalRoutes);
-app.use(`${API_V1}/beds`, bedRoutes);
-app.use(`${API_V1}/alerts`, alertRoutes);
-app.use(`${API_V1}`, activityRoutes);
-app.use(`${API_V1}`, paymentRoutes);
-app.use(`${API_V1}/orders`, orderRoutes);
+app.use(`${API_VERSION}/auth`, authRoutes);
+app.use(`${API_VERSION}/users`, userRoutes);
+app.use(`${API_VERSION}/patients`, patientRoutes);
+app.use(`${API_VERSION}/appointments`, appointmentRoutes);
+app.use(`${API_VERSION}/clinical-notes`, clinicalNoteRoutes);
+app.use(`${API_VERSION}/departments`, departmentRoutes);
+app.use(`${API_VERSION}/admin`, adminRoutes);
+app.use(`${API_VERSION}/schedules`, scheduleRoutes);
+app.use(`${API_VERSION}/lab-reports`, labReportRoutes);
+app.use(`${API_VERSION}/messages`, messageRoutes);
+app.use(`${API_VERSION}/medications`, medicationRoutes);
+app.use(`${API_VERSION}/vitals`, vitalRoutes);
+app.use(`${API_VERSION}/beds`, bedRoutes);
+app.use(`${API_VERSION}/alerts`, alertRoutes);
+app.use(`${API_VERSION}`, activityRoutes);
+app.use(`${API_VERSION}`, paymentRoutes);
+app.use(`${API_VERSION}/orders`, orderRoutes);
 
 app.use((req, res, next) => {
   res.status(404).json({

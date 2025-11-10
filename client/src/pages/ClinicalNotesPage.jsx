@@ -142,7 +142,6 @@ function ClinicalNotesPage() {
     fetchPatients();
   }, [isAuthenticated, token, authLoading, navigate, showNotification, patientIdFromUrl]);
 
-  // Effect to fetch patient details and clinical notes when selectedPatientId changes
   useEffect(() => {
     if (!token || !selectedPatientId) {
       setPatient(null);

@@ -1,7 +1,7 @@
 // frontend/src/pages/DoctorDashboardPage.jsx
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../../../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -10,7 +10,6 @@ import {
     Search, PlusCircle, History, AlertTriangle, MessageSquareMore, BarChart, TrendingUp, Handshake, Loader2
 } from 'lucide-react';
 
-// --- Reusable Notification Component (extracted for clarity) ---
 const Notification = ({ message, type, onClose }) => {
     if (!message) return null;
 
@@ -46,7 +45,6 @@ const Notification = ({ message, type, onClose }) => {
     );
 };
 
-// --- Reusable Dashboard Card Component ---
 const DashboardCard = ({ title, value, subText, linkTo, linkText, icon: Icon, borderColor, children }) => (
     <motion.div
         variants={{
@@ -71,7 +69,7 @@ const DashboardCard = ({ title, value, subText, linkTo, linkText, icon: Icon, bo
         </div>
         {value !== undefined && <p className="text-5xl font-bold text-gray-900 dark:text-gray-100">{value}</p>}
         {subText && <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{subText}</p>}
-        {children} {/* Allows for custom content, e.g., lists */}
+        {children}
         {linkTo && linkText && (
             <Link to={linkTo} className="text-blue-600 hover:underline text-sm mt-3 inline-block dark:text-blue-400 dark:hover:text-blue-300">
                 {linkText} &rarr;
@@ -142,6 +140,8 @@ function DoctorDashboardPage() {
         setNotification({ message, type });
         setTimeout(() => setNotification({ message: null, type: null }), 5000);
     };
+
+    const currentDate = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
     const fetchDashboardData = useCallback(async () => {
         if (!token || !user?.id) {
@@ -260,6 +260,7 @@ function DoctorDashboardPage() {
             </div>
         );
     }
+    
 
     return (
         <motion.div
@@ -281,10 +282,9 @@ function DoctorDashboardPage() {
             <header className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 pb-4 border-b border-gray-200 dark:border-gray-700">
                 <div className="mb-4 md:mb-0">
                     <h1 className="text-4xl font-extrabold text-gray-900 dark:text-gray-100 flex items-center">
-                        <Stethoscope className="h-10 w-10 text-blue-600 mr-3" />
-                        Physician's Overview
+                        Welcome Back, Doctor {user ? user.last_name : ''}
                     </h1>
-                    <p className="text-xl text-gray-600 dark:text-gray-300 mt-1">Welcome, Dr. {user?.username || 'Physician'} Here's your daily summary for AfyaLink HMS.</p>
+                    <p className='text-gray-600 dark:text-gray-400 mt-1'>Today is {currentDate}</p>
                 </div>
                 <div className="flex flex-wrap gap-3">
                     <Link to="/patients/" className="flex items-center px-4 py-2 bg-gray-200 text-gray-700 rounded-lg shadow-sm hover:bg-gray-300 transition-colors dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">

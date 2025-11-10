@@ -1,8 +1,8 @@
-import React from 'react';
+
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-const PrivateRoute = ({ allowedRoles }) => {
+const PrivateRoute = ({ allowedRoles, children }) => {
   const { isAuthenticated, loading, user } = useAuth();
 
   if (loading) {
@@ -27,13 +27,13 @@ const PrivateRoute = ({ allowedRoles }) => {
     );
   }
 
-  if (allowedRoles && user.role && !allowedRoles.includes(user.role)) {
+  if (allowedRoles && !allowedRoles.includes(user.role)) {
     console.warn(`Access Denied: User role '${user.role}' not allowed for this route. Redirecting to dashboard.`);
     console.log('allowedRoles:', allowedRoles, 'user.role:', user.role);
     return <Navigate to="/dashboard" replace />;
   }
 
-  return <Outlet />;
+  return children;
 };
 
 export default PrivateRoute;

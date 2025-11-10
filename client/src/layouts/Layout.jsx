@@ -1,19 +1,20 @@
+// src/layouts/Layout.jsx
+
 import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import Navbar from './Navbar';
-import Header from './Header';
+import Navbar from '../components/Navbar';
+import Header from '../components/Header';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { X, User, Menu, LayoutDashboard, Users, HeartPulse, Calendar, ClipboardList, Building2, LogOut } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
-import afyalinkLogo from '../assets/afyalink-logo.svg';
+import { useAuth } from '../context/AuthContext'; 
 
 const capitalize = (str) => {
   if (!str) return '';
   return str.charAt(0).toUpperCase() + str.slice(1);
 };
 
-function Layout() {
+function Layout() { 
   const { user, logout } = useAuth();
   const location = useLocation();
 
@@ -64,18 +65,22 @@ function Layout() {
   return (
     <div className="flex h-screen overflow-hidden bg-gray-100 dark:bg-gray-800">
 
+      {/* Desktop Sidebar (Navbar component) toggleSidebar */}
       <div className="hidden md:block">
-        <Navbar isSidebarExpanded={isSidebarExpanded} toggleSidebar={toggleUnifiedMenu} />
+        <Navbar isSidebarExpanded={isSidebarExpanded} toggleSidebar={toggleUnifiedMenu} navLinks={navLinks} />
       </div>
 
+      {/* Main Content Area */}
       <div className={`flex flex-col flex-grow overflow-y-auto ${mainContentMarginClass} transition-all duration-200`}>
         <Header toggleSidebar={toggleUnifiedMenu} />
 
+        {/* Outlet renders the specific page content */}
         <main className="flex-grow py-0.4 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg shadow-md mt-[80px]">
           <Outlet />
         </main>
       </div>
 
+      {/* Mobile Menu Overlay */}
       <AnimatePresence>
         {isMobileMenuOpen && (
           <motion.div
@@ -88,16 +93,16 @@ function Layout() {
             <div className="flex justify-end mb-6">
               <button
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 dark:text-gray-400 dark:hover:text-gray-200"
+                className="text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 dark:text-orange-500 dark:hover:text-orange-600"
                 aria-label="Close Navigation"
               >
-                <X className="h-8 w-8" />
+                <X className="h-7 w-7" />
               </button>
             </div>
 
             <div className="flex flex-col space-y-2 flex-grow">
               {user && navLinks.map((link) => {
-                const isActive = location.pathname === link.to;
+                const isActive = location.pathname.startsWith(link.to);
                 return link.roles.includes(user.role) && (
                   <Link
                     key={link.to}
@@ -106,8 +111,8 @@ function Layout() {
                       flex items-center gap-x-3 px-4 py-3 rounded-lg text-base font-medium
                       transition-colors duration-300
                       ${isActive
-                        ? 'bg-blue-100 text-blue-700 hover:text-blue-800 dark:bg-blue-700 dark:text-white dark:hover:text-gray-200'
-                        : 'text-gray-600 hover:bg-gray-100 hover:text-blue-600 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-blue-400'
+                        ? 'bg-orange-500 text-blue-700 hover:text-blue-800 dark:bg-orange-500 dark:text-white dark:hover:bg-orange-600'
+                        : 'text-gray-600 hover:bg-gray-100 hover:text-blue-600 dark:text-white dark:hover:bg-orange-500 dark:hover:text-white'
                       }
                     `}
                     onClick={() => setIsMobileMenuOpen(false)}
@@ -120,16 +125,16 @@ function Layout() {
             </div>
 
             {user && (
-              <div className="mt-auto pt-4 border-t border-gray-200 dark:border-gray-700">
-                <span className="text-gray-600 font-medium text-sm block mb-2 dark:text-gray-300">
-                  Hello, {user.first_name || user.username} ({capitalize(user.role)})
+              <div className="mt-auto pt-4 border-t border-orange-500 dark:border-orange-500">
+                <span className="text-gray-600 font-medium text-sm block mb-2 dark:text-white">
+                  Hello, {user.first_name || user.username} [{capitalize(user.role)}]
                 </span>
                 <button
                   onClick={() => {
                     logout();
                     setIsMobileMenuOpen(false);
                   }}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-md shadow-sm hover:shadow-md transition duration-200 ease-in-out text-sm flex items-center gap-x-2 w-full justify-center"
+                  className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-md shadow-sm hover:shadow-md transition duration-200 ease-in-out text-sm flex items-center gap-x-2 w-full justify-center"
                 >
                   <LogOut size={16} />
                   <span>Logout</span>
