@@ -1,6 +1,6 @@
-const pool = require('../config/db');
+import pool from '../config/db.js';
 
-exports.getBedOccupancy = async (req, res) => {
+export async function getBedOccupancy(req, res) {
   try {
     const beds = await pool.query(`
       SELECT
@@ -31,4 +31,4 @@ exports.getBedOccupancy = async (req, res) => {
     console.error('Error fetching bed occupancy:', error.stack);
     res.status(500).json({ message: 'Server error when fetching bed occupancy.' });
   }
-};
+}

@@ -1,15 +1,15 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const vitalController = require('../controllers/vitalController');
-const { protect, authorize } = require('../middleware/authMiddleware');
+import { getVitalsNeedingUpdate, getRecordedVitalsCount } from '../controllers/vitalController.js';
+import { protect, authorize } from '../middleware/authMiddleware.js';
 
-router.get('/needs-update', protect, authorize('nurse', 'admin'), vitalController.getVitalsNeedingUpdate);
+router.get('/needs-update', protect, authorize('nurse', 'admin'), getVitalsNeedingUpdate);
 
 router.get(
   '/recorded/count',
   protect,
   authorize('nurse', 'admin'),
-  vitalController.getRecordedVitalsCount
+  getRecordedVitalsCount
 );
 
-module.exports = router;
+export default router;

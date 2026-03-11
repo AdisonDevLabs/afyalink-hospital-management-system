@@ -48,21 +48,22 @@ const messageVariants = {
 const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
 function RegisterPage() {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [role, setRole] = useState('patient'); // Default to patient
-
-  // New states for patient-specific fields
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [dateOfBirth, setDateOfBirth] = useState('');
-  const [gender, setGender] = useState('');
-  const [nationalId, setNationalId] = useState('');
-  const [contactPhone, setContactPhone] = useState('');
-  const [email, setEmail] = useState('');
-  const [address, setAddress] = useState('');
-  const [photoUrl, setPhotoUrl] = useState(''); // For a URL, or consider file upload if needed
+  const [formData, setFormData] = useState({
+    first_name: '',
+    last_name: '',
+    date_of_birth: '',
+    gender: '',
+    contact_phone: '',
+    email: '',
+    username: '',
+    password: '',
+    confirm_password: '',
+    national_id: '',
+    address: '',
+    emergency_contact_name: '',
+    emergency_contact_phone: '',
+    emergency_contact_relationship: '',
+  });
 
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -70,61 +71,44 @@ function RegisterPage() {
 
   const navigate = useNavigate();
 
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prevData => ({
+      ...prevData,
+      [name]: value
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage('');
     setError('');
     setLoading(true);
 
-    if (password !== confirmPassword) {
-      setError('Passwords do not match. Please ensure both passwords are identical.');
-      setLoading(false);
-      return;
-    }
-
-    // Basic client-side validation for required patient fields if role is patient
-    if (role === 'patient') {
-        if (!firstName || !lastName || !dateOfBirth || !gender || !contactPhone) {
-            setError('Please fill in all required patient details (First Name, Last Name, Date of Birth, Gender, Contact Phone).');
-            setLoading(false);
-            return;
-        }
-    }
-
-
     try {
-      const response = await fetch(`${backendUrl}/api/v1/register`, {
+      const response = await fetch(`${backendUrl}/api/v1/auth/register-patient`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          username,
-          password,
-          role,
-          // Include all patient-specific fields in the request body
-          first_name: firstName,
-          last_name: lastName,
-          date_of_birth: dateOfBirth,
-          gender,
-          national_id: nationalId,
-          contact_phone: contactPhone,
-          email,
-          address,
-          photo_url: photoUrl,
-          // specialization is not needed for patients, but if you had doctors, you'd send it conditionally
-        }),
+        body: JSON.stringify({formData}),
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        setMessage(data.message || 'Registration successful! You will be redirected to the login page shortly.');
+        setMessage(data.message || 'Registration successful! Redirecting...');
         setTimeout(() => {
           navigate('/login');
         }, 2500);
       } else {
-        setError(data.message || 'Registration failed. Please review your details and try again.');
+
+        const isValidationError = Array.isArray(data.error) && data.error.length > 0;
+
+        const displayError = isValidationError
+          ? data.error.map(err => `(${err.field}): ${err.message}`).join(' | ')
+          : data.message || 'Registration failed. Please try again.';
+        setError(displayError);
       }
     } catch (err) {
       console.error('Error during registration:', err);
@@ -173,20 +157,80 @@ function RegisterPage() {
 
           {/* Role Selection (Keep it at the top or bottom as per design choice) */}
           <motion.div variants={itemVariants}>
-            <label htmlFor="role" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-              Registering As:
+            <label htmlFor="first_name" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+              First Name <span className="text-red-500">*</span>
             </label>
             <div className="relative">
-              <Info className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" />
+              <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" />
+              <input
+                type="text"
+                id="first_name"
+                name="first_name"
+                value={formData.first_name}
+                onChange={handleChange}
+                required
+                placeholder="e.g., Jane"
+                className="pl-10 pr-4 py-2.5 block w-full border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 sm:text-sm transition-all duration-200 hover:border-blue-500"
+              />
+            </div>
+          </motion.div>
+
+          <motion.div variants={itemVariants}>
+            <label htmlFor="last_name" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+              Last Name <span className="text-red-500">*</span>
+            </label>
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" />
+              <input
+                type="text"
+                id="last_name"
+                name="last_name" // 👈 Crucial: Name must match state key (snake_case)
+                value={formData.last_name}
+                onChange={handleChange} // 👈 Use generic handler
+                required
+                placeholder="e.g., Doe"
+                className="pl-10 pr-4 py-2.5 block w-full border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 sm:text-sm transition-all duration-200 hover:border-blue-500"
+              />
+            </div>
+          </motion.div>
+
+          <motion.div variants={itemVariants}>
+            <label htmlFor="date_of_birth" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+              Date of Birth <span className="text-red-500">*</span>
+            </label>
+            <div className="relative">
+              <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" />
+              <input
+                type="date"
+                id="date_of_birth"
+                name="date_of_birth" // 👈 Crucial: Name must match state key (snake_case)
+                value={formData.date_of_birth}
+                onChange={handleChange} // 👈 Use generic handler
+                required
+                className="pl-10 pr-4 py-2.5 block w-full border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 sm:text-sm transition-all duration-200 hover:border-blue-500"
+              />
+            </div>
+          </motion.div>
+
+          <motion.div variants={itemVariants}>
+            <label htmlFor="gender" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+              Gender <span className="text-red-500">*</span>
+            </label>
+            <div className="relative">
+              <UserPlus className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" />
               <select
-                id="role"
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
+                id="gender"
+                name="gender" // 👈 Crucial: Name must match state key (snake_case)
+                value={formData.gender}
+                onChange={handleChange} // 👈 Use generic handler
+                required
                 className="pl-10 pr-4 py-2.5 block w-full border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white sm:text-sm appearance-none transition-all duration-200"
               >
-                <option value="patient">Patient</option>
-                <option value="guest">Guest</option>
-                {/* You can add 'doctor' here if doctors can also self-register with their own specific fields */}
+                <option value="">Select Gender</option>
+                {/* 👈 CRITICAL: Must match Zod Enum values exactly ("Male", "Female", "Other") */}
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
               </select>
               <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-200">
                 <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
@@ -196,177 +240,83 @@ function RegisterPage() {
             </div>
           </motion.div>
 
-          {/* Conditional Rendering for Patient Fields */}
-          {role === 'patient' && (
-            <>
-              <motion.div variants={itemVariants}>
-                <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                  First Name <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" />
-                  <input
-                    type="text"
-                    id="firstName"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                    required // Make required if patient
-                    placeholder="e.g., Jane"
-                    className="pl-10 pr-4 py-2.5 block w-full border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 sm:text-sm transition-all duration-200 hover:border-blue-500"
-                  />
-                </div>
-              </motion.div>
+          <motion.div variants={itemVariants}>
+            <label htmlFor="contact_phone" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+              Contact Phone <span className="text-red-500">*</span>
+            </label>
+            <div className="relative">
+              <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" />
+              <input
+                type="tel"
+                id="contact_phone"
+                name="contact_phone" // 👈 Crucial: Name must match state key (snake_case)
+                value={formData.contact_phone}
+                onChange={handleChange} // 👈 Use generic handler
+                required
+                placeholder="e.g., +1234567890"
+                className="pl-10 pr-4 py-2.5 block w-full border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 sm:text-sm transition-all duration-200 hover:border-blue-500"
+              />
+            </div>
+          </motion.div>
 
-              <motion.div variants={itemVariants}>
-                <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                  Last Name <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" />
-                  <input
-                    type="text"
-                    id="lastName"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                    required // Make required if patient
-                    placeholder="e.g., Doe"
-                    className="pl-10 pr-4 py-2.5 block w-full border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 sm:text-sm transition-all duration-200 hover:border-blue-500"
-                  />
-                </div>
-              </motion.div>
+          <motion.div variants={itemVariants}>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+              Email <span className="text-red-500">*</span>
+            </label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" />
+              <input
+                type="email"
+                id="email"
+                name="email" // 👈 Crucial: Name must match state key (snake_case)
+                value={formData.email}
+                onChange={handleChange} // 👈 Use generic handler
+                required
+                placeholder="your.email@example.com"
+                className="pl-10 pr-4 py-2.5 block w-full border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 sm:text-sm transition-all duration-200 hover:border-blue-500"
+              />
+            </div>
+          </motion.div>
+          
+          <motion.div variants={itemVariants}>
+            <label htmlFor="address" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+              Address <span className="text-red-500">*</span>
+            </label>
+            <div className="relative">
+              <Home className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" />
+              <input
+                type="text"
+                id="address"
+                name="address" // 👈 Crucial: Name must match state key (snake_case)
+                value={formData.address}
+                onChange={handleChange} // 👈 Use generic handler
+                required
+                placeholder="e.g., 123 Main St, Anytown"
+                className="pl-10 pr-4 py-2.5 block w-full border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 sm:text-sm transition-all duration-200 hover:border-blue-500"
+              />
+            </div>
+          </motion.div>
 
-              <motion.div variants={itemVariants}>
-                <label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                  Date of Birth <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" />
-                  <input
-                    type="date"
-                    id="dateOfBirth"
-                    value={dateOfBirth}
-                    onChange={(e) => setDateOfBirth(e.target.value)}
-                    required // Make required if patient
-                    className="pl-10 pr-4 py-2.5 block w-full border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 sm:text-sm transition-all duration-200 hover:border-blue-500"
-                  />
-                </div>
-              </motion.div>
+          <motion.div variants={itemVariants}>
+            <label htmlFor="national_id" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+              National ID (Optional)
+            </label>
+            <div className="relative">
+              <CreditCard className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" />
+              <input
+                type="text"
+                id="national_id"
+                name="national_id" // 👈 Crucial: Name must match state key (snake_case)
+                value={formData.national_id}
+                onChange={handleChange} // 👈 Use generic handler
+                placeholder="e.g., 12345678"
+                className="pl-10 pr-4 py-2.5 block w-full border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 sm:text-sm transition-all duration-200 hover:border-blue-500"
+              />
+            </div>
+          </motion.div>
+          
+          {/* USER ACCOUNT FIELDS (Username/Password) */}
 
-              <motion.div variants={itemVariants}>
-                <label htmlFor="gender" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                  Gender <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <Info className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" />
-                  <select
-                    id="gender"
-                    value={gender}
-                    onChange={(e) => setGender(e.target.value)}
-                    required // Make required if patient
-                    className="pl-10 pr-4 py-2.5 block w-full border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white sm:text-sm appearance-none transition-all duration-200"
-                  >
-                    <option value="">Select Gender</option>
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                    <option value="other">Other</option>
-                  </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-200">
-                    <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                      <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-                    </svg>
-                  </div>
-                </div>
-              </motion.div>
-
-              <motion.div variants={itemVariants}>
-                <label htmlFor="nationalId" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                  National ID
-                </label>
-                <div className="relative">
-                  <CreditCard className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" />
-                  <input
-                    type="text"
-                    id="nationalId"
-                    value={nationalId}
-                    onChange={(e) => setNationalId(e.target.value)}
-                    placeholder="e.g., 12345678"
-                    className="pl-10 pr-4 py-2.5 block w-full border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 sm:text-sm transition-all duration-200 hover:border-blue-500"
-                  />
-                </div>
-              </motion.div>
-
-              <motion.div variants={itemVariants}>
-                <label htmlFor="contactPhone" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                  Contact Phone <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" />
-                  <input
-                    type="tel"
-                    id="contactPhone"
-                    value={contactPhone}
-                    onChange={(e) => setContactPhone(e.target.value)}
-                    required // Make required if patient
-                    placeholder="e.g., +1234567890"
-                    className="pl-10 pr-4 py-2.5 block w-full border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 sm:text-sm transition-all duration-200 hover:border-blue-500"
-                  />
-                </div>
-              </motion.div>
-
-              <motion.div variants={itemVariants}>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                  Email
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" />
-                  <input
-                    type="email"
-                    id="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="your.email@example.com"
-                    className="pl-10 pr-4 py-2.5 block w-full border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 sm:text-sm transition-all duration-200 hover:border-blue-500"
-                  />
-                </div>
-              </motion.div>
-
-              <motion.div variants={itemVariants}>
-                <label htmlFor="address" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                  Address
-                </label>
-                <div className="relative">
-                  <Home className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" />
-                  <input
-                    type="text"
-                    id="address"
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                    placeholder="e.g., 123 Main St, Anytown"
-                    className="pl-10 pr-4 py-2.5 block w-full border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 sm:text-sm transition-all duration-200 hover:border-blue-500"
-                  />
-                </div>
-              </motion.div>
-
-              <motion.div variants={itemVariants}>
-                <label htmlFor="photoUrl" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                  Photo URL (Optional)
-                </label>
-                <div className="relative">
-                  <Image className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" />
-                  <input
-                    type="url" // Use type "url" for photo URL
-                    id="photoUrl"
-                    value={photoUrl}
-                    onChange={(e) => setPhotoUrl(e.target.value)}
-                    placeholder="https://example.com/your-photo.jpg"
-                    className="pl-10 pr-4 py-2.5 block w-full border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 sm:text-sm transition-all duration-200 hover:border-blue-500"
-                  />
-                </div>
-              </motion.div>
-            </>
-          )}
-
-          {/* Username (always required) */}
           <motion.div variants={itemVariants}>
             <label htmlFor="username" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
               Username <span className="text-red-500">*</span>
@@ -376,16 +326,16 @@ function RegisterPage() {
               <input
                 type="text"
                 id="username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                name="username" // 👈 Name must match state key
+                value={formData.username}
+                onChange={handleChange} // 👈 Use generic handler
                 required
-                placeholder="e.g., john.doe"
+                placeholder="e.g., jane.doe"
                 className="pl-10 pr-4 py-2.5 block w-full border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 sm:text-sm transition-all duration-200 hover:border-blue-500"
               />
             </div>
           </motion.div>
 
-          {/* Password (always required) */}
           <motion.div variants={itemVariants}>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
               Password <span className="text-red-500">*</span>
@@ -395,29 +345,89 @@ function RegisterPage() {
               <input
                 type="password"
                 id="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                name="password" // 👈 Name must match state key
+                value={formData.password}
+                onChange={handleChange} // 👈 Use generic handler
                 required
-                placeholder="Minimum 8 characters"
+                placeholder="Min 8 chars, incl. Upper, Number, Special"
                 className="pl-10 pr-4 py-2.5 block w-full border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 sm:text-sm transition-all duration-200 hover:border-blue-500"
               />
             </div>
           </motion.div>
 
-          {/* Confirm Password (always required) */}
           <motion.div variants={itemVariants}>
-            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+            <label htmlFor="confirm_password" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
               Confirm Password <span className="text-red-500">*</span>
             </label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" />
               <input
                 type="password"
-                id="confirmPassword"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                id="confirm_password"
+                name="confirm_password" // 👈 CRUCIAL: Must match Zod's field name (snake_case)
+                value={formData.confirm_password}
+                onChange={handleChange} // 👈 Use generic handler
                 required
                 placeholder="Re-enter your password"
+                className="pl-10 pr-4 py-2.5 block w-full border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 sm:text-sm transition-all duration-200 hover:border-blue-500"
+              />
+            </div>
+          </motion.div>
+
+          {/* EMERGENCY CONTACT FIELDS (Optional - Added for full schema coverage) */}
+          <motion.h3 className="text-lg font-semibold text-gray-800 dark:text-white pt-4 border-t border-gray-200 dark:border-gray-700" variants={itemVariants}>
+            Emergency Contact (Optional)
+          </motion.h3>
+
+          <motion.div variants={itemVariants}>
+            <label htmlFor="emergency_contact_name" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+              Name
+            </label>
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" />
+              <input
+                type="text"
+                id="emergency_contact_name"
+                name="emergency_contact_name"
+                value={formData.emergency_contact_name}
+                onChange={handleChange}
+                placeholder="e.g., John Smith"
+                className="pl-10 pr-4 py-2.5 block w-full border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 sm:text-sm transition-all duration-200 hover:border-blue-500"
+              />
+            </div>
+          </motion.div>
+          
+          <motion.div variants={itemVariants}>
+            <label htmlFor="emergency_contact_phone" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+              Phone
+            </label>
+            <div className="relative">
+              <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" />
+              <input
+                type="tel"
+                id="emergency_contact_phone"
+                name="emergency_contact_phone"
+                value={formData.emergency_contact_phone}
+                onChange={handleChange}
+                placeholder="e.g., +1234567890"
+                className="pl-10 pr-4 py-2.5 block w-full border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 sm:text-sm transition-all duration-200 hover:border-blue-500"
+              />
+            </div>
+          </motion.div>
+          
+          <motion.div variants={itemVariants}>
+            <label htmlFor="emergency_contact_relationship" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+              Relationship
+            </label>
+            <div className="relative">
+              <UserPlus className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" />
+              <input
+                type="text"
+                id="emergency_contact_relationship"
+                name="emergency_contact_relationship"
+                value={formData.emergency_contact_relationship}
+                onChange={handleChange}
+                placeholder="e.g., Spouse, Sibling, Friend"
                 className="pl-10 pr-4 py-2.5 block w-full border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 sm:text-sm transition-all duration-200 hover:border-blue-500"
               />
             </div>

@@ -1,4 +1,4 @@
-const pool = require('../config/db');
+import pool from '../config/db.js';
 
 const isDoctor = async (userID) => {
   if (isNaN(parseInt(userID))) {
@@ -15,7 +15,7 @@ const departmentExists = async (departmentID) => {
   return result.rows.length > 0;
 };
 
-exports.createAppointment = async (req, res) => {
+export async function createAppointment(req, res) {
   let { patient_id, doctor_id, department_id, appointment_date, appointment_time, reason, status } = req.body;
   patient_id = (typeof patient_id === 'string' && patient_id.trim() === '') ? null : parseInt(patient_id);
   doctor_id = (typeof doctor_id === 'string' && doctor_id.trim() === '') ? null : parseInt(doctor_id);
@@ -71,9 +71,9 @@ exports.createAppointment = async (req, res) => {
     res.status(500).json({ message: 'Server error when creating appointment.' });
   } finally {
   }
-};
+}
 
-exports.getAllAppointments = async (req, res) => {
+export async function getAllAppointments(req, res) {
   const { patient_id, doctor_id, date, status } = req.query;
   let query = `
   SELECT
@@ -88,12 +88,13 @@ exports.getAllAppointments = async (req, res) => {
     p.first_name AS patient_first_name,
     p.last_name AS patient_last_name,
     u.username AS doctor_username,
-    u.first_name AS doctor_first_name,
-    u.last_name AS doctor_last_name,
+    s.first_name AS doctor_first_name,
+    s.last_name AS doctor_last_name,
     d.name AS department_name
   FROM appointments a
   JOIN patients p ON a.patient_id = p.id
   JOIN users u ON a.doctor_id = u.id
+  JOIN staffs s ON a.doctor_id = s.id
   JOIN departments d ON a.department_id = d.id
   WHERE 1=1
   `;
@@ -127,9 +128,9 @@ exports.getAllAppointments = async (req, res) => {
     console.error('Error fetching appointments:', error.stack);
     res.status(500).json({ message: 'Server error when fetching appointments.' });
   }
-};
+}
 
-exports.getAppointmentById = async (req, res) => {
+export async function getAppointmentById(req, res) {
   const { id } = req.params;
 
   try {
@@ -168,9 +169,9 @@ exports.getAppointmentById = async (req, res) => {
     console.error('Error fetching appointment by ID:', error.stack);
     res.status(500).json({ message: 'Server error when fetching appointment by ID.' });
   }
-};
+}
 
-exports.updateAppointment = async (req, res) => {
+export async function updateAppointment(req, res) {
   const { id } = req.params;
   let { patient_id, doctor_id, department_id,  appointment_date, appointment_time, status, reason } = req.body;
 
@@ -283,9 +284,9 @@ exports.updateAppointment = async (req, res) => {
     
   } finally {
   }
-};
+}
 
-exports.deleteAppointment = async (req, res) => {
+export async function deleteAppointment(req, res) {
   const { id } = req.params;
 
   try {
@@ -300,4 +301,4 @@ exports.deleteAppointment = async (req, res) => {
     console.error('Error deleting appointment.', error.stack);
     res.status(500).json({ message: 'Server error when deleting appointment.' });
   }
-};
+}

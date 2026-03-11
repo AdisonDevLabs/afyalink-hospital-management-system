@@ -1,16 +1,16 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const appointmentController = require('../controllers/appointmentController');
-const { protect, authorize } = require('../middleware/authMiddleware');
+import { createAppointment, getAllAppointments, getAppointmentById, updateAppointment, deleteAppointment } from '../controllers/appointmentController.js';
+import { protect, authorize } from '../middleware/authMiddleware.js';
 
-router.post('/', protect, authorize('admin', 'receptionist'), appointmentController.createAppointment);
+router.post('/', protect, authorize('admin', 'receptionist'), createAppointment);
 
-router.get('/', protect, appointmentController.getAllAppointments);
+router.get('/', protect, getAllAppointments);
 
-router.get('/:id', protect, appointmentController.getAppointmentById);
+router.get('/:id', protect, getAppointmentById);
 
-router.put('/:id', protect, authorize('admin', 'receptionist', 'doctor'), appointmentController.updateAppointment);
+router.put('/:id', protect, authorize('admin', 'receptionist', 'doctor'), updateAppointment);
 
-router.delete('/:id', protect, authorize('admin'), appointmentController.deleteAppointment);
+router.delete('/:id', protect, authorize('admin'), deleteAppointment);
 
-module.exports = router;
+export default router;

@@ -1,13 +1,13 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const orderController = require('../controllers/orderController');
-const { protect, authorize } = require('../middleware/authMiddleware');
+import { getNewDoctorOrders } from '../controllers/orderController.js';
+import { protect, authorize } from '../middleware/authMiddleware.js';
 
 router.get(
   '/new',
   protect,
   authorize('nurse', 'admin'),
-  orderController.getNewDoctorOrders
+  getNewDoctorOrders
 );
 
-module.exports = router;
+export default router;

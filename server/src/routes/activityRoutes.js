@@ -1,6 +1,6 @@
-const express = require('express');
-const { protect, authorize } = require('../middleware/authMiddleware');
-const activityController = require('../controllers/activityController');
+import express from 'express';
+import { protect, authorize } from '../middleware/authMiddleware.js';
+import { getDoctorActivities } from '../controllers/activityController.js';
 
 const router = express.Router();
 
@@ -8,7 +8,7 @@ router.get(
     '/doctor-activities',
     protect,
     authorize('doctor', 'admin', 'guest'),
-    activityController.getDoctorActivities
+    getDoctorActivities
 );
 
-module.exports = router;
+export default router;

@@ -1,6 +1,6 @@
-const pool = require('../config/db');
+import pool from '../config/db.js';
 
-exports.getMessages = async (req, res) => {
+export async function getMessages(req, res) {
   const { recipient_id, type, is_read } = req.query;
   const authenticatedUserId = req.user.id;
   let query = 'SELECT * FROM messages WHERE recipient_id = $1';
@@ -26,9 +26,9 @@ exports.getMessages = async (req, res) => {
     console.error('Error fetching messages:', error.stack);
     res.status(500).json({ message: 'Server error fetching messages.' });
   }
-};
+}
 
-exports.createMessage = async (req, res) => {
+export async function createMessage(req, res) {
   const { sender_id, recipient_id, type, content, reference_id } = req.body;
 
   if (!recipient_id || !type || !content) {
@@ -46,9 +46,9 @@ exports.createMessage = async (req, res) => {
     console.error('Error creating message:', error.stack);
     res.status(500).json({ message: 'Server error creating message.' });
   }
-};
+}
 
-exports.markMessageAsRead = async (req, res) => {
+export async function markMessageAsRead(req, res) {
   const { id } = req.params;
   const authenticatedUserId = req.user.id;
 
@@ -66,9 +66,9 @@ exports.markMessageAsRead = async (req, res) => {
     console.error('Error marking message as read:', error.stack);
     res.status(500).json({ message: 'Server error marking message as read.' });
   }
-};
+}
 
-exports.deleteMessage = async (req, res) => {
+export async function deleteMessage(req, res) {
   const { id } = req.params;
   const authenticatedUserId = req.user.id;
 
@@ -87,4 +87,4 @@ exports.deleteMessage = async (req, res) => {
     console.error('Error deleting message:', error.stack);
     res.status(500).json({ message: 'Server error deleting message.' });
   }
-};
+}

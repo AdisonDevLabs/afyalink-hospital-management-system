@@ -1,6 +1,6 @@
-const pool = require('../config/db');
+import pool from '../config/db.js';
 
-exports.getNewDoctorOrders = async (req, res) => {
+export async function getNewDoctorOrders(req, res) {
   const nurse_id = req.user.id;
 
   if (!nurse_id) {
@@ -39,4 +39,4 @@ exports.getNewDoctorOrders = async (req, res) => {
     console.error('Error fetching new doctor orders:', error.stack);
     res.status(500).json({ message: 'Server error when fetching new doctor orders.' });
   }
-};
+}

@@ -1,6 +1,6 @@
-const pool = require('../config/db');
+import pool from '../config/db.js';
 
-exports.getDueMedications = async (req, res) => {
+export async function getDueMedications(req, res) {
   const nurse_id = req.user.id;
   const { status } = req.query;
 
@@ -50,9 +50,9 @@ exports.getDueMedications = async (req, res) => {
     console.error('Error fetching due medications:', error.stack);
     res.status(500).json({ message: 'Server error when fetching due medications.' });
   }
-};
+}
 
-exports.getAdministeredMedicationsCount = async (req, res) => {
+export async function getAdministeredMedicationsCount(req, res) {
   const nurse_id = req.user.id;
   const { date } = req.query;
 
@@ -85,9 +85,9 @@ exports.getAdministeredMedicationsCount = async (req, res) => {
     console.error('Error fetching administered medications count:', error.stack);
     res.status(500).json({ message: 'Server error when fetching administered medications count.' });
   }
-};
+}
 
-exports.markMedicationAsAdministered = async (req, res) => {
+export async function markMedicationAsAdministered(req, res) {
   const { medicationId } = req.params;
   const nurse_id = req.user.id;
 
@@ -124,4 +124,4 @@ exports.markMedicationAsAdministered = async (req, res) => {
     console.error('Error marking medication as administered:', error.stack);
     res.status(500).json({ message: 'Server error when marking medication as administered.' });
   }
-};
+}

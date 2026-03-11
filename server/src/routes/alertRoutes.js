@@ -1,10 +1,10 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const alertController = require('../controllers/alertController');
-const { protect, authorize } = require('../middleware/authMiddleware');
+import { getAlertsByRecipientRole, getAlerts } from '../controllers/alertController.js';
+import { protect, authorize } from '../middleware/authMiddleware.js';
 
-router.get('/', protect, authorize('nurse', 'doctor', 'admin', 'guest'), alertController.getAlertsByRecipientRole);
+router.get('/', protect, authorize('nurse', 'doctor', 'admin', 'guest'), getAlertsByRecipientRole);
 
-router.get('/by-user', protect, authorize('nurse', 'doctor', 'admin'), alertController.getAlerts);
+router.get('/by-user', protect, authorize('nurse', 'doctor', 'admin'), getAlerts);
 
-module.exports = router;
+export default router;

@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { Menu, X } from 'lucide-react';
+import { Helmet } from 'react-helmet-async';
 
 import AnimatedSection from '../components/AnimatedSection';
 
@@ -161,8 +162,46 @@ const HomePage = () => {
         { title: 'Wellness & Prevention', icon:'/assets/icons/icon-maternity.png', desc: 'Programs focused on health education, disease prevention, and wellness promotion for a healthier community.' },
     ];
 
+
+
+    // Structured Data for Google (JSON-LD)
+    const structuredData = {
+        "@context": "https://schema.org",
+        "@type": "MedicalBusiness",
+        "name": "AfyaLink Hospital Management System",
+        "alternateName": "AfyaLink HMS",
+        "url": "https://afyalink-hms.onrender.com/",
+        "logo": "https://afyalink-hms.onrender.com/assets/afyalink-logo2.svg",
+        "description": "Providing compassionate, advanced healthcare services in Rongai, Nakuru County.",
+        "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "123 AfyaLink Road",
+            "addressLocality": "Rongai",
+            "addressRegion": "Nakuru County",
+            "addressCountry": "KE"
+        },
+        "contactPoint": {
+            "@type": "ContactPoint",
+            "telephone": "+254-712-345-678",
+            "contactType": "emergency",
+            "areaServed": "KE",
+            "availableLanguage": "English"
+        }
+    };
+
+
+
     return (
         <div className="home-page overflow-x-hidden">
+            <Helmet>
+                <title>AfyaLink HMS | Best Hospital Management System in Nakuru</title>
+                <meta name="description" content="AfyaLink HMS offers seamless patient management, appointment scheduling, and laboratory services in Rongai, Nakuru County. Book your appointment online today." />
+                <link rel="canonical" href="https://afyalink-hms.onrender.com/" />
+                <script type="application/ld+json">
+                    {JSON.stringify(structuredData)}
+                </script>
+            </Helmet>
+            
             <header className="fixed w-full bg-white shadow-lg z-50 py-2 px-4 md:px-8 flex justify-between items-center transition-all duration-300">
                 <div className="flex items-center space-x-3">
                     <Link to="/" className="flex items-center space-x-2 animate-fadeInLeft">

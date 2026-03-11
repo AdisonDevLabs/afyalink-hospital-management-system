@@ -1,6 +1,6 @@
-const pool = require('../config/db');
+import pool from '../config/db.js';
 
-exports.getTodayRevenue = async (req, res) => {
+export async function getTodayRevenue(req, res) {
   try {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -23,9 +23,9 @@ exports.getTodayRevenue = async (req, res) => {
     console.error('Error fetching today\'s revenue:', error.stack);
     res.status(500).json({ message: 'Server error when fetching today\'s revenue.', error: error.message });
   }
-};
+}
 
-exports.getPendingPaymentsCount = async (req, res) => {
+export async function getPendingPaymentsCount(req, res) {
   try {
     const query = `
       SELECT COUNT(*) AS count
@@ -41,4 +41,4 @@ exports.getPendingPaymentsCount = async (req, res) => {
     console.error('Error fetching pending payments count:', error.stack);
     res.status(500).json({ message: 'Server error when fetching pending payments count.', error: error.message });
   }
-};
+}

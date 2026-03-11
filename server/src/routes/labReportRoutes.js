@@ -1,16 +1,16 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const labReportController = require('../controllers/labReportController');
-const { protect, authorize } = require('../middleware/authMiddleware');
+import { getLabReports, createLabReport, getLabReportById, updateLabReport, deleteLabReport } from '../controllers/labReportController.js';
+import { protect, authorize } from '../middleware/authMiddleware.js';
 
-router.get('/', protect, authorize('admin', 'doctor', 'nurse', 'receptionist'), labReportController.getLabReports);
+router.get('/', protect, authorize('admin', 'doctor', 'nurse', 'receptionist'), getLabReports);
 
-router.post('/', protect, authorize('admin', 'doctor', 'nurse'), labReportController.createLabReport);
+router.post('/', protect, authorize('admin', 'doctor', 'nurse'), createLabReport);
 
-router.get('/:id', protect, authorize('admin', 'doctor', 'nurse', 'receptionist'), labReportController.getLabReportById);
+router.get('/:id', protect, authorize('admin', 'doctor', 'nurse', 'receptionist'), getLabReportById);
 
-router.put('/:id', protect, authorize('admin', 'doctor', 'nurse'), labReportController.updateLabReport);
+router.put('/:id', protect, authorize('admin', 'doctor', 'nurse'), updateLabReport);
 
-router.delete('/:id', protect, authorize('admin'), labReportController.deleteLabReport);
+router.delete('/:id', protect, authorize('admin'), deleteLabReport);
 
-module.exports = router;
+export default router;

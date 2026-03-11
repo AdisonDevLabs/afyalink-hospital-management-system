@@ -1,10 +1,10 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const adminController = require('../controllers/adminController');
-const { protect, authorize } = require('../middleware/authMiddleware');
+import { getAdminStats, getAppointmentStatusCounts } from '../controllers/adminController.js';
+import { protect, authorize } from '../middleware/authMiddleware.js';
 
-router.get('/stats', protect, authorize('admin', 'receptionist'), adminController.getAdminStats);
+router.get('/stats', protect, authorize('admin', 'receptionist'), getAdminStats);
 
-router.get('/appointment-status-counts', protect, authorize('admin'), adminController.getAppointmentStatusCounts);
+router.get('/appointment-status-counts', protect, authorize('admin'), getAppointmentStatusCounts);
 
-module.exports = router;
+export default router;

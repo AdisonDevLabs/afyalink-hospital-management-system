@@ -1,6 +1,6 @@
-const pool = require('../config/db');
+import pool from '../config/db.js';
 
-exports.getLabReports = async (req, res) => {
+export async function getLabReports(req, res) {
   const { doctor_id, patient_id, status } = req.query;
   let query = 'SELECT * FROM lab_reports WHERE 1=1';
   const queryParams = [];
@@ -31,9 +31,9 @@ exports.getLabReports = async (req, res) => {
     console.error('Error fetching lab reports:', error.stack);
     res.status(500).json({ message: 'Server error fetching lab reports.' });
   }
-};
+}
 
-exports.createLabReport = async (req, res) => {
+export async function createLabReport(req, res) {
   const { patient_id, doctor_id, test_name, results, status, notes } = req.body;
 
   if (!patient_id || !doctor_id || !test_name) {
@@ -51,9 +51,9 @@ exports.createLabReport = async (req, res) => {
     console.error('Error creating lab report:', error.stack);
     res.status(500).json({ message: 'Server error creating lab report.' });
   }
-};
+}
 
-exports.getLabReportById = async (req, res) => {
+export async function getLabReportById(req, res) {
   const { id } = req.params;
 
   try {
@@ -68,9 +68,9 @@ exports.getLabReportById = async (req, res) => {
     console.error('Error fetching lab report by ID:', error.stack);
     res.status(500).json({ message: 'Server error fetching lab report.' });
   }
-};
+}
 
-exports.updateLabReport = async (req, res) => {
+export async function updateLabReport(req, res) {
   const { id } = req.params;
   const { patient_id, doctor_id, test_name, results, status, notes } = req.body;
 
@@ -89,9 +89,9 @@ exports.updateLabReport = async (req, res) => {
     console.error('Error updating lab report:', error.stack);
     res.status(500).json({ message: 'Server error updating lab report.' });
   }
-};
+}
 
-exports.deleteLabReport = async (req, res) => {
+export async function deleteLabReport(req, res) {
   const { id } = req.params;
 
   try {
@@ -106,4 +106,4 @@ exports.deleteLabReport = async (req, res) => {
     console.error('Error deleting lab report:', error.stack);
     res.status(500).json({ message: 'Server error deleting lab report.' });
   }
-};
+}

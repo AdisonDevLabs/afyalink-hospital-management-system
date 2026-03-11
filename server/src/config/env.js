@@ -1,9 +1,9 @@
 // src/config/env.js
 
-const { z } = require('zod');
+import { z } from 'zod';
 
 // Schema for env
-const envSchema = z.object({
+export const envSchema = z.object({
   // General
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PORT: z.preprocess(
@@ -54,4 +54,4 @@ try {
   process.exit(1);
 }
 
-module.exports = env;
+export default env;

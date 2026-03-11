@@ -1,20 +1,20 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const paymentController = require('../controllers/paymentController');
-const { protect, authorize } = require('../middleware/authMiddleware');
+import { getTodayRevenue, getPendingPaymentsCount } from '../controllers/paymentController.js';
+import { protect, authorize } from '../middleware/authMiddleware.js';
 
 router.get(
   '/payments/revenue/today',
   protect,
   authorize('receptionist', 'admin', 'finance'),
-  paymentController.getTodayRevenue
+  getTodayRevenue
 );
 
 router.get(
   '/payments/pending/count',
   protect,
   authorize('receptionist', 'admin', 'finance'),
-  paymentController.getPendingPaymentsCount
+  getPendingPaymentsCount
 );
 
-module.exports = router;
+export default router;

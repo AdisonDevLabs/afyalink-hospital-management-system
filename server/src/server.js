@@ -1,15 +1,16 @@
 // src/server/js
 
-require('dotenv').config();
+import 'dotenv/config';
+import env from './config/env.js';
 
-const http = require('http');
-const WebSocket = require('ws');
-const app = require('./app');
+import http from 'http';
+import { WebSocketServer } from 'ws';
+import app from './app.js';
 
-const PORT = process.env.PORT || 5006;
+const PORT = env.PORT || 5006;
 
 const server = http.createServer(app);
-const wss = new WebSocket.Server({ server });
+const wss = new WebSocketServer({ server });
 
 wss.on('connection', (ws, req) => {
   console.log(`WebSocket connected from ${req.socket.remoteAddress}`);

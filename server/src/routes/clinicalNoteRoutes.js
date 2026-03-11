@@ -1,16 +1,16 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const clinicalNoteController = require('../controllers/clinicalNoteController');
-const { protect, authorize } = require('../middleware/authMiddleware');
+import { createClinicalNote, getClinicalNotesByPatient, getClinicalNoteById, updateClinicalNote, deleteClinicalNote } from '../controllers/clinicalNoteController.js';
+import { protect, authorize } from '../middleware/authMiddleware.js';
 
-router.post('/', protect, authorize('admin', 'doctor', 'nurse'), clinicalNoteController.createClinicalNote);
+router.post('/', protect, authorize('admin', 'doctor', 'nurse'), createClinicalNote);
 
-router.get('/patient/:patientId', protect, authorize('admin', 'doctor', 'nurse', 'guest'), clinicalNoteController.getClinicalNotesByPatient);
+router.get('/patient/:patientId', protect, authorize('admin', 'doctor', 'nurse', 'guest'), getClinicalNotesByPatient);
 
-router.get('/:id', protect, authorize('admin', 'doctor', 'nurse', 'guest'), clinicalNoteController.getClinicalNoteById);
+router.get('/:id', protect, authorize('admin', 'doctor', 'nurse', 'guest'), getClinicalNoteById);
 
-router.put('/:id', protect, authorize('admin', 'doctor', 'nurse'), clinicalNoteController.updateClinicalNote);
+router.put('/:id', protect, authorize('admin', 'doctor', 'nurse'), updateClinicalNote);
 
-router.delete('/:id', protect, authorize('admin', 'doctor'), clinicalNoteController.deleteClinicalNote);
+router.delete('/:id', protect, authorize('admin', 'doctor'), deleteClinicalNote);
 
-module.exports = router;
+export default router;

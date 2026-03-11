@@ -1,8 +1,8 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const bedController = require('../controllers/bedController');
-const { protect, authorize } = require('../middleware/authMiddleware');
+import { getBedOccupancy } from '../controllers/bedController.js';
+import { protect, authorize } from '../middleware/authMiddleware.js';
 
-router.get('/availability', protect, authorize('nurse', 'doctor', 'admin', 'receptionist'), bedController.getBedOccupancy);
+router.get('/availability', protect, authorize('nurse', 'doctor', 'admin', 'receptionist'), getBedOccupancy);
 
-module.exports = router;
+export default router;

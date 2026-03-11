@@ -1,6 +1,6 @@
-const pool = require('../config/db');
+import pool from '../config/db.js';
 
-exports.createClinicalNote = async (req, res) => {
+export async function createClinicalNote(req, res) {
   const creator_user_id = req.user.id;
   const creator_role = req.user.role;
 
@@ -69,9 +69,9 @@ exports.createClinicalNote = async (req, res) => {
     }
     res.status(500).json({ message: 'Server error when creating clinical note.' });
   }
-};
+}
 
-exports.getClinicalNotesByPatient = async (req, res) => {
+export async function getClinicalNotesByPatient(req, res) {
   const { patientId } = req.params;
 
   try {
@@ -89,19 +89,25 @@ exports.getClinicalNotesByPatient = async (req, res) => {
         cn.updated_at,
         cn.doctor_id,
         cn.appointment_id,
+        -- Get username from users table (linked via staffs)
         u.username AS doctor_username,
-        u.first_name AS doctor_first_name,
-        u.last_name AS doctor_last_name,
-        -- Include actual appointment details from 'appointments' table schema
+        -- Get names from staffs table
+        s.first_name AS doctor_first_name,
+        s.last_name AS doctor_last_name,
+        -- Appointment details
         a.appointment_date,
         a.appointment_time,
         a.status AS appointment_status,
-        a.reason AS appointment_reason -- Changed from appointment_type to reason
+        a.reason AS appointment_reason
       FROM clinical_notes cn
-      JOIN users u ON cn.doctor_id = u.id
+      -- FIXED: Join staffs to get doctor details (doctor_id is a staff ID)
+      JOIN staffs s ON cn.doctor_id = s.id
+      -- FIXED: Join users to get the username (via staffs.user_id)
+      JOIN users u ON s.user_id = u.id
       LEFT JOIN appointments a ON cn.appointment_id = a.id
       WHERE cn.patient_id = $1
-      ORDER BY cn.visit_datetime DESC`, [patientId]
+      ORDER BY cn.visit_datetime DESC`, 
+      [patientId]
     );
     res.status(200).json(notes.rows);
 
@@ -109,9 +115,9 @@ exports.getClinicalNotesByPatient = async (req, res) => {
     console.error('Error fetching clinical notes by patient:', error.stack);
     res.status(500).json({ message: 'Server error when fetching clinical notes.' });
   }
-};
+}
 
-exports.getClinicalNoteById = async (req, res) => {
+export async function getClinicalNoteById(req, res) {
   const { id } = req.params;
 
   try {
@@ -132,19 +138,26 @@ exports.getClinicalNoteById = async (req, res) => {
         cn.appointment_id,
         p.first_name AS patient_first_name,
         p.last_name AS patient_last_name,
+        -- Get username from users table
         u.username AS doctor_username,
-        u.first_name AS doctor_first_name,
-        u.last_name AS doctor_last_name,
+        -- Get names from staffs table
+        s.first_name AS doctor_first_name,
+        s.last_name AS doctor_last_name,
         a.appointment_date,
         a.appointment_time,
         a.status AS appointment_status,
         a.reason AS appointment_reason
       FROM clinical_notes cn
       JOIN patients p ON cn.patient_id = p.id
-      JOIN users u ON cn.doctor_id = u.id
+      -- FIXED: Join staffs first (doctor_id -> staffs.id)
+      JOIN staffs s ON cn.doctor_id = s.id
+      -- FIXED: Join users via staffs (staffs.user_id -> users.id)
+      JOIN users u ON s.user_id = u.id
       LEFT JOIN appointments a ON cn.appointment_id = a.id
-      WHERE cn.id = $1`, [id]
+      WHERE cn.id = $1`, 
+      [id]
     );
+
     if (note.rows.length === 0) {
       return res.status(404).json({ message: 'Clinical note not found.' });
     }
@@ -154,9 +167,9 @@ exports.getClinicalNoteById = async (req, res) => {
     console.error('Error fetching clinical note by ID:', error.stack);
     res.status(500).json({ message: 'Server error when fetching clinical note.' });
   }
-};
+}
 
-exports.updateClinicalNote = async (req, res) => {
+export async function updateClinicalNote(req, res) {
   const { id } = req.params;
   const { chief_complaint, diagnosis, medications_prescribed, vitals, notes, note_type, appointment_id } = req.body;
   const current_user_id = req.user.id;
@@ -252,9 +265,9 @@ exports.updateClinicalNote = async (req, res) => {
     }
     res.status(500).json({ message: 'Server error when updating clinical note.' });
   }
-};
+}
 
-exports.deleteClinicalNote = async (req, res) => {
+export async function deleteClinicalNote(req, res) {
   const { id } = req.params;
   const current_user_id = req.user.id;
   const current_user_role = req.user.role;
@@ -279,4 +292,4 @@ exports.deleteClinicalNote = async (req, res) => {
     console.error('Error deleting clinical note:', error.stack);
     res.status(500).json({ message: 'Server error when deleting clinical note.' });
   }
-};
+}

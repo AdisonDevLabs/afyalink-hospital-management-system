@@ -1,6 +1,6 @@
-const pool = require('../config/db');
+import pool from '../config/db.js';
 
-exports.getDoctorActivities = async (req, res) => {
+export async function getDoctorActivities(req, res) {
     try {
         const { doctor_id, limit = 5 } = req.query;
         if (!doctor_id) {
@@ -25,4 +25,4 @@ exports.getDoctorActivities = async (req, res) => {
         console.error('Error fetching doctor activities:', error);
         res.status(500).json({ message: 'Server error', error: error.message });
     }
-};
+}

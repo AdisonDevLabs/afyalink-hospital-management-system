@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Allow: /login
+Allow: /register
+Disallow: /dashboard/
+Disallow: /patients
+Disallow: /clinical-notes
+Disallow: /users
+
+Sitemap: https://afyalink-hms.onrender.com/sitemap.xml

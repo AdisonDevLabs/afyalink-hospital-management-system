@@ -1,6 +1,10 @@
-const jwt = require('jsonwebtoken');
+// src/middleware/authMiddleware.js
 
-exports.protect = (req, res, next) => {
+import jwt from 'jsonwebtoken';
+
+import env from '../config/env.js';
+
+export const protect = (req, res, next) => {
   let token;
 
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
@@ -8,30 +12,36 @@ exports.protect = (req, res, next) => {
   }
 
   if (!token) {
-    console.warn('PROTECT: No token provided. Denying access.'); // Add log
+    console.warn('PROTECT: No token provided. Denying access.');
     return res.status(401).json({ message: 'Not authorized, no token provided.' });
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, env.JWT_SECRET);
 
-    req.user = decoded;
+    req.user = {
+      user_id: decoded.user_id,
+      profile_id: decoded.profile_id,
+      role: decoded.role
+    };
+
     next();
   } 
   catch (error) {
-    console.error('PROTECT: Token verification failed:', error.message); // Add log
+    console.error('PROTECT: Token verification failed:', error.message);
     res.status(403).json({ message: 'Not authorized, token failed or expired.' });
   }
-};
+}
 
-exports.authorize = (...roles) => {
+export const authorize = (...roles) => {
   return (req, res, next) => {
-    const isAuthorized = req.user && roles.includes(req.user.role);
+    const userRole = req.user ? req.user.role : "undefined";
+    const isAuthorized = req.user && roles.includes(userRole);
 
     if (!req.user || !isAuthorized) {
-      console.warn(`AUTHORIZATION DENIED: User role '<span class="math-inline">\{req\.user ? req\.user\.role \: "undefined"\}' is not authorized to access this route\. Expected roles\: \[</span>{roles.join(', ')}]`);
-      return res.status(403).json({ message: `User role '${req.user ? req.user.role : "undefined"}' is not authorized to access this route.` });
+      console.warn(`AUTHORIZATION DENIED: User role '${userRole}' is not authorized. Expected: [${roles.join(', ')}]`);
+      return res.status(403).json({ message: `User role '${userRole}' is not authorized to access this route.` });
     }
     next();
   };
-};
+}

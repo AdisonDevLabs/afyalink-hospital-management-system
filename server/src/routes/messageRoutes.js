@@ -1,14 +1,14 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const messageController = require('../controllers/messageController');
-const { protect, authorize } = require('../middleware/authMiddleware');
+import { getMessages, createMessage, markMessageAsRead, deleteMessage } from '../controllers/messageController.js';
+import { protect, authorize } from '../middleware/authMiddleware.js';
 
-router.get('/', protect, authorize('admin', 'doctor', 'nurse', 'receptionist', 'patient'), messageController.getMessages);
+router.get('/', protect, authorize('admin', 'doctor', 'nurse', 'receptionist', 'patient'), getMessages);
 
-router.post('/', protect, authorize('admin', 'doctor', 'nurse', 'receptionist'), messageController.createMessage);
+router.post('/', protect, authorize('admin', 'doctor', 'nurse', 'receptionist'), createMessage);
 
-router.put('/:id/read', protect, authorize('admin', 'doctor', 'nurse', 'receptionist', 'patient'), messageController.markMessageAsRead);
+router.put('/:id/read', protect, authorize('admin', 'doctor', 'nurse', 'receptionist', 'patient'), markMessageAsRead);
 
-router.delete('/:id', protect, authorize('admin', 'doctor', 'nurse', 'receptionist', 'patient'), messageController.deleteMessage);
+router.delete('/:id', protect, authorize('admin', 'doctor', 'nurse', 'receptionist', 'patient'), deleteMessage);
 
-module.exports = router;
+export default router;

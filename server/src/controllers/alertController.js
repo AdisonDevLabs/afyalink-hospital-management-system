@@ -1,6 +1,6 @@
-const pool = require('../config/db');
+import pool from '../config/db.js';
 
-exports.getAlertsByRecipientRole = async (req, res) => {
+export async function getAlertsByRecipientRole(req, res) {
   const { recipient_role } = req.query;
   const userId = req.user.id;
   if (!recipient_role) {
@@ -28,9 +28,9 @@ exports.getAlertsByRecipientRole = async (req, res) => {
     console.error('Error fetching alerts:', error.stack);
     res.status(500).json({ message: 'Server error when fetching alerts.' });
   }
-};
+}
 
-exports.getAlerts = async (req, res) => {
+export async function getAlerts(req, res) {
   const { recipient_id, severity } = req.query;
   if (!recipient_id) {
     return res.status(400).json({ message: 'Recipient ID is required.' });
@@ -65,4 +65,4 @@ exports.getAlerts = async (req, res) => {
     console.error('Error fetching alerts:', error.stack);
     res.status(400).json({ message: 'Failed to fetch alerts: ' + error.message });
   }
-};
+}

@@ -155,20 +155,27 @@ function ClinicalNotesPage() {
     const fetchPatientAndNotes = async () => {
       setPageLoading(true);
       setNotification({ message: null, type: null });
+
       try {
-        // Fetch patient details
-        const patientRes = await fetch(`${backendUrl}/api/v1/patients/${selectedPatientId}`, { headers: { 'Authorization': `Bearer ${token}` } });
+        // 1. Trigger both requests immediately (in parallel)
+        const [patientRes, notesRes] = await Promise.all([
+          fetch(`${backendUrl}/api/v1/patients/${selectedPatientId}`, { 
+            headers: { 'Authorization': `Bearer ${token}` } 
+          }),
+          fetch(`${backendUrl}/api/v1/clinical-notes/patient/${selectedPatientId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          })
+        ]);
+
+        // 2. Check Patient Response
         if (!patientRes.ok) {
           const errorData = await patientRes.json();
           throw new Error(errorData.message || 'Patient not found.');
         }
         const patientData = await patientRes.json();
-        setPatient(patientData.patient); // Access the 'patient' key
+        setPatient(patientData.patient);
 
-        // Fetch clinical notes for the selected patient
-        const notesRes = await fetch(`${backendUrl}/api/v1/clinical-notes/patient/${selectedPatientId}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
+        // 3. Check Notes Response
         if (!notesRes.ok) {
           const errorData = await notesRes.json();
           throw new Error(errorData.message || 'Failed to fetch clinical notes.');
@@ -177,8 +184,9 @@ function ClinicalNotesPage() {
         setClinicalNotes(notesData);
 
       } catch (err) {
-        console.error('Error fetching patient details or notes:', err);
-        showNotification(err.message || 'Failed to load patient data or clinical notes.', 'error');
+        console.error('Error fetching data:', err);
+        showNotification(err.message || 'Failed to load data.', 'error');
+        // Optional: Decide if you want to clear data on error
         setPatient(null);
         setClinicalNotes([]);
       } finally {
@@ -439,9 +447,12 @@ return (
               aria-label="Select Patient"
             >
               <option value="">-- Select a Patient --</option>
-              {filteredPatients.map(p => (
-                <option key={p.id} value={p.id}>{p.first_name} {p.last_name} (ID: {p.id})</option>
-              ))}
+              {filteredPatients.map(p => {
+                const patientId = p.patient_id || p.id;
+                return (
+                  <option key={patientId} value={patientId}>{p.first_name} {p.last_name} (ID: {patientId})</option>
+                );
+              })}
             </select>
             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-300 transition-colors duration-300">
               <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 6.757 7.586 5.343 9z"/></svg>

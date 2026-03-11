@@ -1,6 +1,6 @@
-const pool = require('../config/db');
+import pool from '../config/db.js';
 
-exports.createPatient = async (req, res) => {
+export async function createPatient(req, res) {
   const {
     first_name, last_name, date_of_birth, gender, national_id,
     contact_phone, email, address, assigned_nurse_id, photo_url, is_admitted = false,
@@ -43,16 +43,17 @@ exports.createPatient = async (req, res) => {
     }
     res.status(500).json({ message: 'Server error when registering patient.' });
   }
-};
+}
 
-exports.getAllPatients = async (req, res) => {
-  const { nurse_id, assigned_today } = req.query;
+export async function getAllPatients(req, res) {
+  const { nurse_id, assigned_today, search } = req.query;
   const queryParams = [];
+  const whereClauses = [];
   let paramIndex = 1;
 
   let query = `
     SELECT
-      p.id,
+      p.id AS patient_id,
       p.first_name,
       p.last_name,
       p.date_of_birth,
@@ -68,28 +69,49 @@ exports.getAllPatients = async (req, res) => {
       p.emergency_contact_name,
       p.emergency_contact_phone,
       p.emergency_contact_relationship,
+      p.is_admitted,
       b.room_number,
       b.bed_number
     FROM patients p
     LEFT JOIN beds b ON p.id = b.patient_id
   `;
-  let whereClauses = [];
 
+  // 1. Filter by Nurse
   if (nurse_id) {
     whereClauses.push(`p.assigned_nurse_id = $${paramIndex++}`);
     queryParams.push(nurse_id);
     whereClauses.push(`p.is_admitted = TRUE`);
   }
 
+  // 2. Filter by Date (Created Today or Specific Date)
   if (assigned_today) {
-    const todayStart = new Date(assigned_today);
-    todayStart.setHours(0, 0, 0, 0);
-    const todayEnd = new Date(assigned_today);
-    todayEnd.setHours(23, 59, 59, 999);
-    whereClauses.push(`p.created_at >= $${paramIndex++}`);
-    queryParams.push(todayStart.toISOString());
-    whereClauses.push(`p.created_at <= $${paramIndex++}`);
-    queryParams.push(todayEnd.toISOString());
+    // If string is "true", use current date, otherwise try to parse the specific date string
+    const dateBase = assigned_today === 'true' ? new Date() : new Date(assigned_today);
+    
+    if (!isNaN(dateBase.getTime())) {
+      const todayStart = new Date(dateBase);
+      todayStart.setHours(0, 0, 0, 0);
+      
+      const todayEnd = new Date(dateBase);
+      todayEnd.setHours(23, 59, 59, 999);
+
+      whereClauses.push(`p.created_at >= $${paramIndex++}`);
+      queryParams.push(todayStart.toISOString());
+      
+      whereClauses.push(`p.created_at <= $${paramIndex++}`);
+      queryParams.push(todayEnd.toISOString());
+    }
+  }
+
+  // 3. Filter by Search (Name or National ID) - THIS WAS MISSING
+  if (search) {
+    whereClauses.push(`(
+      p.first_name ILIKE $${paramIndex} OR 
+      p.last_name ILIKE $${paramIndex} OR 
+      p.national_id ILIKE $${paramIndex}
+    )`);
+    queryParams.push(`%${search}%`);
+    paramIndex++;
   }
 
   if (whereClauses.length > 0) {
@@ -105,10 +127,10 @@ exports.getAllPatients = async (req, res) => {
     console.error('Error fetching all patients:', error.stack);
     res.status(500).json({ message: 'Server error when fetching patients.' });
   }
-};
+}
 
-exports.getPatientCount = async (req, res) => {
-    const { nurse_id } = req.query;
+export async function getPatientCount(req, res) {
+    const { nurse_id, search } = req.query;
     const queryParams = [];
     let paramIndex = 1;
     let query = 'SELECT COUNT(*) AS count FROM patients p';
@@ -118,6 +140,17 @@ exports.getPatientCount = async (req, res) => {
         whereClauses.push(`p.assigned_nurse_id = $${paramIndex++}`);
         queryParams.push(nurse_id);
         whereClauses.push(`p.is_admitted = TRUE`);
+    }
+
+    // Ensure count also respects search filters if present
+    if (search) {
+        whereClauses.push(`(
+          p.first_name ILIKE $${paramIndex} OR 
+          p.last_name ILIKE $${paramIndex} OR 
+          p.national_id ILIKE $${paramIndex}
+        )`);
+        queryParams.push(`%${search}%`);
+        paramIndex++;
     }
 
     if (whereClauses.length > 0) {
@@ -132,9 +165,9 @@ exports.getPatientCount = async (req, res) => {
         console.error('Error fetching patient count:', error.stack);
         res.status(500).json({ message: 'Server error when fetching patient count.', error: error.message });
     }
-};
+}
 
-exports.getPatientById = async (req, res) => {
+export async function getPatientById(req, res) {
   const { id } = req.params;
 
   try {
@@ -160,6 +193,7 @@ exports.getPatientById = async (req, res) => {
          p.emergency_contact_name,
          p.emergency_contact_phone,
          p.emergency_contact_relationship,
+         p.is_admitted,
          b.room_number,
          b.bed_number
        FROM patients p
@@ -177,12 +211,12 @@ exports.getPatientById = async (req, res) => {
     console.error('Error fetching patient by ID:', error.stack);
     res.status(500).json({ message: 'Server error when fetching patient.' });
   }
-};
+}
 
-exports.getRecentPatients = async (req, res) => {
+export async function getRecentPatients(req, res) {
   try {
     const recentPatients = await pool.query(
-      `SELECT id, first_name, last_name, created_at
+      `SELECT id, first_name, last_name, created_at, photo_url
        FROM patients
        ORDER BY created_at DESC
        LIMIT 5`
@@ -193,9 +227,9 @@ exports.getRecentPatients = async (req, res) => {
     console.error('Error fetching recent patients:', error.stack);
     res.status(500).json({ message: 'Server error when fetching recent patients.' });
   }
-};
+}
 
-exports.updatePatient = async (req, res) => {
+export async function updatePatient(req, res) {
   const { id } = req.params;
   const {
     first_name, last_name, date_of_birth, gender, national_id,
@@ -251,9 +285,9 @@ exports.updatePatient = async (req, res) => {
     console.error('Error updating patient:', error.stack);
     res.status(500).json({ message: 'Server error when updating patient.' });
   }
-};
+}
 
-exports.deletePatient = async (req, res) => {
+export async function deletePatient(req, res) {
   const { id } = req.params;
 
   try {
@@ -272,4 +306,4 @@ exports.deletePatient = async (req, res) => {
     }
     res.status(500).json({ message: 'Server error when deleting patient.' });
   }
-};
+}

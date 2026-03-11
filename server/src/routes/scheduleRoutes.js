@@ -1,22 +1,47 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const scheduleController = require('../controllers/scheduleController');
-const { protect, authorize } = require('../middleware/authMiddleware');
+import { 
+    getAllSchedules, 
+    createAppointment, 
+    updateAppointment, 
+    deleteAppointment, 
+    createDoctorAvailability, 
+    getDoctorAvailabilities, 
+    updateDoctorAvailability, 
+    deleteDoctorAvailability 
+} from '../controllers/scheduleController.js';
+import { protect, authorize } from '../middleware/authMiddleware.js';
 
-router.get('/', protect, authorize('admin', 'doctor', 'receptionist', 'nurse', 'guest'), scheduleController.getAllSchedules);
+// ====================================================
+// 1. SPECIFIC ROUTES (Must come BEFORE /:id)
+// ====================================================
 
-router.post('/', protect, authorize('admin', 'doctor', 'receptionist', 'nurse'), scheduleController.createAppointment);
+// Create Availability
+router.post('/availability', protect, authorize('admin', 'doctor'), createDoctorAvailability);
 
-router.put('/:id', protect, authorize('admin', 'doctor', 'receptionist', 'nurse'), scheduleController.updateAppointment);
+// Get Availability (Doctor sees own, Admin sees all)
+router.get('/availability', protect, authorize('admin', 'doctor', 'receptionist', 'nurse'), getDoctorAvailabilities);
 
-router.delete('/:id', protect, authorize('admin', 'doctor', 'receptionist', 'nurse'), scheduleController.deleteAppointment);
+// Update Availability
+router.put('/availability/:id', protect, authorize('admin', 'doctor'), updateDoctorAvailability);
 
-router.post('/availability', protect, authorize('admin', 'doctor'), scheduleController.createDoctorAvailability);
+// Delete Availability
+router.delete('/availability/:id', protect, authorize('admin', 'doctor'), deleteDoctorAvailability);
 
-router.get('/availability', protect, authorize('admin', 'doctor', 'receptionist', 'nurse', 'guest'), scheduleController.getDoctorAvailabilities);
+// ====================================================
+// 2. GENERAL ROUTES
+// ====================================================
 
-router.put('/availability/:id', protect, authorize('admin', 'doctor'), scheduleController.updateDoctorAvailability);
+router.get('/', protect, authorize('admin', 'doctor', 'receptionist', 'nurse'), getAllSchedules);
 
-router.delete('/availability/:id', protect, authorize('admin', 'doctor'), scheduleController.deleteDoctorAvailability);
+router.post('/', protect, authorize('admin', 'doctor', 'receptionist', 'nurse'), createAppointment);
 
-module.exports = router;
+// ====================================================
+// 3. DYNAMIC ROUTES (/:id matches anything, so keep last)
+// ====================================================
+
+router.put('/:id', protect, authorize('admin', 'doctor', 'receptionist', 'nurse'), updateAppointment);
+
+router.delete('/:id', protect, authorize('admin', 'doctor', 'receptionist', 'nurse'), deleteAppointment);
+
+export default router;

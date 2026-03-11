@@ -1,54 +1,38 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const multer = require('multer');
-const path = require('path');
 
-const userController = require('../controllers/userController');
-const { protect, authorize } = require('../middleware/authMiddleware');
+// ❗ FIX: Import from the new userController
+import {
+  getAllStaff,
+  getStaffById,
+  updateStaff,
+  deleteStaff,
+  toggleStaffStatus,
+  resetStaffPassword // Renamed for clarity
+} from '../controllers/userController.js';
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, '..', '..', 'public', 'uploads'));
-  },
-  filename: (req, file, cb) => {
-    const userId = req.user.id;
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const fileExtension = path.extname(file.originalname);
-    cb(null, `profile-${userId}-${uniqueSuffix}${fileExtension}`);
-  }
-});
+import { protect, authorize } from '../middleware/authMiddleware.js';
+// We would add validation middleware here as well for updateStaff
 
-const fileFilter = (req, file, cb) => {
-  if (file.mimetype.startsWith('image/')) {
-    cb(null, true);
-  } else {
-    cb(new Error('Only image files are allowed!'), false);
-  }
-};
-const upload = multer({
-  storage: storage,
-  fileFilter: fileFilter,
-  limits: {
-    fileSize: 10 * 1024 * 1024
-  }
-});
+// === Admin-Only Staff Management Routes ===
+// Note: All routes are prefixed with '/api/v1/staff' in your main server file
 
-router.get('/profile', protect, userController.getProfile);
+// GET /api/v1/staff/
+router.get('/', protect, authorize('admin', 'doctor', 'receptionist', 'nurse'), getAllStaff);
 
-router.put('/profile', protect, upload.single('profile_picture'), userController.updateProfile);
+// GET /api/v1/staff/:id
+router.get('/:id', protect, authorize('admin', 'doctor', 'receptionist', 'nurse'), getStaffById);
 
-router.post('/', protect, authorize('admin'), userController.registerUser);
+// PUT /api/v1/staff/:id
+router.put('/:id', protect, authorize('admin'), updateStaff);
 
-router.get('/', protect, authorize('admin', 'doctor', 'receptionist', 'nurse', 'guest'), userController.getAllUsers);
+// DELETE /api/v1/staff/:id
+router.delete('/:id', protect, authorize('admin'), deleteStaff);
 
-router.get('/:id', protect, authorize('admin', 'doctor', 'receptionist', 'nurse', 'guest'), userController.getUserById);
+// PATCH /api/v1/staff/:id/toggle-status
+router.patch('/:id/toggle-status', protect, authorize('admin'), toggleStaffStatus);
 
-router.put('/:id', protect, authorize('admin'), userController.updateUser);
+// POST /api/v1/staff/:id/reset-password
+router.post('/:id/reset-password', protect, authorize('admin'), resetStaffPassword);
 
-router.delete('/:id', protect, authorize('admin'), userController.deleteUser);
-
-router.put('/:id/toggle-status', protect, authorize('admin'), userController.toggleUserStatus);
-
-router.post('/:id/reset-password', protect, authorize('admin'), userController.resetUserPassword);
-
-module.exports = router;
+export default router;

@@ -1,22 +1,22 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const departmentController = require('../controllers/departmentController');
-const { protect, authorize } = require('../middleware/authMiddleware');
+import { getDepartmentsCount, getPotentialDepartmentHeads, getAllDepartments, getDepartmentById, createDepartment, updateDepartment, deleteDepartment, getStaffByDepartment } from '../controllers/departmentController.js';
+import { protect, authorize } from '../middleware/authMiddleware.js';
 
-router.get('/count', protect, authorize('receptionist', 'admin', 'doctor', 'nurse', 'guest'), departmentController.getDepartmentsCount);
+router.get('/count', protect, authorize('receptionist', 'admin', 'doctor', 'nurse', 'guest'), getDepartmentsCount);
 
-router.get('/potential-heads', protect, authorize('admin', 'guest'), departmentController.getPotentialDepartmentHeads);
+router.get('/potential-heads', protect, authorize('admin', 'guest'), getPotentialDepartmentHeads);
 
-router.get('/', protect, authorize('admin', 'doctor', 'receptionist', 'nurse', 'guest'), departmentController.getAllDepartments);
+router.get('/', protect, authorize('admin', 'doctor', 'receptionist', 'nurse', 'guest'), getAllDepartments);
 
-router.get('/:id', protect, authorize('admin', 'doctor', 'receptionist', 'nurse', 'guest'), departmentController.getDepartmentById);
+router.get('/:id', protect, authorize('admin', 'doctor', 'receptionist', 'nurse', 'guest'), getDepartmentById);
 
-router.post('/', protect, authorize('admin'), departmentController.createDepartment);
+router.post('/', protect, authorize('admin'), createDepartment);
 
-router.put('/:id', protect, authorize('admin'), departmentController.updateDepartment);
+router.put('/:id', protect, authorize('admin'), updateDepartment);
 
-router.delete('/:id', protect, authorize('admin'), departmentController.deleteDepartment);
+router.delete('/:id', protect, authorize('admin'), deleteDepartment);
 
-router.get('/:id/staff', protect, authorize('admin', 'doctor', 'receptionist', 'nurse', 'guest'), departmentController.getStaffByDepartment);
+router.get('/:id/staff', protect, authorize('admin', 'doctor', 'receptionist', 'nurse', 'guest'), getStaffByDepartment);
 
-module.exports = router;
+export default router;

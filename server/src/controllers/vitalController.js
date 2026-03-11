@@ -1,6 +1,6 @@
-const pool = require('../config/db');
+import pool from '../config/db.js';
 
-exports.getVitalsNeedingUpdate = async (req, res) => {
+export async function getVitalsNeedingUpdate(req, res) {
   const nurse_id = req.user.id;
   const { status } = req.query;
 
@@ -46,9 +46,9 @@ exports.getVitalsNeedingUpdate = async (req, res) => {
     console.error('Error fetching vitals needing update:', error.stack);
     res.status(500).json({ message: 'Error fetching vitals needing update: Internal Server Error' });
   }
-};
+}
 
-exports.getRecordedVitalsCount = async (req, res) => {
+export async function getRecordedVitalsCount(req, res) {
   const nurse_id = req.user.id;
   const { date } = req.query;
 
@@ -80,4 +80,4 @@ exports.getRecordedVitalsCount = async (req, res) => {
     console.error('Error fetching recorded vitals count:', error.stack);
     res.status(500).json({ message: 'Server error when fetching recorded vitals count.' });
   }
-};
+}

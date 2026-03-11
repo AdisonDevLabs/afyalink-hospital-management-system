@@ -1,51 +1,57 @@
 // server/src/app.js
 
-const express = require('express');
-const cors = require('cors');
-const path = require('path');
-const fs = require('fs');
-const helmet = require('helmet');
-const compression = require('compression');
-const rateLimit = require('express-rate-limit');
-const morgan = require('morgan');
-const hpp = require('hpp');
+import express from 'express';
+import cors from 'cors';
+import path from 'path';
+import fs from 'fs';
+import helmet from 'helmet';
+import compression from 'compression';
+import rateLimit from 'express-rate-limit';
+import morgan from 'morgan';
+import hpp from 'hpp';
+import { fileURLToPath } from 'url';
 
-const pool = require('./config/db');
+import env from './config/env.js';
+import pool from './config/db.js';
 
 // Route Imports
-const authRoutes = require('./routes/authRoutes');const patientRoutes = require('./routes/patientRoutes');
-const appointmentRoutes = require('./routes/appointmentRoutes');
-const clinicalNoteRoutes = require('./routes/clinicalNoteRoutes');
-const userRoutes = require('./routes/userRoutes');
-const departmentRoutes = require('./routes/departmentRoutes');
-const adminRoutes = require('./routes/adminRoutes');
-const scheduleRoutes = require('./routes/scheduleRoutes');
-const labReportRoutes = require('./routes/labReportRoutes');
-const messageRoutes = require('./routes/messageRoutes');
-const medicationRoutes = require('./routes/medicationRoutes');
-const vitalRoutes = require('./routes/vitalRoutes');
-const bedRoutes = require('./routes/bedRoutes');
-const alertRoutes = require('./routes/alertRoutes');
-const activityRoutes = require('./routes/activityRoutes');
-const paymentRoutes = require('./routes/paymentRoutes');
-const orderRoutes = require('./routes/orderRoutes');
+import authRoutes from './routes/authRoutes.js';
+import patientRoutes from './routes/patientRoutes.js';
+import appointmentRoutes from './routes/appointmentRoutes.js';
+import clinicalNoteRoutes from './routes/clinicalNoteRoutes.js';
+import userRoutes from './routes/userRoutes.js';
+import departmentRoutes from './routes/departmentRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
+import scheduleRoutes from './routes/scheduleRoutes.js';
+import labReportRoutes from './routes/labReportRoutes.js';
+import messageRoutes from './routes/messageRoutes.js';
+import medicationRoutes from './routes/medicationRoutes.js';
+import vitalRoutes from './routes/vitalRoutes.js';
+import bedRoutes from './routes/bedRoutes.js';
+import alertRoutes from './routes/alertRoutes.js';
+import activityRoutes from './routes/activityRoutes.js';
+import paymentRoutes from './routes/paymentRoutes.js';
+import orderRoutes from './routes/orderRoutes.js';
 
 const app = express();
 const API_VERSION = '/api/v1';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // --- Middleware Configuration  ---
 
 // Security
 app.use(
   helmet({
-    contentSecurityPolicy: process.env.NODE_ENV === 'production' ? undefined : false,
+    contentSecurityPolicy: env.NODE_ENV === 'production' ? undefined : false,
     crossOriginResourcePolicy: { policy: "cross-origin" },
   })
 );
 
 // Cross-Origin Resource Sharing
 const allowedOrigins = [
-  process.env.CLIENT_URL || "http://localhost:5005",
+  env.CLIENT_URL || "http://localhost:5005",
 ];
 
 app.use(
@@ -54,6 +60,7 @@ app.use(
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
+        console.warn(`CORS blocked for origin: ${origin}`);
         callback(new Error(`CORS blocked: ${origin} not allowed.`));
       }
     },
@@ -83,7 +90,7 @@ app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 app.use(compression());
 
 // Request logging and audit trails
-if (process.env.NODE_ENV !== 'test') app.use(morgan('combined'));
+if (env.NODE_ENV !== 'test') app.use(morgan('combined'));
 
 // --- Static and Uploads Setup ---
 // Creates the uploads directory if it doesn't exist
@@ -130,8 +137,8 @@ app.use((err, req, res, next) => {
   console.error('SERVER ERROR:', err.stack);
   res.status(err.status || 500).json({
     message: err.message || 'Internal Server Error',
-    error: process.env.NODE_ENV === 'developement' ? err: {},
+    error: env.NODE_ENV === 'developement' ? err: {},
   });
 });
 
-module.exports = app;
+export default app;

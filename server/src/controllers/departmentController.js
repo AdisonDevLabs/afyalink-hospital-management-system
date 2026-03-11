@@ -1,6 +1,6 @@
-const pool = require('../config/db');
+import pool from '../config/db.js';
 
-exports.createDepartment = async (req, res) => {
+export async function createDepartment(req, res) {
   const { name, description, head_of_department_id } = req.body;
 
   if (!name) {
@@ -29,9 +29,9 @@ exports.createDepartment = async (req, res) => {
     console.error('Error creating department:', error.stack);
     res.status(500).json({ message: 'Server error when creating department.' });
   }
-};
+}
 
-exports.getDepartmentsCount = async (req, res) => {
+export async function getDepartmentsCount(req, res) {
   try {
     const query = `
       SELECT COUNT(*) AS count
@@ -46,9 +46,9 @@ exports.getDepartmentsCount = async (req, res) => {
     console.error('Error fetching departments count:', error.stack);
     res.status(500).json({ message: 'Server error when fetching departments count.', error: error.message });
   }
-};
+}
 
-exports.getAllDepartments = async (req, res) => {
+export async function getAllDepartments(req, res) {
   try {
     const query = `
       SELECT
@@ -59,19 +59,20 @@ exports.getAllDepartments = async (req, res) => {
           d.updated_at,
           d.head_of_department_id,
           COALESCE(h.first_name || ' ' || h.last_name, 'N/A') AS head_of_department_name,
-          COUNT(DISTINCT CASE WHEN u_doc.role = 'doctor' AND a.department_id = d.id THEN u_doc.id ELSE NULL END) AS doctor_count,
+          -- FIXED: references s_doc.id, not u_doc.id
+          COUNT(DISTINCT CASE WHEN s_doc.role = 'doctor' THEN s_doc.id ELSE NULL END) AS doctor_count,
           COUNT(DISTINCT CASE WHEN a.appointment_date = CURRENT_DATE THEN a.patient_id ELSE NULL END) AS patients_today,
           COUNT(DISTINCT CASE WHEN a.appointment_date >= CURRENT_DATE THEN a.id ELSE NULL END) AS scheduled_appointments
       FROM
           departments d
       LEFT JOIN
-          users h ON d.head_of_department_id = h.id
+          staffs h ON d.head_of_department_id = h.id
       LEFT JOIN
           appointments a ON a.department_id = d.id
       LEFT JOIN
-          users u_doc ON a.doctor_id = u_doc.id AND u_doc.role = 'doctor'
+          staffs s_doc ON a.doctor_id = s_doc.id AND s_doc.role = 'doctor'
       GROUP BY
-          d.id, h.first_name, h.last_name -- Group by first_name and last_name
+          d.id, h.first_name, h.last_name
       ORDER BY
           d.name ASC;
     `;
@@ -86,9 +87,9 @@ exports.getAllDepartments = async (req, res) => {
     console.error('Error fetching all departments with aggregated data:', error.stack);
     res.status(500).json({ message: 'Server error when fetching departments.' });
   }
-};
+}
 
-exports.getDepartmentById = async (req, res) => {
+export async function getDepartmentById(req, res) {
   const { id } = req.params;
 
   try {
@@ -101,17 +102,18 @@ exports.getDepartmentById = async (req, res) => {
           d.updated_at,
           d.head_of_department_id,
           COALESCE(h.first_name || ' ' || h.last_name, 'N/A') AS head_of_department_name,
-          COUNT(DISTINCT CASE WHEN u_doc.role = 'doctor' AND a.department_id = d.id THEN u_doc.id ELSE NULL END) AS doctor_count,
+          -- FIXED: Using staffs table alias s_doc
+          COUNT(DISTINCT CASE WHEN s_doc.role = 'doctor' THEN s_doc.id ELSE NULL END) AS doctor_count,
           COUNT(DISTINCT CASE WHEN a.appointment_date = CURRENT_DATE THEN a.patient_id ELSE NULL END) AS patients_today,
           COUNT(DISTINCT CASE WHEN a.appointment_date >= CURRENT_DATE THEN a.id ELSE NULL END) AS scheduled_appointments
       FROM
           departments d
       LEFT JOIN
-          users h ON d.head_of_department_id = h.id
+          staffs h ON d.head_of_department_id = h.id
       LEFT JOIN
           appointments a ON a.department_id = d.id
       LEFT JOIN
-          users u_doc ON a.doctor_id = u_doc.id AND u_doc.role = 'doctor'
+          staffs s_doc ON a.doctor_id = s_doc.id AND s_doc.role = 'doctor'
       WHERE
           d.id = $1
       GROUP BY
@@ -135,9 +137,9 @@ exports.getDepartmentById = async (req, res) => {
     }
     res.status(500).json({ message: 'Server error when fetching department by ID.' });
   }
-};
+}
 
-exports.updateDepartment = async (req, res) => {
+export async function updateDepartment(req, res) {
   const { id } = req.params;
   const { name, description, head_of_department_id } = req.body;
 
@@ -180,9 +182,9 @@ exports.updateDepartment = async (req, res) => {
     }
     res.status(500).json({ message: 'Server error when updating department.' });
   }
-};
+}
 
-exports.deleteDepartment = async (req, res) => {
+export async function deleteDepartment(req, res) {
   const { id } = req.params;
 
   try {
@@ -201,18 +203,19 @@ exports.deleteDepartment = async (req, res) => {
     }
     res.status(500).json({ message: 'Server error when deleting department.' });
   }
-};
+}
 
-exports.getStaffByDepartment = async (req, res) => {
+export async function getStaffByDepartment(req, res) {
   const { id } = req.params;
 
   try {
+    // FIXED: querying 'staffs' instead of 'users'
     const doctors = await pool.query(
-      `SELECT DISTINCT u.id, u.first_name, u.last_name, u.role
-       FROM users u
-       JOIN appointments a ON u.id = a.doctor_id
-       WHERE a.department_id = $1 AND u.role = 'doctor'
-       ORDER BY u.first_name ASC`,
+      `SELECT DISTINCT s.id, s.first_name, s.last_name, s.role
+       FROM staffs s
+       JOIN appointments a ON s.id = a.doctor_id
+       WHERE a.department_id = $1 AND s.role = 'doctor'
+       ORDER BY s.first_name ASC`,
       [id]
     );
 
@@ -228,13 +231,14 @@ exports.getStaffByDepartment = async (req, res) => {
     console.error('Error fetching staff (doctors) by department:', error.stack);
     res.status(500).json({ message: 'Server error when fetching staff for department.' });
   }
-};
+}
 
-exports.getPotentialDepartmentHeads = async (req, res) => {
+export async function getPotentialDepartmentHeads(req, res) {
   try {
+    // FIXED: querying 'staffs' instead of 'users'
     const heads = await pool.query(
       `SELECT id, first_name, last_name
-       FROM users
+       FROM staffs
        WHERE role IN ('doctor', 'admin')
        ORDER BY first_name ASC, last_name ASC`
     );
@@ -249,4 +253,4 @@ exports.getPotentialDepartmentHeads = async (req, res) => {
     console.error('Error fetching potential department heads:', error.stack);
     res.status(500).json({ message: 'Server error when fetching potential department heads.' });
   }
-};
+}
