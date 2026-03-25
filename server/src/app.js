@@ -51,7 +51,8 @@ app.use(
 
 // Cross-Origin Resource Sharing
 const allowedOrigins = [
-  env.CLIENT_URL || "http://localhost:5005",
+  env.CLIENT_URL,
+  "http://localhost:5005",
 ];
 
 app.use(
