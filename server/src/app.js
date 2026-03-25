@@ -51,7 +51,7 @@ app.use(
 
 // Cross-Origin Resource Sharing
 const allowedOrigins = [
-  env.CLIENT_URL,
+  "https://afyalink-hms.onrender.com",
   "http://localhost:5005",
 ];
 
