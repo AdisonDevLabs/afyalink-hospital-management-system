@@ -1,9 +1,8 @@
-import jwt from 'jsonwebtoken';
-
 import { patientRegistrationSchema } from '../validators/patientRegistrationSchema.js';
 import { selfRegisterPatient } from '../services/RegistrationService.js';
 import { loginUserService, getProfileService, registerStaffService } from '../services/AuthService.js';
 import { updateSelfProfileService } from '../services/StaffService.js';
+import { generateToken } from '../utils/authUtil.js';
 
 
 export async function registerPatient(req, res) {
@@ -20,11 +19,7 @@ export async function registerPatient(req, res) {
     const { patientId, userId } = await selfRegisterPatient(validationResult.data);
 
     // Post-Registration: Generate JWT for immediate login
-    const token = jwt.sign(
-      { id: userId, role: 'patient', profile_id: patientId },
-      process.env.JWT_SECRET,
-      { expiresIn: '1h' }
-    );
+    const token = generateToken({ id: userId, role: 'patient', profile_id: patientId });
 
     // Send minimal info for immediate usage.
     res.status(201).json({
@@ -52,21 +47,9 @@ export async function registerPatient(req, res) {
 
 
 export async function registerStaff(req, res) {
-  const validationResult = staffRegistrationSchema.safeParse(req.body);
-
-  if (!validationResult.success) {
-    const errors = validationResult.error.issues.map(issue => ({
-      field:issue.path.join('.'),
-      message: issue.message,
-    }));
-    return res.status(400).json({
-      message: 'Validation failed.',
-      error: errors
-    });
-  }
-
+  // Note: Validation is handled upstream by validate(staffRegistrationSchema) middleware.
   try {
-    const newStaffUser = await registerStaffService(validationResult.data);
+    const newStaffUser = await registerStaffService(req.body);
 
     res.status(201).json({
       message: 'Staff user registered successfully.',
@@ -121,7 +104,7 @@ export async function getProfile(req, res) {
   } catch (error) {
     console.error('Error fetching user profile:', error.stack);
 
-    if (err.message.includes('not found')) {
+    if (error.message.includes('not found')) {
       return res.status(404).json({ message: error.message });
     }
     res.status(500).json({ message: 'Server error when fetching profile.' });
@@ -132,7 +115,7 @@ export async function getProfile(req, res) {
 export async function updateProfile(req, res) {
   try {
     // Get user_id (the auth ID) from the 'protect' middleware
-    const userId = req.user_id; 
+    const userId = req.user.id; 
     
     // The service handles file I/O, transactions, etc.
     const updatedUser = await updateSelfProfileService(userId, req.body, req.file);

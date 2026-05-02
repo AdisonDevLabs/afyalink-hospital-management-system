@@ -18,10 +18,10 @@ import { protect, authorize } from '../middleware/authMiddleware.js';
 // Note: All routes are prefixed with '/api/v1/staff' in your main server file
 
 // GET /api/v1/staff/
-router.get('/', protect, authorize('admin', 'doctor', 'receptionist', 'nurse'), getAllStaff);
+router.get('/', protect, authorize('admin', 'doctor', 'receptionist', 'nurse', 'guest'), getAllStaff);
 
 // GET /api/v1/staff/:id
-router.get('/:id', protect, authorize('admin', 'doctor', 'receptionist', 'nurse'), getStaffById);
+router.get('/:id', protect, authorize('admin', 'doctor', 'receptionist', 'nurse', 'guest'), getStaffById);
 
 // PUT /api/v1/staff/:id
 router.put('/:id', protect, authorize('admin'), updateStaff);

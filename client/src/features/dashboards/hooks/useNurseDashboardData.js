@@ -20,10 +20,10 @@ export const useNurseDashboardData = () => {
   const [notification, setNotification] = useState({ message: null, type: null });
 
   const fetchData = useCallback(async () => {
-    if (!token || !user?.id || user?.role !== 'nurse') {
-      console.log(user)
+    if (!token || !user?.id || !['nurse', 'guest'].includes(user?.role)) {
+      //console.log(user)
       setLoading(false);
-      console.log(user);
+      //console.log(user);
       return;
     }
     setLoading(true);

@@ -6,7 +6,6 @@ import * as api from '../../../api/endpoints/dashboard';
 
 export const fetchNurseDashboardData = async (userId, token) => {
   if (!token || !userId) {
-    console.log(user);
     throw new Error('Authentication token or user ID is missing.');
   }
 

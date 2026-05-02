@@ -28,10 +28,15 @@ export const selfRegisterPatient = async (registrationData) => {
       username: username,
       email: email,
       password_hash: password_hash,
-      patientId: patientId
     };
 
     const userId = await createPatientUser(client, userData);
+
+    // Link the patient record back to the auth user
+    await client.query(
+      'UPDATE patients SET user_id = $1 WHERE id = $2',
+      [userId, patientId]
+    );
 
     await client.query('COMMIT');
 

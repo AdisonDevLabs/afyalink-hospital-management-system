@@ -20,7 +20,7 @@ import { protect, authorize } from '../middleware/authMiddleware.js';
 router.post('/availability', protect, authorize('admin', 'doctor'), createDoctorAvailability);
 
 // Get Availability (Doctor sees own, Admin sees all)
-router.get('/availability', protect, authorize('admin', 'doctor', 'receptionist', 'nurse'), getDoctorAvailabilities);
+router.get('/availability', protect, authorize('admin', 'doctor', 'receptionist', 'nurse', 'guest'), getDoctorAvailabilities);
 
 // Update Availability
 router.put('/availability/:id', protect, authorize('admin', 'doctor'), updateDoctorAvailability);
@@ -32,7 +32,7 @@ router.delete('/availability/:id', protect, authorize('admin', 'doctor'), delete
 // 2. GENERAL ROUTES
 // ====================================================
 
-router.get('/', protect, authorize('admin', 'doctor', 'receptionist', 'nurse'), getAllSchedules);
+router.get('/', protect, authorize('admin', 'doctor', 'receptionist', 'nurse', 'guest'), getAllSchedules);
 
 router.post('/', protect, authorize('admin', 'doctor', 'receptionist', 'nurse'), createAppointment);
 

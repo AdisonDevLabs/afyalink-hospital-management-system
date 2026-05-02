@@ -147,7 +147,7 @@ function AppointmentsPage() {
   const fetchDoctors = useCallback(async () => {
     if (!token) return;
     try {
-      const response = await fetch(`${backendUrl}/api/v1/users?role=doctor`, { headers: { 'Authorization': `Bearer ${token}` } });
+      const response = await fetch(`${backendUrl}/api/v1/staff?role=doctor`, { headers: { 'Authorization': `Bearer ${token}` } });
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       setDoctorsList(await response.json() || []);
     } catch (error) {
@@ -327,8 +327,8 @@ function AppointmentsPage() {
       </motion.div>
 
       <motion.div variants={itemVariants} className="flex justify-end mb-6">
-        {(user && user.role === 'admin' || user.role === 'receptionist') && (
-          <button onClick={handleAddAppointmentClick} className="flex items-center bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-5 rounded-lg shadow-md dark:shadow-lg transition duration-300">
+        {(user && (user.role === 'admin' || user.role === 'receptionist' || user.role === 'guest')) && (
+          <button onClick={handleAddAppointmentClick} disabled={user?.role === 'guest'} className="flex items-center bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-5 rounded-lg shadow-md dark:shadow-lg transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed">
             <PlusCircle className="mr-2 h-5 w-5" /> Add New Appointment
           </button>
         )}
@@ -367,9 +367,9 @@ function AppointmentsPage() {
                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getAppointmentStatusBadgeClasses(appointment.status)}`}>{appointment.status}</span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                        <button onClick={() => handleEditAppointmentClick(appointment)} className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 mr-3 transition duration-200 transition-colors duration-300" title="Edit Appointment"><Edit className="h-5 w-5" /></button>
-                        {user && user.role === 'admin' && (
-                          <button onClick={() => handleDeleteConfirmation(appointment.id)} className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 transition-colors duration-300" title="Delete Appointment"><Trash2 className="h-5 w-5" /></button>
+                        <button onClick={() => handleEditAppointmentClick(appointment)} disabled={user?.role === 'guest'} className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 mr-3 transition duration-200 transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed" title="Edit Appointment"><Edit className="h-5 w-5" /></button>
+                        {user && (user.role === 'admin' || user.role === 'guest') && (
+                          <button onClick={() => handleDeleteConfirmation(appointment.id)} disabled={user?.role === 'guest'} className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed" title="Delete Appointment"><Trash2 className="h-5 w-5" /></button>
                         )}
                       </td>
                     </motion.tr>

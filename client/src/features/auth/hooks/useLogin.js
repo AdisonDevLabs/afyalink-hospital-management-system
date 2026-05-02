@@ -26,7 +26,7 @@ export function useLogin() {
       const response = await fetch(`${BACKEND_URL}${API_VERSION}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ login: username, password }),
       });
 
       if (!response.ok) {

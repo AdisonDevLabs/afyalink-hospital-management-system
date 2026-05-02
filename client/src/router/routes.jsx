@@ -35,18 +35,18 @@ export const publicRoutes = [
 
 export const protectedRoutes = [
   // Dashboard Routes
-  { path: '/dashboard/admin', element: AdminDashboardPage, roles: ['admin'] },
-  { path: '/dashboard/doctor', element: DoctorDashboardPage, roles: ['doctor'] },
-  { path: '/dashboard/nurse', element: NurseDashboardPage, roles: ['nurse'] },
-  { path: '/dashboard/receptionist', element: ReceptionistDashboardPage, roles: ['receptionist'] },
+  { path: '/dashboard/admin', element: AdminDashboardPage, roles: ['admin', 'guest'] },
+  { path: '/dashboard/doctor', element: DoctorDashboardPage, roles: ['doctor', 'guest'] },
+  { path: '/dashboard/nurse', element: NurseDashboardPage, roles: ['nurse', 'guest'] },
+  { path: '/dashboard/receptionist', element: ReceptionistDashboardPage, roles: ['receptionist', 'guest'] },
   { path: '/dashboard/guest', element: GuestDashboardPage, roles: ['guest'] },
 
   // Shared/Core Feature Routes
-  { path: '/patients', element: PatientsPage, roles: ['admin', 'doctor', 'nurse', 'receptionist'] },
-  { path: '/appointments', element: AppointmentsPage, roles: ['admin', 'doctor', 'receptionist'] },
-  { path: '/clinical-notes', element: ClinicalNotesPage, roles: ['admin', 'doctor', 'nurse'] },
-  { path: '/clinical-notes/:patientId', element: ClinicalNotesPage, roles: ['admin', 'doctor', 'nurse'] },
-  { path: '/schedules', element: ScheduleManagementPage, roles: ['admin', 'doctor', 'nurse', 'receptionist'] },
+  { path: '/patients', element: PatientsPage, roles: ['admin', 'doctor', 'nurse', 'receptionist', 'guest'] },
+  { path: '/appointments', element: AppointmentsPage, roles: ['admin', 'doctor', 'receptionist', 'guest'] },
+  { path: '/clinical-notes', element: ClinicalNotesPage, roles: ['admin', 'doctor', 'nurse', 'guest'] },
+  { path: '/clinical-notes/:patientId', element: ClinicalNotesPage, roles: ['admin', 'doctor', 'nurse', 'guest'] },
+  { path: '/schedules', element: ScheduleManagementPage, roles: ['admin', 'doctor', 'nurse', 'receptionist', 'guest'] },
   { path: '/profile', element: UserProfileComponent, roles: ['admin', 'doctor', 'nurse', 'receptionist', 'guest'] },
 
   // Admin/System Routes

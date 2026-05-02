@@ -392,17 +392,17 @@ function ClinicalNotesPage() {
   const userRole = user?.role;
   const currentUserId = user?.id;
 
-  const canAddNote = ['admin', 'doctor', 'nurse'].includes(userRole);
+  const canAddNote = ['admin', 'doctor', 'nurse', 'guest'].includes(userRole);
 
   const canEditSpecificNote = (note) => {
-    if (userRole === 'admin') return true;
+    if (userRole === 'admin' || userRole === 'guest') return true;
     if (userRole === 'doctor' && note.doctor_id === currentUserId) return true;
     if (userRole === 'nurse' && note.note_type === 'Progress Note' && note.doctor_id === currentUserId) return true; // Nurses can edit their own progress notes
     return false;
   };
 
   const canDeleteSpecificNote = (note) => {
-    if (userRole === 'admin') return true;
+    if (userRole === 'admin' || userRole === 'guest') return true;
     if (userRole === 'doctor' && note.doctor_id === currentUserId) return true;
     // Potentially allow nurses to delete their own progress notes if business logic allows
     // if (userRole === 'nurse' && note.note_type === 'Progress Note' && note.doctor_id === currentUserId) return true;
@@ -469,7 +469,8 @@ return (
                 setEditingNote(null);
                 setShowNoteModal(true);
               }}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md dark:shadow-xl hover:shadow-lg dark:hover:shadow-2xl transition duration-300 ease-in-out transform hover:scale-105 whitespace-nowrap w-full sm:w-auto transition-colors"
+              disabled={userRole === 'guest'}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md dark:shadow-xl hover:shadow-lg dark:hover:shadow-2xl transition duration-300 ease-in-out transform hover:scale-105 whitespace-nowrap w-full sm:w-auto transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
               <svg className="inline-block h-5 w-5 mr-2 -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
               Add New Note
@@ -530,7 +531,8 @@ return (
                   {canEditSpecificNote(note) && (
                     <button
                       onClick={() => handleEditClick(note)}
-                      className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-blue-700 dark:text-blue-200 bg-blue-100 dark:bg-blue-800 hover:bg-blue-200 dark:hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out transition-colors"
+                      disabled={userRole === 'guest'}
+                      className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-blue-700 dark:text-blue-200 bg-blue-100 dark:bg-blue-800 hover:bg-blue-200 dark:hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       title="Edit Note"
                     >
                       <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
@@ -540,7 +542,8 @@ return (
                   {canDeleteSpecificNote(note) && (
                     <button
                       onClick={() => handleDeleteNote(note.id)}
-                      className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-red-700 dark:text-red-200 bg-red-100 dark:bg-red-800 hover:bg-red-200 dark:hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-150 ease-in-out transition-colors"
+                      disabled={userRole === 'guest'}
+                      className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-red-700 dark:text-red-200 bg-red-100 dark:bg-red-800 hover:bg-red-200 dark:hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-150 ease-in-out transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       title="Delete Note"
                     >
                       <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
@@ -632,7 +635,8 @@ return (
                 setEditingNote(null);
                 setShowNoteModal(true);
               }}
-              className="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-5 rounded-lg shadow-md dark:shadow-xl transition duration-300 ease-in-out transform hover:scale-105 transition-colors"
+              disabled={userRole === 'guest'}
+              className="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-5 rounded-lg shadow-md dark:shadow-xl transition duration-300 ease-in-out transform hover:scale-105 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
               <svg className="inline-block h-5 w-5 mr-2 -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
               Add the First Note

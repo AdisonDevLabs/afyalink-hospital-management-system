@@ -2,6 +2,7 @@
 
 import pool from '../config/db.js';
 import * as StaffModel from '../models/StaffModel.js';
+import { findStaffByUserId } from '../models/StaffModel.js';
 import * as UserModel from '../models/UserModel.js';
 import { hashPassword } from '../utils/authUtil.js';
 import fs from 'fs/promises';
@@ -133,10 +134,11 @@ export const updateSelfProfileService = async (userId, data, file) => {
       }
     }
     
-    // 2. Get current profile to find old photo
-    // We assume user_id === staff_id for logged-in staff
-    const staffProfile = await StaffModel.findStaffById(userId); 
+    // 2. Get current profile to find old photo.
+    // Look up by user_id since that's what we have from the JWT.
+    const staffProfile = await findStaffByUserId(userId);
     if (!staffProfile) throw new Error('Profile not found.'); // 404
+    const staffId = staffProfile.id; // actual staffs PK
     const currentPhotoUrl = staffProfile.photo_url;
     let newPhotoUrl = currentPhotoUrl;
 
@@ -163,7 +165,7 @@ export const updateSelfProfileService = async (userId, data, file) => {
       WHERE id = $6
       RETURNING *;
     `;
-    const profileRes = await client.query(profileQuery, [first_name, last_name, phone_number, address, newPhotoUrl, userId]);
+    const profileRes = await client.query(profileQuery, [first_name, last_name, phone_number, address, newPhotoUrl, staffId]);
 
     await client.query('COMMIT');
     

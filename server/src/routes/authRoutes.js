@@ -35,8 +35,8 @@ const storage = diskStorage({
     cb(null, join(__dirname, '..', '..', 'public', 'uploads'));
   },
   filename: (req, file, cb) => {
-    // ❗ FIX: Use req.user.user_id from our new 'protect' middleware
-    const userId = req.user_id; 
+    // Use req.user.id set by the 'protect' middleware
+    const userId = req.user?.id; 
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     const fileExtension = extname(file.originalname);
     cb(null, `profile-${userId}-${uniqueSuffix}${fileExtension}`);

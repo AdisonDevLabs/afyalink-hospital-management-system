@@ -3,7 +3,7 @@ const router = express.Router();
 import { getMessages, createMessage, markMessageAsRead, deleteMessage } from '../controllers/messageController.js';
 import { protect, authorize } from '../middleware/authMiddleware.js';
 
-router.get('/', protect, authorize('admin', 'doctor', 'nurse', 'receptionist', 'patient'), getMessages);
+router.get('/', protect, authorize('admin', 'doctor', 'nurse', 'receptionist', 'patient', 'guest'), getMessages);
 
 router.post('/', protect, authorize('admin', 'doctor', 'nurse', 'receptionist'), createMessage);
 

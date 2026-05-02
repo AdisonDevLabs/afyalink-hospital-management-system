@@ -6,7 +6,7 @@ import { protect, authorize } from '../middleware/authMiddleware.js';
 router.get(
   '/new',
   protect,
-  authorize('nurse', 'admin'),
+  authorize('nurse', 'admin', 'guest'),
   getNewDoctorOrders
 );
 

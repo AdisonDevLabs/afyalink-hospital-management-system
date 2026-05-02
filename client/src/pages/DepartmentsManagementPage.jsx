@@ -254,7 +254,7 @@ function DepartmentsManagementPage() {
     setShowStaffListModal(true);
   };
 
-  if (!user || user.role !== 'admin') {
+  if (!user || !['admin', 'guest'].includes(user.role)) {
     navigate('/dashboard');
     return null;
   }
@@ -292,7 +292,8 @@ function DepartmentsManagementPage() {
       <div className='flex justify-end items-center mb-6'>
         <button
           onClick={handleAddDepartmentClick}
-          className='bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-6 rounded-lg shadow-md hover:shadow-lg transition duration-300 ease-in-out'
+          disabled={user?.role === 'guest'}
+          className='bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-6 rounded-lg shadow-md hover:shadow-lg transition duration-300 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed'
         >
           Add New Department
         </button>
@@ -336,14 +337,16 @@ function DepartmentsManagementPage() {
                     <td className='px-6 py-4 whitespace-nowrap text-sm font-medium'>
                       <button
                         onClick={() => handleEditDepartmentClick(dept)}
-                        className='text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 mr-3'
+                        disabled={user?.role === 'guest'}
+                        className='text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 mr-3 disabled:opacity-50 disabled:cursor-not-allowed'
                         title='Edit Department'
                       >
                         Edit
                       </button>
                       <button
                         onClick={() => handleDeleteDepartmentClick(dept)}
-                        className='text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300'
+                        disabled={user?.role === 'guest'}
+                        className='text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed'
                         title='Delete Department'
                       >
                         Delete

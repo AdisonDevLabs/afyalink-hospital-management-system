@@ -220,7 +220,7 @@ function DoctorDashboardPage() {
 
     useEffect(() => {
         if (!authLoading) {
-            if (isAuthenticated && user?.role === 'doctor') {
+            if (isAuthenticated && ['doctor', 'guest'].includes(user?.role)) {
                 fetchDashboardData();
             } else {
                 showNotification('You are not authorized to view this page.', 'error');
@@ -248,12 +248,12 @@ function DoctorDashboardPage() {
         );
     }
 
-    if (!isAuthenticated || user.role !== 'doctor') {
+    if (!isAuthenticated || !['doctor', 'guest'].includes(user?.role)) {
         return (
             <div className="flex flex-col justify-center items-center h-screen bg-red-50 dark:bg-red-900 text-red-800 dark:text-red-100 transition-colors duration-300">
                 <AlertTriangle className="h-20 w-20 text-red-500 dark:text-red-400 mb-4" />
                 <h1 className="text-3xl font-bold mb-2">Access Denied</h1>
-                <p className="text-lg text-center">You must be logged in as a doctor to view this page.</p>
+                <p className="text-lg text-center">You must be logged in as a doctor or guest to view this page.</p>
                 <Link to="/login" className="mt-6 px-6 py-3 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 transition duration-300">
                     Go to Login
                 </Link>

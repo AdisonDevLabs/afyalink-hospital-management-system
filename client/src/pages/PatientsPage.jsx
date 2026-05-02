@@ -299,7 +299,7 @@ function PatientsPage() {
     }
 
     const isEditing = !!modalState.editingPatient;
-    const url = isEditing ? `${backendUrl}/api/v1/patients/${modalState.editingPatient.id}` : `${backendUrl}/api/v1/patients`;
+    const url = isEditing ? `${backendUrl}/api/v1/patients/${modalState.editingPatient.patient_id || modalState.editingPatient.id}` : `${backendUrl}/api/v1/patients`;
     const method = isEditing ? 'PUT' : 'POST';
 
     try {
@@ -413,10 +413,10 @@ function PatientsPage() {
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   // Permissions (no change, as they are role-based logic)
-  const canManagePatients = user && (user.role === 'admin' || user.role === 'receptionist');
-  const canViewClinicalNotes = user && (user.role === 'admin' || user.role === 'doctor' || user.role === 'nurse');
-  const canViewAppointments = user && (user.role === 'admin' || user.role === 'receptionist' || user.role === 'doctor' || user.role === 'nurse');
-  const canViewMedicalHistory = user && (user.role === 'admin' || user.role === 'doctor' || user.role === 'nurse');
+  const canManagePatients = user && (user.role === 'admin' || user.role === 'receptionist' || user.role === 'guest');
+  const canViewClinicalNotes = user && (user.role === 'admin' || user.role === 'doctor' || user.role === 'nurse' || user.role === 'guest');
+  const canViewAppointments = user && (user.role === 'admin' || user.role === 'receptionist' || user.role === 'doctor' || user.role === 'nurse' || user.role === 'guest');
+  const canViewMedicalHistory = user && (user.role === 'admin' || user.role === 'doctor' || user.role === 'nurse' || user.role === 'guest');
 
   if (authLoading) return (
     <div className='flex justify-center items-center h-screen bg-gray-100 dark:bg-gray-900'>
@@ -480,9 +480,10 @@ function PatientsPage() {
         {canManagePatients && (
           <motion.button
             onClick={handleAddPatientClick}
-            className='bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-5 rounded-lg shadow-md transition duration-300 flex items-center space-x-2'
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            disabled={user?.role === 'guest'}
+            className='bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-5 rounded-lg shadow-md transition duration-300 flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed'
+            whileHover={user?.role !== 'guest' ? { scale: 1.05 } : {}}
+            whileTap={user?.role !== 'guest' ? { scale: 0.95 } : {}}
             initial={{ x: 50, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ delay: 0.3, duration: 0.5 }}
@@ -524,7 +525,7 @@ function PatientsPage() {
                   >
                     {currentPatients.map((patient) => (
                       <motion.tr
-                        key={patient.id}
+                        key={patient.patient_id || patient.id}
                         className="hover:bg-gray-50 transition-colors duration-200 dark:hover:bg-gray-600"
                         variants={itemVariants}
                       >
@@ -540,19 +541,21 @@ function PatientsPage() {
                               <>
                                 <motion.button
                                   onClick={() => handleEditClick(patient)}
-                                  className="text-indigo-600 hover:text-indigo-900 flex items-center space-x-1 dark:text-indigo-400 dark:hover:text-indigo-300"
-                                  whileHover={{ scale: 1.1 }}
-                                  whileTap={{ scale: 0.9 }}
+                                  disabled={user?.role === 'guest'}
+                                  className="text-indigo-600 hover:text-indigo-900 flex items-center space-x-1 dark:text-indigo-400 dark:hover:text-indigo-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                                  whileHover={user?.role !== 'guest' ? { scale: 1.1 } : {}}
+                                  whileTap={user?.role !== 'guest' ? { scale: 0.9 } : {}}
                                   title="Edit Patient"
                                 >
                                   <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                                   <span className="hidden sm:inline">Edit</span>
                                 </motion.button>
                                 <motion.button
-                                  onClick={() => handleDeleteClick(patient.id, `${patient.first_name} ${patient.last_name}`)}
-                                  className="text-red-600 hover:text-red-900 flex items-center space-x-1 dark:text-red-400 dark:hover:text-red-300"
-                                  whileHover={{ scale: 1.1 }}
-                                  whileTap={{ scale: 0.9 }}
+                                  onClick={() => handleDeleteClick(patient.patient_id || patient.id, `${patient.first_name} ${patient.last_name}`)}
+                                  disabled={user?.role === 'guest'}
+                                  className="text-red-600 hover:text-red-900 flex items-center space-x-1 dark:text-red-400 dark:hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                                  whileHover={user?.role !== 'guest' ? { scale: 1.1 } : {}}
+                                  whileTap={user?.role !== 'guest' ? { scale: 0.9 } : {}}
                                   title="Delete Patient"
                                 >
                                   <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
@@ -562,7 +565,7 @@ function PatientsPage() {
                             )}
                             {canViewClinicalNotes && (
                               <Link
-                                to={`/clinical-notes/${patient.id}`}
+                                to={`/clinical-notes/${patient.patient_id || patient.id}`}
                                 className="text-blue-600 hover:text-blue-900 flex items-center space-x-1 transition-transform duration-200 ease-in-out transform hover:scale-110 active:scale-90 dark:text-blue-400 dark:hover:text-blue-300"
                                 title="View Clinical Notes"
                               >
@@ -572,7 +575,7 @@ function PatientsPage() {
                             )}
                             {canViewMedicalHistory && (
                               <Link
-                                to={`/medical-history/${patient.id}`}
+                                to={`/medical-history/${patient.patient_id || patient.id}`}
                                 className="text-purple-600 hover:text-purple-900 flex items-center space-x-1 transition-transform duration-200 ease-in-out transform hover:scale-110 active:scale-90 dark:text-purple-400 dark:hover:text-purple-300"
                                 title="View Medical History"
                               >
@@ -582,7 +585,7 @@ function PatientsPage() {
                             )}
                             {canViewAppointments && (
                               <Link
-                                to={`/appointments/${patient.id}`}
+                                to={`/appointments/${patient.patient_id || patient.id}`}
                                 className="text-green-600 hover:text-green-900 flex items-center space-x-1 transition-transform duration-200 ease-in-out transform hover:scale-110 active:scale-90 dark:text-green-400 dark:hover:text-green-300"
                                 title="View Appointments"
                               >

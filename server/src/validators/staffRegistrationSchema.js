@@ -14,7 +14,7 @@ export const staffRegistrationSchema = z.object({
     .regex(/[A-Z]/, { message: "Password must contain at lease one uppercase letter." })
     .regex(/[0-9]/, { message: "Password must contain at least one number." })
     .regex(/[^a-zA-Z0-9\s]/, { message: "Password must contain at least one special character." }),
-  role: z.enum(["admin", "doctor", "receptionist", "nurse"]),
+  role: z.enum(["admin", "doctor", "receptionist", "nurse", "guest"]),
   phone_number: z.string().trim().min(10, { message: "Phone number must be atleast 10 digits." }),
   address: z.string().min(5, { message: "Address must be at least 5 characters." }),
   date_of_birth: z.string().refine((val) => {

@@ -13,14 +13,14 @@ import 'react-datepicker/dist/react-datepicker.css';
 Modal.setAppElement('#root');
 
 const pageVariants = {
-  initial: { opacity: 0, y: 20 },
-  animate: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
-  exit: { opacity: 0, y: -20, transition: { duration: 0.3, ease: "easeIn" } },
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
+    exit: { opacity: 0, y: -20, transition: { duration: 0.3, ease: "easeIn" } },
 };
 
 const itemVariants = {
-  hidden: { y: 20, opacity: 0 },
-  visible: { y: 0, opacity: 1 },
+    hidden: { y: 20, opacity: 0 },
+    visible: { y: 0, opacity: 1 },
 };
 
 const Notification = ({ message, type, onClose }) => {
@@ -162,7 +162,7 @@ function ScheduleManagementPage() {
 
     useEffect(() => {
         if (!isAuthenticated || authLoading) return;
-        fetchData(`${backendUrl}/api/v1/users?role=doctor`, setDoctors, 'fetching doctors');
+        fetchData(`${backendUrl}/api/v1/staff?role=doctor`, setDoctors, 'fetching doctors');
         fetchData(`${backendUrl}/api/v1/departments`, setDepartments, 'fetching departments');
         fetchData(`${backendUrl}/api/v1/patients`, setPatients, 'fetching patients');
         fetchSchedules();
@@ -319,10 +319,10 @@ function ScheduleManagementPage() {
     if (authLoading) return <div className="flex justify-center items-center h-screen text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-900 transition-colors duration-300">Loading authentication...</div>;
     if (!isAuthenticated) { navigate('/login'); return null; }
 
-    const canViewSchedules = user && ['admin', 'doctor', 'receptionist', 'nurse'].includes(user.role);
-    const canManageSchedules = user && ['admin', 'receptionist'].includes(user.role);
-    const canViewAvailability = user && ['admin', 'doctor', 'receptionist'].includes(user.role);
-    const canManageAvailability = user && ['admin', 'doctor'].includes(user.role);
+    const canViewSchedules = user && ['admin', 'doctor', 'receptionist', 'nurse', 'guest'].includes(user.role);
+    const canManageSchedules = user && ['admin', 'receptionist', 'guest'].includes(user.role);
+    const canViewAvailability = user && ['admin', 'doctor', 'receptionist', 'guest'].includes(user.role);
+    const canManageAvailability = user && ['admin', 'doctor', 'guest'].includes(user.role);
 
     return (
         <motion.div className='p-6 bg-gray-50 dark:bg-gray-900 min-h-[calc(100vh-64px)] transition-colors duration-300' initial="initial" animate="animate" exit="exit" variants={pageVariants}>
@@ -340,7 +340,7 @@ function ScheduleManagementPage() {
                     <div className="flex justify-between items-center mb-4">
                         <h2 className="text-2xl font-semibold text-gray-700 dark:text-gray-200 transition-colors duration-300">All Appointments</h2>
                         {canManageSchedules && (
-                            <motion.button onClick={() => { setShowScheduleFormModal(true); setEditingSchedule(null); resetScheduleFormData(); }} className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300 flex items-center" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                            <motion.button onClick={() => { setShowScheduleFormModal(true); setEditingSchedule(null); resetScheduleFormData(); }} disabled={user?.role === 'guest'} className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300 flex items-center disabled:opacity-50 disabled:cursor-not-allowed" whileHover={user?.role !== 'guest' ? { scale: 1.05 } : {}} whileTap={user?.role !== 'guest' ? { scale: 0.95 } : {}}>
                                 <PlusCircle className="mr-2 h-5 w-5" /> Add New Schedule
                             </motion.button>
                         )}
@@ -371,18 +371,17 @@ function ScheduleManagementPage() {
                                                 </td>
                                                 <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300 max-w-xs truncate">{schedule.original_reason}</td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                                        schedule.status === 'Scheduled' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-700 dark:text-yellow-100' :
-                                                        schedule.status === 'Completed' ? 'bg-green-100 text-green-800 dark:bg-green-700 dark:text-green-100' :
-                                                        schedule.status === 'Cancelled' ? 'bg-red-100 text-red-800 dark:bg-red-700 dark:text-red-100' :
-                                                        schedule.status === 'Confirmed' ? 'bg-blue-100 text-blue-800 dark:bg-blue-700 dark:text-blue-100' :
-                                                        'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-100'
-                                                    } transition-colors duration-300`}>{schedule.status}</span>
+                                                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${schedule.status === 'Scheduled' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-700 dark:text-yellow-100' :
+                                                            schedule.status === 'Completed' ? 'bg-green-100 text-green-800 dark:bg-green-700 dark:text-green-100' :
+                                                                schedule.status === 'Cancelled' ? 'bg-red-100 text-red-800 dark:bg-red-700 dark:text-red-100' :
+                                                                    schedule.status === 'Confirmed' ? 'bg-blue-100 text-blue-800 dark:bg-blue-700 dark:text-blue-100' :
+                                                                        'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-100'
+                                                        } transition-colors duration-300`}>{schedule.status}</span>
                                                 </td>
                                                 {canManageSchedules && (
                                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                         <div className="flex justify-end space-x-3">
-                                                            <motion.button onClick={() => openEditScheduleModal(schedule)} className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 transition-colors duration-300" title="Edit Schedule" whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}><Edit className="h-5 w-5" /></motion.button>
+                                                            <motion.button onClick={() => openEditScheduleModal(schedule)} disabled={user?.role === 'guest'} className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed" title="Edit Schedule" whileHover={user?.role !== 'guest' ? { scale: 1.1 } : {}} whileTap={user?.role !== 'guest' ? { scale: 0.9 } : {}}><Edit className="h-5 w-5" /></motion.button>
                                                         </div>
                                                     </td>
                                                 )}
@@ -401,7 +400,7 @@ function ScheduleManagementPage() {
                     <div className="flex justify-between items-center mb-4">
                         <h2 className="text-2xl font-semibold text-gray-700 dark:text-gray-200 transition-colors duration-300">Doctor Availability Slots</h2>
                         {canManageAvailability && (
-                            <motion.button onClick={() => { setShowAvailabilityFormModal(true); setEditingAvailability(null); resetAvailabilityFormData(); }} className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300 flex items-center" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                            <motion.button onClick={() => { setShowAvailabilityFormModal(true); setEditingAvailability(null); resetAvailabilityFormData(); }} disabled={user?.role === 'guest'} className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300 flex items-center disabled:opacity-50 disabled:cursor-not-allowed" whileHover={user?.role !== 'guest' ? { scale: 1.05 } : {}} whileTap={user?.role !== 'guest' ? { scale: 0.95 } : {}}>
                                 <PlusCircle className="mr-2 h-5 w-5" /> Add New Availability
                             </motion.button>
                         )}
@@ -431,17 +430,16 @@ function ScheduleManagementPage() {
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{availability.start_time} - {availability.end_time}</td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{availability.max_patients_per_slot}</td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                                        availability.is_active ? 'bg-green-100 text-green-800 dark:bg-green-700 dark:text-green-100' : 'bg-red-100 text-red-800 dark:bg-red-700 dark:text-red-100'
-                                                    } transition-colors duration-300`}>
+                                                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${availability.is_active ? 'bg-green-100 text-green-800 dark:bg-green-700 dark:text-green-100' : 'bg-red-100 text-red-800 dark:bg-red-700 dark:text-red-100'
+                                                        } transition-colors duration-300`}>
                                                         {availability.is_active ? 'Active' : 'Inactive'}
                                                     </span>
                                                 </td>
                                                 {canManageAvailability && (
                                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                         <div className="flex justify-end space-x-3">
-                                                            <motion.button onClick={() => openEditAvailabilityModal(availability)} className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 transition-colors duration-300" title="Edit Availability" whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}><Edit className="h-5 w-5" /></motion.button>
-                                                            <motion.button onClick={() => handleDeleteAvailability(availability.id)} className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 transition-colors duration-300" title="Delete Availability" whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}><Trash2 className="h-5 w-5" /></motion.button>
+                                                            <motion.button onClick={() => openEditAvailabilityModal(availability)} disabled={user?.role === 'guest'} className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed" title="Edit Availability" whileHover={user?.role !== 'guest' ? { scale: 1.1 } : {}} whileTap={user?.role !== 'guest' ? { scale: 0.9 } : {}}><Edit className="h-5 w-5" /></motion.button>
+                                                            <motion.button onClick={() => handleDeleteAvailability(availability.id)} disabled={user?.role === 'guest'} className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed" title="Delete Availability" whileHover={user?.role !== 'guest' ? { scale: 1.1 } : {}} whileTap={user?.role !== 'guest' ? { scale: 0.9 } : {}}><Trash2 className="h-5 w-5" /></motion.button>
                                                         </div>
                                                     </td>
                                                 )}

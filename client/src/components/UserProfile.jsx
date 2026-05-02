@@ -25,9 +25,9 @@ function UserProfile() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
-const backendUrl = import.meta.env.VITE_BACKEND_URL;
+  const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
-const apiBackendUrl = backendUrl.replace('/api/v1', '');
+  const apiBackendUrl = backendUrl.replace('/api/v1', '');
 
 
   useEffect(() => {
@@ -43,10 +43,9 @@ const apiBackendUrl = backendUrl.replace('/api/v1', '');
       }
 
       setIsLoading(true);
-      toast.dismiss();
 
       try {
-        const response = await fetch(`${backendUrl}/api/v1/users/profile`, {
+        const response = await fetch(`${backendUrl}/api/v1/auth/profile`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -68,7 +67,6 @@ const apiBackendUrl = backendUrl.replace('/api/v1', '');
         const data = await response.json();
         setProfileData(data);
         setOriginalProfileData(data);
-        toast.success('Profile loaded successfully!');
       } catch (error) {
         console.error('Error fetching user profile:', error);
         toast.error(error.message || 'Failed to load profile. Please try again.');
@@ -126,7 +124,7 @@ const apiBackendUrl = backendUrl.replace('/api/v1', '');
         formData.append('profile_picture', selectedFile);
       }
 
-      const response = await fetch(`${backendUrl}/api/v1/users/profile`, {
+      const response = await fetch(`${backendUrl}/api/v1/auth/profile`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -145,9 +143,9 @@ const apiBackendUrl = backendUrl.replace('/api/v1', '');
       }
 
       const responseData = await response.json();
-      console.log('UserProfile - Full backend response after update:', responseData);
-      console.log('UserProfile - User data passed to login:', responseData.user);
-      
+      //console.log('UserProfile - Full backend response after update:', responseData);
+      //console.log('UserProfile - User data passed to login:', responseData.user);
+
       const updatedUserData = responseData.user;
 
       login(updatedUserData, token);
@@ -195,14 +193,14 @@ const apiBackendUrl = backendUrl.replace('/api/v1', '');
         </h2>
 
         <div className="flex flex-col md:flex-row items-center md:items-start gap-8 mb-8">
-          
+
           {/* Profile Picture Section */}
           <div className="flex-shrink-0 relative w-36 h-36 rounded-full bg-gradient-to-br from-blue-100 to-indigo-200 dark:from-gray-700 dark:to-gray-600 flex items-center justify-center overflow-hidden border-4 border-blue-500 dark:border-blue-400 shadow-lg group">
             {profileData.profile_picture ? (
               <img
                 src={profileData.profile_picture.startsWith('/uploads/')
-                ? `${apiBackendUrl}${profileData.profile_picture}`
-                : profileData.profile_picture}
+                  ? `${apiBackendUrl}${profileData.profile_picture}`
+                  : profileData.profile_picture}
                 alt="Profile"
                 className="w-full h-full object-cover rounded-full transition-transform duration-300 group-hover:scale-105"
               />

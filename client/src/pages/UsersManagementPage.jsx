@@ -1,4 +1,4 @@
-// frontend/src/pages/UsersManagementPage.jsx
+// frontend/src/pages/staffManagementPage.jsx
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
@@ -162,6 +162,7 @@ const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, userName }) => {
 };
 
 const backendUrl = import.meta.env.VITE_BACKEND_URL;
+const apiBackendUrl = backendUrl.replace('/api/v1', '');
 
 // --- Main UsersManagementPage Component ---
 function UsersManagementPage() {
@@ -209,7 +210,7 @@ function UsersManagementPage() {
       if (searchTerm) queryParams.append('search', searchTerm);
       if (filterRole) queryParams.append('role', filterRole);
 
-      const response = await fetch(`${backendUrl}/api/v1/users?${queryParams.toString()}`, {
+      const response = await fetch(`${backendUrl}/api/v1/staff?${queryParams.toString()}`, {
         headers: { 'Authorization': `Bearer ${token}` },
       });
 
@@ -229,9 +230,9 @@ function UsersManagementPage() {
   }, [token, searchTerm, filterRole, navigate]);
 
   useEffect(() => {
-    if (!authLoading && isAuthenticated && user?.role === 'admin') { // Simplified user role check
+    if (!authLoading && isAuthenticated && ['admin', 'guest'].includes(user?.role)) { // Simplified user role check
       fetchUsers();
-    } else if (!authLoading && (!isAuthenticated || user?.role !== 'admin')) {
+    } else if (!authLoading && (!isAuthenticated || !['admin', 'guest'].includes(user?.role))) {
       navigate('/unauthorized');
     }
   }, [authLoading, isAuthenticated, user, navigate, fetchUsers]);
@@ -242,7 +243,10 @@ function UsersManagementPage() {
   }, [searchTerm, filterRole, fetchUsers]);
 
   const getUserAvatar = (u) => {
-    if (u.photo_url) return <img src={u.photo_url} alt={u.first_name} className="h-8 w-8 rounded-full object-cover mr-3" />;
+    if (u.photo_url) {
+      const src = u.photo_url.startsWith('/uploads/') ? `${apiBackendUrl}${u.photo_url}` : u.photo_url;
+      return <img src={src} alt={u.first_name || u.username} className="h-8 w-8 rounded-full object-cover mr-3" />;
+    }
     const initials = `${u.first_name ? u.first_name[0] : ''}${u.last_name ? u.last_name[0] : ''}`.toUpperCase();
     const charCode = initials.charCodeAt(0) || 0;
     const hue = (charCode * 10) % 360;
@@ -258,8 +262,8 @@ function UsersManagementPage() {
   const handleToggleStatus = async (userId, currentStatus) => {
     if (!token) { setNotification({ message: 'Authentication required.', type: 'error' }); return; }
     try {
-      const response = await fetch(`${backendUrl}/api/v1/users/${userId}/toggle-status`, {
-        method: 'PUT',
+      const response = await fetch(`${backendUrl}/api/v1/staff/${userId}/toggle-status`, {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ is_active: !currentStatus })
       });
@@ -279,7 +283,7 @@ function UsersManagementPage() {
     if (!token) { setNotification({ message: 'Authentication required.', type: 'error' }); return; }
     setNotification({ message: `Sending password reset for user ${userId}...`, type: 'info' });
     try {
-      const response = await fetch(`${backendUrl}/api/v1/users/${userId}/reset-password`, {
+      const response = await fetch(`${backendUrl}/api/v1/staff/${userId}/reset-password`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -342,7 +346,7 @@ function UsersManagementPage() {
     const { confirmPassword, ...dataToSend } = formData;
     if (editingUser && dataToSend.password === '') delete dataToSend.password;
 
-    const url = editingUser ? `${backendUrl}/api/v1/users/${editingUser.id}` : `${backendUrl}/api/v1/users`;
+    const url = editingUser ? `${backendUrl}/api/v1/staff/${editingUser.id}` : `${backendUrl}/api/v1/auth/register-staff`;
     const method = editingUser ? 'PUT' : 'POST';
 
     try {
@@ -354,7 +358,8 @@ function UsersManagementPage() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'API request failed.');
+        const detail = errorData.errors ? errorData.errors.map(e => `${e.field}: ${e.message}`).join(' | ') : '';
+        throw new Error(errorData.message + (detail ? ` Details: ${detail}` : '') || 'API request failed.');
       }
 
       setNotification({ message: `User ${editingUser ? 'updated' : 'added'} successfully!`, type: 'success' });
@@ -372,7 +377,7 @@ function UsersManagementPage() {
     if (!userToDelete || !token) return;
 
     try {
-      const response = await fetch(`${backendUrl}/api/v1/users/${userToDelete.id}`, {
+      const response = await fetch(`${backendUrl}/api/v1/staff/${userToDelete.id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` },
       });
@@ -395,7 +400,7 @@ function UsersManagementPage() {
   const itemVariants = { hidden: { y: 20, opacity: 0 }, visible: { y: 0, opacity: 1 } };
 
   if (authLoading) return <div className="flex justify-center items-center h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300 text-lg text-gray-700 dark:text-gray-300">Loading authentication...</div>;
-  if (!isAuthenticated || user?.role !== 'admin') return <div className="flex justify-center items-center h-screen bg-red-50 dark:bg-red-900 transition-colors duration-300 text-lg text-red-700 dark:text-red-100">Unauthorized Access. Only administrators can view this page.</div>;
+  if (!isAuthenticated || !['admin', 'guest'].includes(user?.role)) return <div className="flex justify-center items-center h-screen bg-red-50 dark:bg-red-900 transition-colors duration-300 text-lg text-red-700 dark:text-red-100">Unauthorized Access. Only administrators can view this page.</div>;
 
   const indexOfLastUser = currentPage * usersPerPage;
   const indexOfFirstUser = indexOfLastUser - usersPerPage;
@@ -411,12 +416,10 @@ function UsersManagementPage() {
 
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 transition-colors duration-300">User Management</h1>
-        {user?.role === 'admin' && (
-          <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => openUserFormModal()} className={`${BUTTON_BLUE_CLASSES} flex items-center space-x-2`}>
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
-            <span>Add New User</span>
-          </motion.button>
-        )}
+        <motion.button disabled={user?.role === 'guest'} whileHover={user?.role !== 'guest' ? { scale: 1.02 } : {}} whileTap={user?.role !== 'guest' ? { scale: 0.98 } : {}} onClick={() => openUserFormModal()} className={`${BUTTON_BLUE_CLASSES} flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed`}>
+          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
+          <span>Add New User</span>
+        </motion.button>
       </div>
 
       <motion.div className="bg-white shadow-lg rounded-lg p-4 mb-6 grid grid-cols-1 md:grid-cols-3 gap-4 dark:bg-gray-800 dark:shadow-xl transition-colors duration-300" variants={itemVariants}>
@@ -469,21 +472,21 @@ function UsersManagementPage() {
                       </td>
                       <td className="px-5 py-4 text-sm">
                         <div className="flex items-center space-x-3">
-                          <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => openUserFormModal(u)} className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200 transition-colors duration-300" title="Edit User">
+                          <motion.button disabled={user?.role === 'guest'} whileHover={user?.role !== 'guest' ? { scale: 1.1 } : {}} whileTap={user?.role !== 'guest' ? { scale: 0.9 } : {}} onClick={() => openUserFormModal(u)} className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200 transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed" title="Edit User">
                             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.536L15.232 5.232z"></path></svg>
                           </motion.button>
                           {user && user.id !== u.id && (
                             <>
-                              <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleDeleteClick(u)} className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200 transition-colors duration-300" title="Delete User">
+                              <motion.button disabled={user?.role === 'guest'} whileHover={user?.role !== 'guest' ? { scale: 1.1 } : {}} whileTap={user?.role !== 'guest' ? { scale: 0.9 } : {}} onClick={() => handleDeleteClick(u)} className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200 transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed" title="Delete User">
                                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                               </motion.button>
-                              <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleToggleStatus(u.id, u.is_active)}
-                                className={`text-sm py-1 px-2 rounded ${u.is_active ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200 dark:bg-yellow-700 dark:text-yellow-100 dark:hover:bg-yellow-600' : 'bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-700 dark:text-green-100 dark:hover:bg-green-600'} transition-colors duration-300`}
+                              <motion.button disabled={user?.role === 'guest'} whileHover={user?.role !== 'guest' ? { scale: 1.1 } : {}} whileTap={user?.role !== 'guest' ? { scale: 0.9 } : {}} onClick={() => handleToggleStatus(u.id, u.is_active)}
+                                className={`text-sm py-1 px-2 rounded disabled:opacity-50 disabled:cursor-not-allowed ${u.is_active ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200 dark:bg-yellow-700 dark:text-yellow-100 dark:hover:bg-yellow-600' : 'bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-700 dark:text-green-100 dark:hover:bg-green-600'} transition-colors duration-300`}
                                 title={u.is_active ? "Deactivate User" : "Activate User"}>
                                 {u.is_active ? 'Deactivate' : 'Activate'}
                               </motion.button>
-                              <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleResetPassword(u.id)}
-                                className="text-purple-600 hover:text-purple-800 text-sm py-1 px-2 rounded bg-purple-100 hover:bg-purple-200 dark:bg-purple-700 dark:text-purple-100 dark:hover:bg-purple-600 transition-colors duration-300"
+                              <motion.button disabled={user?.role === 'guest'} whileHover={user?.role !== 'guest' ? { scale: 1.1 } : {}} whileTap={user?.role !== 'guest' ? { scale: 0.9 } : {}} onClick={() => handleResetPassword(u.id)}
+                                className="text-purple-600 hover:text-purple-800 text-sm py-1 px-2 rounded bg-purple-100 hover:bg-purple-200 dark:bg-purple-700 dark:text-purple-100 dark:hover:bg-purple-600 transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                                 title="Reset Password">
                                 Reset Pass
                               </motion.button>
@@ -530,13 +533,13 @@ function UsersManagementPage() {
             <option value='nurse'>Nurse</option>
             <option value='guest'>Guest</option>
           </FormField>
-          <FormField label='First Name' id='first_name' name='first_name' value={formData.first_name} onChange={handleInputChange} />
-          <FormField label='Last Name' id='last_name' name='last_name' value={formData.last_name} onChange={handleInputChange} />
+          <FormField label='First Name' id='first_name' name='first_name' value={formData.first_name} onChange={handleInputChange} required />
+          <FormField label='Last Name' id='last_name' name='last_name' value={formData.last_name} onChange={handleInputChange} required />
           <FormField label='Email' id='email' name='email' type='email' value={formData.email} onChange={handleInputChange} required />
-          <FormField label='Phone Number' id='phone_number' name='phone_number' value={formData.phone_number} onChange={handleInputChange} />
-          <FormField label='Address' id='address' name='address' value={formData.address} onChange={handleInputChange} className='md:col-span-2' />
-          <FormField label='Date of Birth' id='date_of_birth' name='date_of_birth' type='date' value={formData.date_of_birth} onChange={handleInputChange} />
-          <FormField label='Gender' id='gender' name='gender' type='select' value={formData.gender} onChange={handleInputChange}>
+          <FormField label='Phone Number' id='phone_number' name='phone_number' value={formData.phone_number} onChange={handleInputChange} required />
+          <FormField label='Address' id='address' name='address' value={formData.address} onChange={handleInputChange} className='md:col-span-2' required />
+          <FormField label='Date of Birth' id='date_of_birth' name='date_of_birth' type='date' value={formData.date_of_birth} onChange={handleInputChange} required />
+          <FormField label='Gender' id='gender' name='gender' type='select' value={formData.gender} onChange={handleInputChange} required>
             <option value=''>Select Gender</option>
             <option value='Male'>Male</option>
             <option value='Female'>Female</option>

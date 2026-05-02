@@ -3,20 +3,18 @@
 import pool from '../config/db.js';
 
 export const createPatientUser = async (client, userData) => {
-  // Destructure and prepare user data for users table
   const {
     username,
     password_hash,
     email,
-    patient_id,
   } = userData;
 
-  // Note: We set role='patient' and is_active=true for self-registration.
+  // The link back to patients is stored in patients.user_id, not here.
   const query = `
     INSERT INTO users (
-      username, password_hash, role, email, is_active, patient_id
+      username, password_hash, role, email, is_active
     )
-    VALUES ($1, $2, 'patient', $3, true, $4)
+    VALUES ($1, $2, 'patient', $3, true)
     RETURNING id;
   `;
 
@@ -24,7 +22,6 @@ export const createPatientUser = async (client, userData) => {
     username,
     password_hash,
     email,
-    patient_id
   ];
 
   const result = await client.query(query, values);
@@ -48,7 +45,7 @@ export const createStaffUser = async(client, userData) => {
 
   const values = [username, password_hash, email, role];
   const result = await client.query(query, values);
-  return result.rows[0];
+  return result.rows[0].id;
 };
 
 export const findUserByUsernameOrEmail = async (username, email, client = pool) => {

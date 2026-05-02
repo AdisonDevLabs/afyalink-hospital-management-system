@@ -60,7 +60,7 @@ export const loginUserService = async (login, password) => {
 
   const tokenPayload = {
     id: data.user_id,
-    role: data.role,
+    role: userProfile.role,
     profile_id: profileId
   };
   

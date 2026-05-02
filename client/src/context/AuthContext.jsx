@@ -24,7 +24,7 @@ export const AuthProvider = ({ children }) => {
           setUser(parsedUser);
           setToken(storedToken);
           // *** ADD THIS LOG ***
-          console.log('AuthContext useEffect: User parsed from localStorage on initial load:', parsedUser);
+          //console.log('AuthContext useEffect: User parsed from localStorage on initial load:', parsedUser);
           // *********************
         }
 
@@ -40,8 +40,8 @@ export const AuthProvider = ({ children }) => {
 
   const login = (userData, jwtToken) => {
     // *** ADD THESE LOGS ***
-    console.log('AuthContext Login: userData RECEIVED by login function:', userData);
-    console.log('AuthContext Login: profile_picture in RECEIVED userData:', userData?.profile_picture);
+    //console.log('AuthContext Login: userData RECEIVED by login function:', userData);
+    //console.log('AuthContext Login: profile_picture in RECEIVED userData:', userData?.profile_picture);
     // *********************
 
     setUser(userData); // This updates the React state
@@ -50,7 +50,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('user', JSON.stringify(userData)); // This updates localStorage
 
     // *** ADD THIS LOG ***
-    console.log('AuthContext Login: User object STRINGIFIED and SAVED to localStorage:', JSON.stringify(userData));
+    //console.log('AuthContext Login: User object STRINGIFIED and SAVED to localStorage:', JSON.stringify(userData));
     // *********************
   };
 

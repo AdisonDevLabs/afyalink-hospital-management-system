@@ -20,7 +20,7 @@ export const protect = (req, res, next) => {
     const decoded = jwt.verify(token, env.JWT_SECRET);
 
     req.user = {
-      user_id: decoded.user_id,
+      id: decoded.id,
       profile_id: decoded.profile_id,
       role: decoded.role
     };

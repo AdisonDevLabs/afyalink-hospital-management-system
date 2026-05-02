@@ -28,7 +28,7 @@ function NurseDashboardPage() {
 
   // --- Auth and Redirection Logic ---
   useEffect(() => {
-    if (!authLoading && (!isAuthenticated || user.role !== 'nurse')) {
+    if (!authLoading && (!isAuthenticated || !['nurse', 'guest'].includes(user?.role))) {
       // Small delay to ensure the user sees the unauthorized message before redirect
       const timeout = setTimeout(() => navigate('/unauthorized'), 1000);
       return () => clearTimeout(timeout);
@@ -52,8 +52,8 @@ function NurseDashboardPage() {
   }
 
   // The unauthorized check in useEffect handles the redirect, but this renders the temporary state.
-  if (!isAuthenticated || user.role !== 'nurse') {
-    console.log(user);
+  if (!isAuthenticated || !['nurse', 'guest'].includes(user?.role)) {
+    //console.log(user);
      return (
         <div className="flex justify-center items-center h-screen bg-red-50 dark:bg-red-900 transition-colors duration-300">
           <div className="text-xl font-semibold text-red-700 dark:text-red-100 p-8 bg-white dark:bg-gray-800 rounded-lg shadow-md border border-red-300 dark:border-red-700 transition-colors duration-300">

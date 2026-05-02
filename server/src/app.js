@@ -36,6 +36,8 @@ import orderRoutes from './routes/orderRoutes.js';
 const app = express();
 const API_VERSION = '/api/v1';
 
+app.set('trust proxy', 1);
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -65,7 +67,7 @@ app.use(
         callback(new Error(`CORS blocked: ${origin} not allowed.`));
       }
     },
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
   })
@@ -95,7 +97,7 @@ if (env.NODE_ENV !== 'test') app.use(morgan('combined'));
 
 // --- Static and Uploads Setup ---
 // Creates the uploads directory if it doesn't exist
-const uploadsDir = path.join(__dirname, 'public', 'uploads');
+const uploadsDir = path.join(__dirname, '..', 'public', 'uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
@@ -110,7 +112,7 @@ app.get('/', (req, res) => {
 
 // --- API Routes ---
 app.use(`${API_VERSION}/auth`, authRoutes);
-app.use(`${API_VERSION}/users`, userRoutes);
+app.use(`${API_VERSION}/staff`, userRoutes);
 app.use(`${API_VERSION}/patients`, patientRoutes);
 app.use(`${API_VERSION}/appointments`, appointmentRoutes);
 app.use(`${API_VERSION}/clinical-notes`, clinicalNoteRoutes);
@@ -138,7 +140,7 @@ app.use((err, req, res, next) => {
   console.error('SERVER ERROR:', err.stack);
   res.status(err.status || 500).json({
     message: err.message || 'Internal Server Error',
-    error: env.NODE_ENV === 'developement' ? err: {},
+    error: env.NODE_ENV === 'development' ? err : {},
   });
 });
 

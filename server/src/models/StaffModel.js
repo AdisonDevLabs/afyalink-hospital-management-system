@@ -24,8 +24,10 @@ export const findAllStaff = async (filters) => {
   
   let query = `
     SELECT 
-      s.id, s.user_id, s.first_name, s.last_name, s.role, s.specialization,
-      u.username, u.email, u.is_active, u.last_login, s.photo_url
+      s.id, s.user_id, s.first_name, s.last_name, s.phone_number,
+      s.address, s.date_of_birth, s.gender, s.photo_url,
+      s.role, s.specialization,
+      u.username, u.email, u.is_active, u.last_login
     FROM staffs s
     JOIN users u ON s.user_id = u.id
   `;
@@ -59,7 +61,7 @@ export const createStaff = async (client, staffData, userId, role) => {
 
   const query = `
     INSERT INTO staffs (
-      id, user_id, first_name, last_name, phone_number, address, date_of_birth, gender, specialization, role
+      user_id, first_name, last_name, phone_number, address, date_of_birth, gender, specialization, role
     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
     RETURNING id;
   `;
@@ -77,6 +79,22 @@ export const createStaff = async (client, staffData, userId, role) => {
   ];
 
   const result = await client.query(query, values);
+  return result.rows[0].id;
+};
+
+export const findStaffByUserId = async (userId) => {
+  const query = `
+    SELECT
+      s.id, s.user_id, s.first_name, s.last_name, s.phone_number,
+      s.address, s.date_of_birth, s.gender, s.photo_url,
+      s.role, s.specialization,
+      u.username, u.email, u.is_active, u.last_login
+    FROM staffs s
+    JOIN users u ON s.user_id = u.id
+    WHERE s.user_id = $1
+  `;
+
+  const result = await pool.query(query, [userId]);
   return result.rows[0];
 };
 
